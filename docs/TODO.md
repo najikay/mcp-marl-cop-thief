@@ -115,7 +115,7 @@
 ## PHASE 2 — Enterprise Infrastructure (Config Managers, Versioning, uv, Ruff)
 
 ### 2.A Project bootstrap (uv)
-- [ ] **#76** `uv init` the project; create `pyproject.toml` (name, version `1.00`, description, license).
+- [x] **#76** `uv init` the project; create `pyproject.toml` (name, version `1.00`, description, license).
 - [ ] **#77** Configure `[project]` Python `>=3.10` and package layout (`src/cop_thief`).
 - [ ] **#78** Add runtime deps via `uv add` (fastmcp, google-api-python-client, requests/httpx).
 - [ ] **#79** Add dev deps via `uv add --dev` (pytest, pytest-cov, ruff).
@@ -125,14 +125,14 @@
 - [ ] **#83** Add `uv run` wrappers/notes to README for every dev command.
 
 ### 2.B Ruff configuration
-- [ ] **#84** Add `[tool.ruff]` (`line-length=100`, `target-version="py310"`).
-- [ ] **#85** Add `[tool.ruff.lint]` select `E,F,W,I,N,UP,B,C4,SIM`; ignore `E501` if needed.
+- [x] **#84** Add `[tool.ruff]` (`line-length=100`, `target-version="py310"`).
+- [x] **#85** Add `[tool.ruff.lint]` select `E,F,W,I,N,UP,B,C4,SIM`; ignore `E501` if needed.
 - [ ] **#86** Run `uv run ruff check` and drive violations to **0**.
 - [ ] **#87** Document the lint gate in README contribution guidelines.
 
 ### 2.C Coverage configuration
-- [ ] **#88** Add `[tool.coverage.run]` `source=["src"]`, omit `main.py`, `tests/*`, `**/gui/*`.
-- [ ] **#89** Add `[tool.coverage.report] fail_under = 85`.
+- [x] **#88** Add `[tool.coverage.run]` `source=["src"]`, omit `main.py`, `tests/*`, `**/gui/*`.
+- [x] **#89** Add `[tool.coverage.report] fail_under = 85`.
 - [ ] **#90** Wire `uv run pytest --cov` and confirm the gate fails under 85 %.
 
 ### 2.D ConfigManager
@@ -148,8 +148,8 @@
 - [ ] **#100** Inject docstrings (why config-driven; cite Guidelines §7.2/§7.3).
 
 ### 2.E setup.json & friends
-- [ ] **#101** Author `config/setup.json` with `version`, `grid_size`, `max_moves`, `num_games`, `max_barriers`, `scoring{...}`.
-- [ ] **#102** Author `config/logging_config.json` (levels, file rotation, dispute log).
+- [x] **#101** Author `config/setup.json` with `version`, `grid_size`, `max_moves`, `num_games`, `max_barriers`, `scoring{...}`.
+- [x] **#102** Author `config/logging_config.json` (levels, file rotation, dispute log).
 - [ ] **#103** Validation test: `setup.json` matches the typed model & immutable scoring.
 - [ ] **#104** Edge fixture: 2×2 and 3×2 config variants for sanity stages (no code change).
 
@@ -163,7 +163,7 @@
 - [ ] **#111** Inject docstrings (Guidelines §8.1 versioning table).
 
 ### 2.G Secrets & git hygiene
-- [ ] **#112** Create `.env-example` with placeholders (LLM_API_KEY, GMAIL_*).
+- [x] **#112** Create `.env-example` with placeholders (LLM_API_KEY, GMAIL_*).
 - [ ] **#113** Update `.gitignore` for `.env`, `credentials.json`, `token.json`, `*.key`, `*.pem`.
 - [ ] **#114** Implement `os.environ.get(...)` access pattern helper (no secrets in code).
 - [ ] **#115** Secret-scan audit task: prove no keys/tokens in source.
@@ -218,7 +218,7 @@
 - [ ] **#150** Inject docstrings mirroring the Guidelines §5.1 interface.
 
 ### 3.F rate_limits.json
-- [ ] **#151** Author `config/rate_limits.json` (version `1.00`, services default/llm/gmail).
+- [x] **#151** Author `config/rate_limits.json` (version `1.00`, services default/llm/gmail).
 - [ ] **#152** Validation test: limits load into typed `RateLimitConfig`.
 - [ ] **#153** Edge fixture: zero-depth queue & 1-rpm service behave correctly.
 - [ ] **#154** Phase-3 review: 100 % external calls routed via gatekeeper (design check).
