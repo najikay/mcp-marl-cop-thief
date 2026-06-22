@@ -248,19 +248,19 @@
 
 ## PHASE 4 — The SDK Layer Encapsulation
 
-- [ ] **#155** Create `sdk/sdk.py` skeleton: `CopThiefSDK` single-entrypoint class + typing.
-- [ ] **#156** Define SDK method signatures: `play_game`, `play_sub_game`, `decide_action`, `parse_message`, `build_internal_report`, `build_bonus_report`, `send_report`.
-- [ ] **#157** Implement delegation to Domain Services (no business logic in SDK).
-- [ ] **#158** Implement dependency injection of Gatekeeper, ConfigManager, Logger.
-- [ ] **#159** Add validation hook: SDK validates inputs before delegating.
-- [ ] **#160** Add gatekeeper hook: all external-facing SDK ops go through the gatekeeper.
-- [ ] **#161** Write positive test `test_sdk.py` (each method delegates correctly — mocked services).
-- [ ] **#162** Write edge-case fixture: invalid args raise clear SDK-level errors.
-- [ ] **#163** Write edge-case fixture: SDK callable by external consumer with no internal imports.
-- [ ] **#164** Inject docstrings: document the single entrypoint contract (Guidelines §4.1).
-- [ ] **#165** Wire `sdk/__init__.py` to export only `CopThiefSDK`.
-- [ ] **#166** Architecture test: assert GUI/CLI/servers import **only** the SDK (no domain imports).
-- [ ] **#167** Phase-4 review: confirm layered boundary SDK → Domain → Infrastructure.
+- [x] **#155** Create `sdk/sdk.py` skeleton: `CopThiefSDK` single-entrypoint class + typing.
+- [x] **#156** Define SDK method signatures: `play_game`, `play_sub_game`, `decide_action`, `parse_message`, `build_internal_report`, `build_bonus_report`, `send_report`.
+- [x] **#157** Implement delegation to Domain Services (no business logic in SDK).
+- [x] **#158** Implement dependency injection of Gatekeeper, ConfigManager, Logger.
+- [x] **#159** Add validation hook: SDK validates inputs before delegating.
+- [x] **#160** Add gatekeeper hook: all external-facing SDK ops go through the gatekeeper.
+- [x] **#161** Write positive test `test_sdk.py` (each method delegates correctly — mocked services).
+- [x] **#162** Write edge-case fixture: invalid args raise clear SDK-level errors.
+- [x] **#163** Write edge-case fixture: SDK callable by external consumer with no internal imports.
+- [x] **#164** Inject docstrings: document the single entrypoint contract (Guidelines §4.1).
+- [x] **#165** Wire `sdk/__init__.py` to export only `CopThiefSDK`.
+- [x] **#166** Architecture test: assert GUI/CLI/servers import **only** the SDK (no domain imports).
+- [x] **#167** Phase-4 review: confirm layered boundary SDK → Domain → Infrastructure.
 
 ---
 
