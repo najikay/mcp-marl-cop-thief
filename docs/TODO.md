@@ -16,26 +16,26 @@
 ## PHASE 1 — Core Domain, Grid Mechanics & State Machine (Dec-POMDP)
 
 ### 1.A constants.py
-- [ ] **#1** Create `src/cop_thief/constants.py` skeleton with module docstring & typing imports.
-- [ ] **#2** Define `Direction` Enum (8 directions + STAY) with `(dr, dc)` vectors.
-- [ ] **#3** Define `AgentRole` Enum (`COP`, `THIEF`) and `ActionType` Enum (`MOVE`, `PLACE_BARRIER`).
-- [ ] **#4** Define `SubGameOutcome` Enum (`COP_WINS`, `THIEF_WINS`, `VOID_TECHNICAL`).
-- [ ] **#5** Add immutable physical/math constants (default vision band labels, tie-break order).
-- [ ] **#6** Write positive unit test `tests/unit/test_constants.py` asserting enum members & vectors.
+- [x] **#1** Create `src/cop_thief/constants.py` skeleton with module docstring & typing imports.
+- [x] **#2** Define `Direction` Enum (8 directions + STAY) with `(dr, dc)` vectors.
+- [x] **#3** Define `AgentRole` Enum (`COP`, `THIEF`) and `ActionType` Enum (`MOVE`, `PLACE_BARRIER`).
+- [x] **#4** Define `SubGameOutcome` Enum (`COP_WINS`, `THIEF_WINS`, `VOID_TECHNICAL`).
+- [x] **#5** Add immutable physical/math constants (default vision band labels, tie-break order).
+- [x] **#6** Write positive unit test `tests/unit/test_constants.py` asserting enum members & vectors.
 - [ ] **#7** Add edge-case fixture: assert no duplicate direction vectors, STAY = (0,0).
 - [ ] **#8** Inject Ruff-compliant docstrings explaining *why* each enum exists.
 
 ### 1.B Cell & Grid
-- [ ] **#9** Create `domain/grid.py` skeleton; define `Cell` dataclass (row, col) with typing.
-- [ ] **#10** Implement `Cell` equality, hashing, and neighbor computation.
-- [ ] **#11** Define `Grid` class skeleton (rows, cols sourced from config, not literals).
-- [ ] **#12** Implement `Grid.in_bounds(cell)` core logic.
-- [ ] **#13** Implement `Grid.neighbors(cell, include_diagonal=True)` core logic.
-- [ ] **#14** Add validation hook: reject non-positive grid dimensions (raise `ValueError`).
-- [ ] **#15** Write positive test `test_grid.py`: bounds & neighbors on a 5×5.
-- [ ] **#16** Write edge-case fixture: 1×1, 2×2, and non-square (3×2) grids.
-- [ ] **#17** Write edge-case fixture: corner/edge cells have correct reduced neighbor sets.
-- [ ] **#18** Inject docstrings (Input/Output/Setup per building-block format).
+- [x] **#9** Create `domain/grid.py` skeleton; define `Cell` dataclass (row, col) with typing.
+- [x] **#10** Implement `Cell` equality, hashing, and neighbor computation.
+- [x] **#11** Define `Grid` class skeleton (rows, cols sourced from config, not literals).
+- [x] **#12** Implement `Grid.in_bounds(cell)` core logic.
+- [x] **#13** Implement `Grid.neighbors(cell, include_diagonal=True)` core logic.
+- [x] **#14** Add validation hook: reject non-positive grid dimensions (raise `ValueError`).
+- [x] **#15** Write positive test `test_grid.py`: bounds & neighbors on a 5×5.
+- [x] **#16** Write edge-case fixture: 1×1, 2×2, and non-square (3×2) grids.
+- [x] **#17** Write edge-case fixture: corner/edge cells have correct reduced neighbor sets.
+- [x] **#18** Inject docstrings (Input/Output/Setup per building-block format).
 
 ### 1.C BoardStateMachine
 - [ ] **#19** Create `domain/board_state.py` skeleton; define `BoardState` dataclass (cop, thief, barriers:set, barriers_left, move_count).
