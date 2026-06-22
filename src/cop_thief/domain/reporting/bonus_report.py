@@ -32,6 +32,25 @@ class BonusReport(BaseReport):
     students_group_2: list[str] = field(default_factory=list)
     timezone: str = "Asia/Jerusalem"
 
+    @classmethod
+    def from_sides(cls, series, side_a, side_b, mutual_agreement: bool = True) -> BonusReport:
+        """Build from a played series and two group sides (duck-typed)."""
+        return cls(
+            group_1=side_a.name,
+            group_2=side_b.name,
+            github_repo_group_1=side_a.github_repo,
+            github_repo_group_2=side_b.github_repo,
+            mcp_url_group_1_cop=side_a.cop_mcp_url,
+            mcp_url_group_1_thief=side_a.thief_mcp_url,
+            mcp_url_group_2_cop=side_b.cop_mcp_url,
+            mcp_url_group_2_thief=side_b.thief_mcp_url,
+            sub_games=series.to_sub_game_dicts(),
+            totals_by_group=series.totals_by_group,
+            mutual_agreement=mutual_agreement,
+            students_group_1=side_a.students,
+            students_group_2=side_b.students,
+        )
+
     def to_dict(self) -> dict:
         """Serialise to the inter-group bonus schema."""
         return {

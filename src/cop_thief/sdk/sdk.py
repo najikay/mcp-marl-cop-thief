@@ -13,6 +13,7 @@ from ..domain.agents import CopAgent, ThiefAgent
 from ..domain.nl import BeliefUpdate, NLEncoder, NLParser
 from ..domain.reporting import BonusReport, InternalReport
 from ..domain.strategy import BaseStrategy, BeliefHeuristicStrategy, HeuristicStrategy
+from ..domain.turn_advisor import propose_turn as _propose_turn
 from ..infra import ApiGatekeeper, LLMClient, make_llm_client
 from ..orchestrator import (
     BonusSeriesController,
@@ -102,21 +103,11 @@ class CopThiefSDK:
         mutual_agreement: bool = True,
     ) -> BonusReport:
         """Assemble the inter-group bonus report from a played series."""
-        return BonusReport(
-            group_1=side_a.name,
-            group_2=side_b.name,
-            github_repo_group_1=side_a.github_repo,
-            github_repo_group_2=side_b.github_repo,
-            mcp_url_group_1_cop=side_a.cop_mcp_url,
-            mcp_url_group_1_thief=side_a.thief_mcp_url,
-            mcp_url_group_2_cop=side_b.cop_mcp_url,
-            mcp_url_group_2_thief=side_b.thief_mcp_url,
-            sub_games=series.to_sub_game_dicts(),
-            totals_by_group=series.totals_by_group,
-            mutual_agreement=mutual_agreement,
-            students_group_1=side_a.students,
-            students_group_2=side_b.students,
-        )
+        return BonusReport.from_sides(series, side_a, side_b, mutual_agreement)
+
+    def propose_turn(self, self_cell: tuple[int, int], role: str, belief=None) -> dict:
+        """Decide one MCP turn from the agent's own cell and current belief."""
+        return _propose_turn(self._config, self._encoder, tuple(self_cell), role, belief)
 
     def parse_message(self, text: str) -> BeliefUpdate:
         """Parse an opponent's free-text message into an actionable belief.

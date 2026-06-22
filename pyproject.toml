@@ -5,10 +5,14 @@ description = "Dual AI Agent Conversation via MCP Servers — Dec-POMDP Cop & Th
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "All Rights Reserved (course submission)" }
-dependencies = []
+dependencies = [
+    "fastmcp>=3.4.2",
+]
 
 [project.scripts]
 cop-thief = "cop_thief.main:main"
+cop-server = "cop_thief.servers.run_server:run_cop"
+thief-server = "cop_thief.servers.run_server:run_thief"
 
 [dependency-groups]
 dev = [
@@ -37,7 +41,7 @@ pythonpath = ["src"]
 
 [tool.coverage.run]
 source = ["src"]
-omit = ["**/main.py", "tests/*", "**/gui/*"]
+omit = ["**/main.py", "tests/*", "**/gui/*", "**/run_server.py"]
 
 [tool.coverage.report]
-fail_under = 85
+fail_under = 90
