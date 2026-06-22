@@ -72,13 +72,19 @@ class GameLoopController:
                 records.append(record)
         return records
 
-    def _play_sub_game(self, index: int, rng: random.Random) -> SubGameRecord:
+    def record_sub_game(self, rng: random.Random | None = None, on_step=None) -> SubGameRecord:
+        """Play one sub-game, invoking ``on_step(state, message)`` per move (for a GUI)."""
+        return self._play_sub_game(1, rng or random.Random(self._config.seed), on_step)
+
+    def _play_sub_game(self, index: int, rng: random.Random, on_step=None) -> SubGameRecord:
         state = self._machine.initial_state(self._config.random_start, rng)
         mover = self._rules.first_mover()
         self._cop.reset()
         self._thief.reset()
         transcript: list[str] = []
         last_message: str | None = None
+        if on_step is not None:
+            on_step(state, None)  # initial frame
         outcome = self._rules.terminal_check(state)
         while outcome is None:
             agent = self._cop if mover is AgentRole.COP else self._thief
@@ -90,6 +96,8 @@ class GameLoopController:
             state = self._machine.apply(state, action)
             transcript.append(turn.message)
             last_message = turn.message
+            if on_step is not None:
+                on_step(state, turn.message)
             outcome = self._resolve(mover, state)
             mover = self._rules.next_mover(mover)
         cop_score, thief_score = self._scoring.score(outcome)
@@ -102,3 +110,21 @@ class GameLoopController:
         if self._rules.moves_exhausted(state, self._config.max_moves):
             return SubGameOutcome.THIEF_WINS
         return None
+
+
+def record_sub_game_frames(controller: GameLoopController, rng=None) -> list[dict]:
+    """Play one sub-game and collect per-move frames (positions + message)."""
+    frames: list[dict] = []
+
+    def capture(state, message) -> None:
+        frames.append(
+            {
+                "cop": [state.cop.row, state.cop.col],
+                "thief": [state.thief.row, state.thief.col],
+                "barriers": [[c.row, c.col] for c in state.barriers],
+                "message": message,
+            }
+        )
+
+    controller.record_sub_game(rng, capture)
+    return frames

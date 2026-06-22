@@ -22,6 +22,7 @@ from ..orchestrator import (
     GameLoopController,
     GameResult,
     GroupSide,
+    record_sub_game_frames,
     run_remote_game,
 )
 
@@ -64,6 +65,11 @@ class CopThiefSDK:
         """Drive a full game across two remote MCP servers (URLs or apps)."""
         return run_remote_game(self._config, cop_target, thief_target, cop_token, thief_token)
 
+    def record_sub_game(self) -> list[dict]:
+        """Play one sub-game and return per-move frames (for the GUI)."""
+        controller = GameLoopController(self._config, self.build_cop(), self.build_thief())
+        return record_sub_game_frames(controller)
+
     def build_cop(self) -> CopAgent:
         """Construct a Cop agent (belief-driven when partial observability is on)."""
         return CopAgent(self._strategy(), self._encoder, self._parser())
@@ -76,9 +82,7 @@ class CopThiefSDK:
         return BeliefHeuristicStrategy() if self._partial else self._strategy_factory()
 
     def _parser(self) -> NLParser | None:
-        if not self._partial:
-            return None
-        return NLParser(llm=self._llm, gatekeeper=self._gatekeeper)
+        return NLParser(self._llm, self._gatekeeper) if self._partial else None
 
     def make_side(
         self,
@@ -123,13 +127,8 @@ class CopThiefSDK:
         return reporter.send_report(report.to_json())
 
     def parse_message(self, text: str) -> BeliefUpdate:
-        """Parse an opponent's free-text message into an actionable belief.
-
-        Uses the configured LLM through the gatekeeper, falling back to the
-        offline heuristic parser when no provider is wired.
-        """
-        parser = NLParser(llm=self._llm, gatekeeper=self._gatekeeper)
-        return parser.parse(text)
+        """Parse opponent free text into a belief (LLM via gatekeeper, heuristic fallback)."""
+        return NLParser(self._llm, self._gatekeeper).parse(text)
 
     def build_internal_report(
         self,

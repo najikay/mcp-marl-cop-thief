@@ -1,7 +1,12 @@
 """Orchestrator: drives the turn loop and aggregates results."""
 
 from .bonus_series import BonusSeriesController, BonusSeriesResult, GroupSide
-from .game_loop import GameLoopController, GameResult, SubGameRecord
+from .game_loop import (
+    GameLoopController,
+    GameResult,
+    SubGameRecord,
+    record_sub_game_frames,
+)
 from .mcp_client import MCPAgentClient
 from .remote_game import RemoteGameController, run_remote_game
 
@@ -14,5 +19,6 @@ __all__ = [
     "MCPAgentClient",
     "RemoteGameController",
     "SubGameRecord",
+    "record_sub_game_frames",
     "run_remote_game",
 ]
