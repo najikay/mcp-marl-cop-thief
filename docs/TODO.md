@@ -474,6 +474,23 @@
 - [ ] **#326** Dry-run task: one real send from a private test inbox before the examiner address.
 - [ ] **#327** Phase-8 review: secrets clean, JSON-only enforced, single-send verified.
 
+### 8.E SubmissionSafetyGuard — SEC-03 burner loopback interlock (`src/cop_thief/reporting/guard.py`)
+- [ ] **#406** Create `reporting/guard.py` skeleton: `SubmissionSafetyGuard` + typing; safety-interlock boolean (`burner_verified`).
+- [ ] **#407** Implement the interlock gate: refuse the live Examiner send until a successful burner→burner dry-run has flipped the boolean.
+- [ ] **#408** Add validation hook: burner & examiner addresses are config-sourced (`reporting.burner_email` / `reporting.examiner_email`); fail-closed when interlock is false.
+- [ ] **#409** Write positive test `test_guard.py` (interlock true → live allowed; false → blocked with clear error).
+- [ ] **#410** Edge-case fixture (double-arm idempotent; reset) + inject Ruff-compliant docstrings.
+
+### 8.F Observer GUI — UI-01 native tkinter window (`src/cop_thief/gui/window.py`)
+- [ ] **#411** Create `gui/window.py` skeleton (stdlib `tkinter`, zero extra deps) + typing; omitted from coverage.
+- [ ] **#412** Implement the left 5×5 (config-driven) `Canvas` layout with cell grid.
+- [ ] **#413** Implement agent/barrier rendering: **Blue = Cop, Red = Thief, Black = active Barriers**, re-drawn from `DecPomdpGameState`.
+- [ ] **#414** Implement the right-hand scrolling text feed live-streaming the NL prose banter.
+- [ ] **#415** Implement the thread-safe queue consumer (`queue.Queue` + `after()` polling) — the GUI never blocks the game loop.
+- [ ] **#416** Wire an observer hook so each `execute_single_turn_cycle` tick pushes `(state, prose)` onto the GUI queue.
+- [ ] **#417** Write a positive visual unit test (headless-safe): push a state+prose, assert canvas items/colours and feed text; skip gracefully when no display is available.
+- [ ] **#418** Inject Ruff-compliant docstrings; confirm ≤150 LOC (split renderer if needed).
+
 ---
 
 ## PHASE 9 — Sanity-Check Progression Run (2×2, 3×3, 4×4, 5×5)
@@ -511,6 +528,13 @@
 - [ ] **#351** Author/update scientific `README.md`: Dec-POMDP tuple, orchestration-challenge analysis, graphs.
 - [ ] **#352** Phase-9 review: all four stages pass in order; results archived.
 
+### 9.E Burner Loopback Dry-Run — SEC-03 execution
+- [ ] **#419** Register the burner sandbox address `mcp.marl.telemetry@gmail.com` as `reporting.burner_email` (config) and an OAuth Test User.
+- [ ] **#420** Execute the burner→burner JSON handshake dry-run via the Gmail API (`mcp.marl.telemetry@gmail.com` → itself).
+- [ ] **#421** Verify Gmail-API formatting/auth on the loopback and assert the `SubmissionSafetyGuard` interlock flips to `burner_verified=True`.
+- [ ] **#422** Only after a successful loopback, enable the live Examiner send path (`rmisegal+uoh26b@gmail.com`).
+- [ ] **#423** Integration test `test_burner_loopback.py` (mocked Gmail): live send blocked pre-loopback, allowed post-loopback; archive the dry-run log to `results/`.
+
 ---
 
 ## PHASE 10 — Public Cloud Tunneling (ngrok/Localtonet) & Bonus Inter-Group Matchmaking Prep
@@ -524,6 +548,15 @@
 - [ ] **#358** Configure outbound-only HTTPS (hybrid LLM model; no inbound ports).
 - [ ] **#359** Validation test: public endpoints reject calls without a valid token.
 - [ ] **#360** Smoke test: orchestrator drives a full game against the cloud URLs.
+
+### 10.A (CLOUD-02) Public HTTPS Tunnel provisioning & security assertions
+- [ ] **#424** Install/configure **Cloudflare Tunnel** (`cloudflared`) — or **Localtonet** as fallback — for two persistent HTTPS endpoints.
+- [ ] **#425** Map `https://cop.team-domain.trycloudflare.com` → `localhost:8001` and `https://thief.team-domain.trycloudflare.com` → `localhost:8002`.
+- [ ] **#426** Set `config/setup.json` `servers.cop.local_port=8001` / `servers.thief.local_port=8002` to align with the tunnel mapping.
+- [ ] **#427** Enforce revocable bearer tokens on both endpoints via `SecurityMiddleware` (constant-time `compare_digest`).
+- [ ] **#428** Security assertion test: a call with a missing/invalid token is rejected (fail-closed).
+- [ ] **#429** Security assertion test: HTTPS endpoint reachable; a rotated token invalidates prior access (revocation works).
+- [ ] **#430** Document the tunnel provisioning + token-revoke runbook in `README.md` / `assets/`.
 
 ### 10.B Tunneling options (when exposing a local LLM/server)
 - [ ] **#361** Implement ngrok path: Traffic Policy / Basic Auth + Authorization header.
@@ -559,5 +592,5 @@
 
 ---
 
-*End of TODO — 405 numbered tasks across the 10 sequential engineering phases (incl. the token-budget mechanism, #387–#405).*
+*End of TODO — 430 numbered tasks across the 10 sequential engineering phases (incl. the token-budget mechanism #387–#405 and the Homestretch expansion: SubmissionSafetyGuard #406–#410, Observer GUI #411–#418, Burner Loopback #419–#423, CLOUD-02 tunnels #424–#430).*
 *Update this file continuously during development (Guidelines §2.5, step 6).*

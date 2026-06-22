@@ -92,6 +92,9 @@ Secondary audiences: **rival groups** (bonus matchmaking partners) and **future 
 | K5 | Draw avoidance | Strategy explicitly avoids draws (deterministic tie-break / capture-seeking) | Strategy test on adversarial fixtures |
 | K6 | Report delivery | Exactly **one** email, **JSON body only** (no free text), to the examiner address, via Gmail API | Mail-send integration test (mocked + one real dry-run) |
 | K7 | Scoring correctness | Per-sub-game and totals match the scoring table exactly; scoring values are **immutable** and config-sourced | Unit tests over the scoring matrix |
+| K8 (**UI-01**) | Real-time observability GUI | Native zero-dependency `tkinter` window renders the live grid + scrolling NL banter feed without blocking the game loop | Visual unit test + manual run |
+| K9 (**SEC-03**) | Burner sandbox dry-run | Final JSON handshake is first sent **burner→burner** (`mcp.marl.telemetry@gmail.com` self-loop) and verified before the live Examiner address is ever contacted | Loopback dry-run integration test |
+| K10 (**CLOUD-02**) | Persistent public HTTPS endpoints | Two revocable-token-secured HTTPS URLs (Cloudflare Tunnel / Localtonet) front the local FastMCP servers | Security assertion tests (token required; HTTPS reachable) |
 
 > **Acceptance gate K3 is non-negotiable:** if the two agents' end-game JSON reports do **not** agree,
 > the deliverable fails this criterion (and, in the bonus, both groups score **0** for that series).
@@ -176,6 +179,9 @@ Per single sub-game (config keys in parentheses):
 | F-16 | Mutual-agreement reconciliation: both agents converge on identical outcome before sending. |
 | F-17 | GUI (optional but in scope) visualizing real-time agent/barrier movement and (bonus) the Q-Table. |
 | F-18 | CLI entrypoint to run a game at a given grid size, all via `uv run`. |
+| **UI-01** | **Native `tkinter` real-time observer GUI** — zero extra dependencies. Left pane: a 5×5 (config-driven) `Canvas` updating agent coordinates each tick — **Blue = Cop, Red = Thief, Black = active Barriers**. Right pane: a scrolling text feed live-streaming the natural-language prose banter between the agents. The GUI consumes updates via a **thread-safe queue** and never blocks the game loop. |
+| **SEC-03** | **Sandbox Loopback Guard** — the Gmail Reporter supports a *"Burner Sandbox Dry-Run"* mode that sends the final JSON handshake from `mcp.marl.telemetry@gmail.com` **to itself** (`mcp.marl.telemetry@gmail.com`) to validate Gmail-API formatting/auth. The live Examiner address (`rmisegal+uoh26b@gmail.com`) is contacted **only** after a successful burner loopback (enforced by a `SubmissionSafetyGuard` interlock). |
+| **CLOUD-02** | **Persistent public HTTPS endpoints** — provision two durable public HTTPS URLs via **Cloudflare Tunnels (`cloudflared`)** or **Localtonet**, fronting the local FastMCP instances and secured by **revocable bearer tokens** (one Cop URL, one Thief URL). |
 
 ### 4.2 Non-Functional Requirements
 | ID | Category | Requirement |
@@ -242,9 +248,9 @@ The following are **explicitly out of scope** for this deliverable:
 4. **M4 — SDK layer** (Phase 4).
 5. **M5 — Cop & Thief FastMCP servers** (Phases 5–6).
 6. **M6 — Orchestrator + NL parser** (Phase 7).
-7. **M7 — OAuth2 desktop client + Gmail JSON reporter** (Phase 8).
-8. **M8 — Sanity progression 2×2 → 5×5** (Phase 9).
-9. **M9 — Cloud tunneling + bonus matchmaking prep** (Phase 10).
+7. **M7 — OAuth2 desktop client + Gmail JSON reporter** (Phase 8), including the **SEC-03 Sandbox Loopback Guard** (`SubmissionSafetyGuard`, Phase 8.E) and the **UI-01 native `tkinter` observer GUI** (Phase 8.F).
+8. **M8 — Sanity progression 2×2 → 5×5** (Phase 9), culminating in the **SEC-03 Burner Loopback Dry-Run** (Phase 9.E).
+9. **M9 — Cloud tunneling + bonus matchmaking prep** (Phase 10): provision the **CLOUD-02** persistent public HTTPS tunnels (Cloudflare/Localtonet) with revocable-token security assertions (Phase 10.A).
 
 ---
 

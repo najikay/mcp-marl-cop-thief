@@ -41,8 +41,10 @@
 | **SDK Layer** | Single entrypoint to all domain logic for every consumer (servers, CLI, GUI, tests). | Python |
 | **Domain Core** | Grid state machine, rules, scoring, strategy, NL parsing, report builders. | Python |
 | **Gmail Reporter** | OAuth2 desktop flow + Gmail-API JSON-only send. | google-api-python-client |
+| **Submission Safety Guard** (SEC-03) | Interlock enforcing a successful **burner→burner loopback** dry-run before the live Examiner address is ever contacted. | Python |
 | **Config Store** | Versioned JSON/YAML: game params, rate limits, logging. | `config/` |
-| **GUI (optional)** | Real-time grid + Q-Table view. | (e.g.) Streamlit/Tk |
+| **Observer GUI** (UI-01) | Native **zero-dependency `tkinter`** window: left 5×5 `Canvas` (Blue=Cop, Red=Thief, Black=Barriers) + right scrolling NL-banter feed; fed by a **thread-safe queue**, never blocks the loop. | `tkinter` (stdlib) |
+| **Public Tunnels** (CLOUD-02) | Two persistent HTTPS URLs (Cloudflare `cloudflared` / Localtonet) → local FastMCP, revocable-token secured. | cloudflared / localtonet |
 
 **Routing of the LLM (3 supported approaches; default = #1, hybrid for local dev = #3):**
 1. **Cloud API** — orchestrator calls a cloud LLM with an API key (stable, fast, cheap on short msgs).
@@ -201,6 +203,9 @@ marl-cop-thief/
 │       │   ├── __init__.py
 │       │   ├── oauth_flow.py             # OAuth2 desktop flow
 │       │   └── gmail_reporter.py         # Gmail-API JSON-only send
+│       ├── reporting/
+│       │   ├── __init__.py
+│       │   └── guard.py                  # SubmissionSafetyGuard (SEC-03 burner loopback interlock)
 │       ├── config/
 │       │   ├── __init__.py
 │       │   ├── config_manager.py
@@ -208,7 +213,8 @@ marl-cop-thief/
 │       │   └── models.py                 # BaseConfigModel + typed models
 │       └── gui/                          # optional, omitted from coverage
 │           ├── __init__.py
-│           └── app.py
+│           ├── app.py
+│           └── window.py                 # UI-01 tkinter Observer Canvas (5x5 grid + NL feed, thread-safe queue)
 ├── tests/
 │   ├── conftest.py                       # shared fixtures
 │   ├── unit/                             # mirrors src/ structure
@@ -334,6 +340,21 @@ Full detail in [`PRD_gatekeeper.md`](./PRD_gatekeeper.md).
   (cop, thief), token-authenticated and revocable; outbound-only HTTPS for the hybrid LLM model.
 - **Tunneling (if exposing local):** ngrok Traffic Policy / Basic Auth, Localtonet, or Nginx
   (SSL termination + htpasswd + Certbot + firewall on the Ollama port).
+- **CLOUD-02 — Persistent public HTTPS tunnels (chosen approach):** two durable tunnels front the
+  two local FastMCP servers, each guarded by a revocable bearer token (`COP_MCP_TOKEN` /
+  `THIEF_MCP_TOKEN`) validated by `SecurityMiddleware` (constant-time `compare_digest`):
+
+  | Public HTTPS URL | → local target | Server | Token env |
+  |------------------|----------------|--------|-----------|
+  | `https://cop.team-domain.trycloudflare.com`   | `localhost:8001` | Cop server   | `COP_MCP_TOKEN`   |
+  | `https://thief.team-domain.trycloudflare.com` | `localhost:8002` | Thief server | `THIEF_MCP_TOKEN` |
+
+  Provision via **Cloudflare Tunnel** (`cloudflared tunnel --url http://localhost:8001`) or
+  **Localtonet** as the fallback. Traffic is outbound-only (no inbound ports opened); HTTPS is
+  terminated by the tunnel provider; tokens are revoked by rotating the env value and restarting.
+  Security assertion tests confirm: (a) calls without a valid token are rejected, (b) the HTTPS
+  endpoint is reachable, (c) a rotated token invalidates prior access. *(Local ports 8001/8002 align
+  with the tunnel mapping; `config/setup.json` `servers.*.local_port` is set accordingly at deploy.)*
 - **Secrets:** `.env` only (git-ignored); `.env-example` committed; `credentials.json`/`token.json`
   git-ignored; periodic key rotation; least-privilege scopes (`gmail.modify`).
 
