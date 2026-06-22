@@ -1,0 +1,23 @@
+# Strictly Private Assignment Source Materials
+material/
+*.pdf
+*.docx
+*.txt
+
+# Google API Secrets & Telemetry (Zero-Tolerance Security)
+credentials.json
+token.json
+.env
+*.pem
+*.key
+
+# uv / Python / IDE Virtual Environments
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.vscode/
+.cursor/
