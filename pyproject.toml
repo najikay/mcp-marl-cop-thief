@@ -17,6 +17,7 @@ cop-thief = "cop_thief.main:main"
 cop-server = "cop_thief.servers.run_server:run_cop"
 thief-server = "cop_thief.servers.run_server:run_thief"
 cop-thief-match = "cop_thief.run_match:main"
+cop-thief-train = "cop_thief.run_train:main"
 
 [dependency-groups]
 dev = [
@@ -51,6 +52,7 @@ omit = [
     "**/gui/*",
     "**/run_server.py",
     "**/run_match.py",
+    "**/run_train.py",
     "**/oauth_flow.py",
 ]
 

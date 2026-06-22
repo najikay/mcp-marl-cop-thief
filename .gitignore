@@ -21,3 +21,6 @@ __pycache__/
 htmlcov/
 .vscode/
 .cursor/
+
+# Run artifacts (trained tables, reports)
+results/

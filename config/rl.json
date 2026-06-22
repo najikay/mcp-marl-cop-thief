@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "alpha": 0.2,
+  "gamma": 0.9,
+  "epsilon": 0.3,
+  "epsilon_min": 0.02,
+  "epsilon_decay": 0.999,
+  "reward_capture": 20.0,
+  "reward_step": -0.5,
+  "reward_escape": -10.0
+}
