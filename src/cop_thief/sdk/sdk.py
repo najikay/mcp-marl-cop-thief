@@ -7,6 +7,7 @@ to the infrastructure (gatekeeper, LLM) via dependency injection.
 
 from __future__ import annotations
 
+from ..auth import GmailReporter
 from ..config import ConfigManager
 from ..config.models import GameConfig
 from ..domain.agents import CopAgent, ThiefAgent
@@ -108,6 +109,11 @@ class CopThiefSDK:
     def propose_turn(self, self_cell: tuple[int, int], role: str, belief=None) -> dict:
         """Decide one MCP turn from the agent's own cell and current belief."""
         return _propose_turn(self._config, self._encoder, tuple(self_cell), role, belief)
+
+    def send_report(self, report, gmail_service, recipient: str | None = None) -> dict:
+        """Email a report's JSON body via the Gmail API (one email, JSON only)."""
+        reporter = GmailReporter(gmail_service, self._gatekeeper, recipient)
+        return reporter.send_report(report.to_json())
 
     def parse_message(self, text: str) -> BeliefUpdate:
         """Parse an opponent's free-text message into an actionable belief.

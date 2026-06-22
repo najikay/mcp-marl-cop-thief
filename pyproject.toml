@@ -7,6 +7,9 @@ requires-python = ">=3.10"
 license = { text = "All Rights Reserved (course submission)" }
 dependencies = [
     "fastmcp>=3.4.2",
+    "google-api-python-client>=2.197.0",
+    "google-auth-httplib2>=0.4.0",
+    "google-auth-oauthlib>=1.4.0",
 ]
 
 [project.scripts]
@@ -41,7 +44,7 @@ pythonpath = ["src"]
 
 [tool.coverage.run]
 source = ["src"]
-omit = ["**/main.py", "tests/*", "**/gui/*", "**/run_server.py"]
+omit = ["**/main.py", "tests/*", "**/gui/*", "**/run_server.py", "**/oauth_flow.py"]
 
 [tool.coverage.report]
 fail_under = 90
