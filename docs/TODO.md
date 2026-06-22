@@ -136,16 +136,16 @@
 - [ ] **#90** Wire `uv run pytest --cov` and confirm the gate fails under 85 %.
 
 ### 2.D ConfigManager
-- [ ] **#91** Create `config/models.py` skeleton: `BaseConfigModel` + typed `GameConfig`, `ScoringConfig`.
-- [ ] **#92** Add typing & defaults matching PRD §3.4 / config Table 3.
-- [ ] **#93** Create `config/config_manager.py` skeleton (load JSON/YAML, single source of truth).
-- [ ] **#94** Implement `ConfigManager.get(key, default)` core logic (no hardcoding downstream).
-- [ ] **#95** Implement hierarchical config resolution (file → defaults → constants).
-- [ ] **#96** Add validation hook: schema validation + type coercion + helpful errors.
-- [ ] **#97** Add validation hook: reject unknown/missing required keys.
-- [ ] **#98** Write positive test `test_config_manager.py` loading `setup.json`.
-- [ ] **#99** Write edge-case fixture: missing file, malformed JSON, wrong types.
-- [ ] **#100** Inject docstrings (why config-driven; cite Guidelines §7.2/§7.3).
+- [x] **#91** Create `config/models.py` skeleton: `BaseConfigModel` + typed `GameConfig`, `ScoringConfig`.
+- [x] **#92** Add typing & defaults matching PRD §3.4 / config Table 3.
+- [x] **#93** Create `config/config_manager.py` skeleton (load JSON/YAML, single source of truth).
+- [x] **#94** Implement `ConfigManager.get(key, default)` core logic (no hardcoding downstream).
+- [x] **#95** Implement hierarchical config resolution (file → defaults → constants).
+- [x] **#96** Add validation hook: schema validation + type coercion + helpful errors.
+- [x] **#97** Add validation hook: reject unknown/missing required keys.
+- [x] **#98** Write positive test `test_config_manager.py` loading `setup.json`.
+- [x] **#99** Write edge-case fixture: missing file, malformed JSON, wrong types.
+- [x] **#100** Inject docstrings (why config-driven; cite Guidelines §7.2/§7.3).
 
 ### 2.E setup.json & friends
 - [x] **#101** Author `config/setup.json` with `version`, `grid_size`, `max_moves`, `num_games`, `max_barriers`, `scoring{...}`.
@@ -154,13 +154,13 @@
 - [ ] **#104** Edge fixture: 2×2 and 3×2 config variants for sanity stages (no code change).
 
 ### 2.F VersionGuard
-- [ ] **#105** Create `config/version_guard.py` skeleton.
-- [ ] **#106** Create `infra` version source `version.py` value `1.00` (code version).
-- [ ] **#107** Implement startup validation comparing code vs each config `version`.
-- [ ] **#108** Add validation hook: fail fast on version mismatch with clear message.
-- [ ] **#109** Write positive test `test_version_guard.py`.
-- [ ] **#110** Write edge-case fixture: mismatched config version raises.
-- [ ] **#111** Inject docstrings (Guidelines §8.1 versioning table).
+- [x] **#105** Create `config/version_guard.py` skeleton.
+- [x] **#106** Create `infra` version source `version.py` value `1.00` (code version).
+- [x] **#107** Implement startup validation comparing code vs each config `version`.
+- [x] **#108** Add validation hook: fail fast on version mismatch with clear message.
+- [x] **#109** Write positive test `test_version_guard.py`.
+- [x] **#110** Write edge-case fixture: mismatched config version raises.
+- [x] **#111** Inject docstrings (Guidelines §8.1 versioning table).
 
 ### 2.G Secrets & git hygiene
 - [x] **#112** Create `.env-example` with placeholders (LLM_API_KEY, GMAIL_*).
