@@ -1,6 +1,7 @@
 """CLI entrypoint: run a full game and print the internal JSON report.
 
-Usage (always via uv)::
+Imports **only** the SDK (no domain/infra imports) to honour the single-entrypoint
+boundary (PRD §E3). Usage (always via uv)::
 
     uv run cop-thief
     uv run cop-thief --config config/setup.json --group-name Team-Alpha
@@ -11,11 +12,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from .config import ConfigManager
-from .domain.agents import CopAgent, ThiefAgent
-from .domain.reporting import InternalReport
-from .domain.strategy import HeuristicStrategy
-from .orchestrator import GameLoopController
+from .sdk import CopThiefSDK
 
 
 def _parse_args() -> argparse.Namespace:
@@ -32,16 +29,15 @@ def _parse_args() -> argparse.Namespace:
 def main() -> None:
     """Load config, play a full game, and emit the internal JSON report."""
     args = _parse_args()
-    config = ConfigManager(args.config).load()
-    cop = CopAgent(HeuristicStrategy())
-    thief = ThiefAgent(HeuristicStrategy())
-    result = GameLoopController(config, cop, thief).play_game()
-    report = InternalReport(
+    sdk = CopThiefSDK.from_config_path(args.config)
+    config = sdk.config
+    result = sdk.play_game()
+    report = sdk.build_internal_report(
+        result,
         group_name=args.group_name,
         github_repo=args.github_repo,
         cop_mcp_url=args.cop_url,
         thief_mcp_url=args.thief_url,
-        result=result,
     )
     rows, cols = config.grid_size
     print(f"# {rows}x{cols} game - cop {result.cop_total} / thief {result.thief_total}")

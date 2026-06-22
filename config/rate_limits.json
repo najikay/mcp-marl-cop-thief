@@ -1,0 +1,26 @@
+{
+  "version": "1.0.0",
+  "services": {
+    "default": {
+      "requests_per_minute": 30,
+      "concurrent_max": 5,
+      "retry_after_seconds": 30,
+      "max_retries": 3,
+      "queue_max_depth": 100
+    },
+    "llm": {
+      "requests_per_minute": 20,
+      "concurrent_max": 3,
+      "retry_after_seconds": 20,
+      "max_retries": 3,
+      "queue_max_depth": 200
+    },
+    "gmail": {
+      "requests_per_minute": 5,
+      "concurrent_max": 1,
+      "retry_after_seconds": 30,
+      "max_retries": 5,
+      "queue_max_depth": 20
+    }
+  }
+}
