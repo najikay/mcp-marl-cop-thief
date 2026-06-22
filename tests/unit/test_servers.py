@@ -46,3 +46,8 @@ def test_token_authorization():
     secured = CopServer(token="s3cret")
     assert secured.authorized("s3cret")
     assert not secured.authorized("wrong")
+
+
+def test_token_wires_auth_verifier_into_app():
+    assert CopServer().app.auth is None  # open server, local dev
+    assert CopServer(token="s3cret").app.auth is not None  # bearer auth required

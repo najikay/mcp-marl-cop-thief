@@ -8,13 +8,22 @@ same orchestrator drives local and cloud servers unchanged.
 from __future__ import annotations
 
 from fastmcp import Client
+from fastmcp.client.transports import StreamableHttpTransport
 
 
 class MCPAgentClient:
     """Call one agent server's contract tools over MCP."""
 
-    def __init__(self, target) -> None:
-        self._client = Client(target)
+    def __init__(self, target, token: str | None = None) -> None:
+        self._client = Client(self._transport(target, token))
+
+    @staticmethod
+    def _transport(target, token: str | None):
+        """Attach a bearer token for URL targets; in-memory apps need none."""
+        if token and isinstance(target, str):
+            headers = {"Authorization": f"Bearer {token}"}
+            return StreamableHttpTransport(target, headers=headers)
+        return target
 
     async def __aenter__(self) -> MCPAgentClient:
         await self._client.__aenter__()

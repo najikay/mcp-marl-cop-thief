@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 
 from fastmcp import FastMCP
+from fastmcp.server.auth import StaticTokenVerifier
 
 from ..sdk import CopThiefSDK
 from .session import AgentSession
@@ -29,8 +30,14 @@ class BaseMCPServer:
         self._sdk = sdk or CopThiefSDK(partial_observability=True)
         self._session = AgentSession(self._sdk, role)
         self._token = token or os.environ.get("MCP_TOKEN")
-        self.app = FastMCP(name or f"{role}-server")
+        self.app = FastMCP(name or f"{role}-server", auth=self._auth())
         self._register()
+
+    def _auth(self) -> StaticTokenVerifier | None:
+        """Require a bearer token on every call when one is configured."""
+        if not self._token:
+            return None  # open server (local dev only)
+        return StaticTokenVerifier(tokens={self._token: {"client_id": self.role}})
 
     def authorized(self, token: str | None) -> bool:
         """True when no token is configured, or the supplied token matches."""

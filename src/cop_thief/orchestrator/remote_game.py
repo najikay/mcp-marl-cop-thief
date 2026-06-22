@@ -25,10 +25,19 @@ from .mcp_client import MCPAgentClient
 class RemoteGameController:
     """Play a full game by driving two remote agent servers via MCP."""
 
-    def __init__(self, config: GameConfig, cop_target, thief_target) -> None:
+    def __init__(
+        self,
+        config: GameConfig,
+        cop_target,
+        thief_target,
+        cop_token: str | None = None,
+        thief_token: str | None = None,
+    ) -> None:
         self._config = config
         self._cop_target = cop_target
         self._thief_target = thief_target
+        self._cop_token = cop_token
+        self._thief_token = thief_token
         rows, cols = config.grid_size
         self._grid = Grid(rows, cols)
         self._rules = RulesEngine(self._grid, config.max_moves)
@@ -39,8 +48,8 @@ class RemoteGameController:
         """Connect to both servers and play ``num_games`` sub-games."""
         rng = rng or random.Random(self._config.seed)
         async with (
-            MCPAgentClient(self._cop_target) as cop,
-            MCPAgentClient(self._thief_target) as thief,
+            MCPAgentClient(self._cop_target, self._cop_token) as cop,
+            MCPAgentClient(self._thief_target, self._thief_token) as thief,
         ):
             records = []
             for index in range(1, self._config.num_games + 1):
@@ -85,7 +94,13 @@ class RemoteGameController:
         return None
 
 
-def run_remote_game(config: GameConfig, cop_target, thief_target) -> GameResult:
+def run_remote_game(
+    config: GameConfig,
+    cop_target,
+    thief_target,
+    cop_token: str | None = None,
+    thief_token: str | None = None,
+) -> GameResult:
     """Synchronous convenience wrapper around :meth:`RemoteGameController.play_game`."""
-    controller = RemoteGameController(config, cop_target, thief_target)
+    controller = RemoteGameController(config, cop_target, thief_target, cop_token, thief_token)
     return asyncio.run(controller.play_game())

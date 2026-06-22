@@ -9,6 +9,7 @@ Excluded from coverage (network entrypoint). Usage::
 from __future__ import annotations
 
 import argparse
+import os
 from pathlib import Path
 
 from .sdk import CopThiefSDK
@@ -19,6 +20,8 @@ def _parse_args() -> argparse.Namespace:  # pragma: no cover
     parser.add_argument("--config", default=None)
     parser.add_argument("--cop-url", required=True, help="Cop server MCP URL")
     parser.add_argument("--thief-url", required=True, help="Thief server MCP URL")
+    parser.add_argument("--cop-token", default=os.environ.get("MCP_COP_TOKEN"))
+    parser.add_argument("--thief-token", default=os.environ.get("MCP_THIEF_TOKEN"))
     parser.add_argument("--group-name", default="Team-Alpha")
     parser.add_argument("--github-repo", default="https://github.com/example/marl-cop-thief")
     parser.add_argument("--out", default=None)
@@ -29,7 +32,9 @@ def main() -> None:  # pragma: no cover
     """Play a remote game and print the internal JSON report."""
     args = _parse_args()
     sdk = CopThiefSDK.from_config_path(args.config)
-    result = sdk.play_remote_game(args.cop_url, args.thief_url)
+    result = sdk.play_remote_game(
+        args.cop_url, args.thief_url, args.cop_token, args.thief_token
+    )
     report = sdk.build_internal_report(
         result, args.group_name, args.github_repo, args.cop_url, args.thief_url
     )
