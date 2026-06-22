@@ -1,0 +1,131 @@
+{
+  "version": "1.00",
+  "description": "Immutable game parameters and runtime routing for marl-cop-thief (Dec-POMDP Cop & Thief).",
+
+  "game": {
+    "grid_size": [5, 5],
+    "max_moves": 25,
+    "num_games": 6,
+    "max_barriers": 5,
+    "allow_diagonal": true,
+    "start_mode": "random",
+    "random_seed": null,
+    "thief_moves_first": true
+  },
+
+  "scoring": {
+    "comment": "Mapped exactly from ex06 Table 1. Values are IMMUTABLE and may not change.",
+    "cop_win": 20,
+    "thief_win": 10,
+    "cop_loss": 5,
+    "thief_loss": 5,
+    "full_game_max_per_group": 90,
+    "full_game_min_per_group": 30
+  },
+
+  "servers": {
+    "cop": {
+      "mode": "cloud",
+      "url": "https://cop-mcp.prefect.run",
+      "auth_env_var": "COP_MCP_TOKEN",
+      "local_port": 8101
+    },
+    "thief": {
+      "mode": "cloud",
+      "url": "https://thief-mcp.prefect.run",
+      "auth_env_var": "THIEF_MCP_TOKEN",
+      "local_port": 8102
+    }
+  },
+
+  "llm_routing": {
+    "comment": "Dual-LLM failover. Gatekeeper tries primary, falls back on exhausted retries / hard errors.",
+    "primary": {
+      "provider": "DEEPSEEK",
+      "base_url": "https://api.deepseek.com",
+      "model": "deepseek-chat",
+      "api_key_env_var": "DEEPSEEK_API_KEY",
+      "timeout_seconds": 60
+    },
+    "fallback": {
+      "provider": "ANTHROPIC",
+      "base_url": "https://api.anthropic.com",
+      "model": "claude-3-5-sonnet-20241022",
+      "api_key_env_var": "ANTHROPIC_API_KEY",
+      "timeout_seconds": 60
+    }
+  },
+
+  "nl": {
+    "encoder": {
+      "tone": "terse",
+      "taunt": true,
+      "verbosity": "low",
+      "deception_level": 0.4,
+      "max_tokens": 120,
+      "prompt_template": "prompts/encoder_default.txt"
+    },
+    "parser": {
+      "min_confidence": 0.45,
+      "max_tokens": 200,
+      "prompt_template": "prompts/parser_default.txt"
+    },
+    "diplomat": {
+      "max_rounds": 3,
+      "prompt_template": "prompts/diplomat_default.txt"
+    }
+  },
+
+  "rl": {
+    "enabled": true,
+    "alpha": 0.1,
+    "gamma": 0.9,
+    "epsilon_start": 1.0,
+    "epsilon_min": 0.05,
+    "epsilon_decay": 0.995,
+    "epsilon_schedule": "exponential",
+    "q_confidence_margin": 0.05,
+    "barrier_mode": "bucketed",
+    "exact_barrier_max_cells": 9,
+    "barrier_value_threshold": 1,
+    "rewards": {
+      "r_capture": 20,
+      "r_evasion": 10,
+      "r_caught": -10,
+      "r_step": -1,
+      "r_invalid": -5,
+      "r_corner": -0.5
+    }
+  },
+
+  "vision": {
+    "comment": "Partial-observability band used by Tier-2 Vision-Hunting and sanity stage 3.",
+    "radius": 2,
+    "distance_bands": { "adjacent": 1, "near": 2, "far": 4 }
+  },
+
+  "reporting": {
+    "examiner_email": "rmisegal+uoh26b@gmail.com",
+    "subject_template": "[marl-cop-thief] Game Report — {group_name} — {timestamp}",
+    "timezone": "Asia/Jerusalem",
+    "json_only_body": true,
+    "single_send_per_game": true
+  },
+
+  "token_budget": {
+    "version": "1.00",
+    "rates": { "input_per_million_usd": 0.15, "output_per_million_usd": 0.60 },
+    "lifecycle_budget": { "input_tokens": 1500000, "output_tokens": 180000 },
+    "ceiling_usd": 5.00,
+    "warn_ratio": 0.80,
+    "per_turn_estimate": { "input": 850, "output": 90 },
+    "enforce_ceiling": true,
+    "usage_file": "data/token_usage.json"
+  },
+
+  "_economics_note": "Per-provider USD pricing ledger (per million tokens). Migrated out of code per Guidelines §7.2 (no hardcoding).",
+  "economics": {
+    "DEEPSEEK": { "input": 0.15, "output": 0.60 },
+    "ANTHROPIC": { "input": 3.00, "output": 15.00 }
+  }
+}

@@ -174,7 +174,7 @@
 ## PHASE 3 — The API Gatekeeper & Rate-Limiting Engine
 
 ### 3.A Companion PRD
-- [ ] **#117** Author [`PRD_gatekeeper.md`](./PRD_gatekeeper.md): FIFO, rate limits, retry, backpressure, criteria.
+- [x] **#117** Author [`PRD_gatekeeper.md`](./PRD_gatekeeper.md): FIFO, rate limits, retry, backpressure, criteria.
 
 ### 3.B RateLimiter (RateLimitMixin)
 - [ ] **#118** Create `infra/rate_limiter.py` skeleton + typing.
@@ -197,24 +197,24 @@
 
 ### 3.D FIFO Queue & QueueMonitor
 - [ ] **#133** Create `infra/queue_monitor.py` skeleton; define `QueueStatus` dataclass.
-- [ ] **#134** Implement bounded FIFO queue (`queue_max_depth` from config).
+- [x] **#134** Implement bounded FIFO queue (`queue_max_depth` from config).
 - [ ] **#135** Implement drain worker releasing on window reset.
-- [ ] **#136** Implement backpressure signal when queue full (no drop, no crash).
+- [x] **#136** Implement backpressure signal when queue full (no drop, no crash).
 - [ ] **#137** Implement `get_queue_status()` (depth, stats).
-- [ ] **#138** Add validation hook: thread-safe access (lock / `queue.Queue`).
+- [x] **#138** Add validation hook: thread-safe access (lock / `queue.Queue`).
 - [ ] **#139** Write positive test `test_queue_monitor.py` (enqueue/drain order preserved).
-- [ ] **#140** Write edge-case fixture: overflow raises backpressure, never crashes.
+- [x] **#140** Write edge-case fixture: overflow raises backpressure, never crashes.
 - [ ] **#141** Inject docstrings.
 
 ### 3.E ApiGatekeeper
-- [ ] **#142** Create `infra/gatekeeper.py` skeleton: `ApiGatekeeper(config: RateLimitConfig)`.
-- [ ] **#143** Implement `execute(api_call, *args, **kwargs)` composing rate-limit → queue → retry → log.
+- [x] **#142** Create `infra/gatekeeper.py` skeleton: `ApiGatekeeper(config: RateLimitConfig)`.
+- [x] **#143** Implement `execute(api_call, *args, **kwargs)` composing rate-limit → queue → retry → log.
 - [ ] **#144** Implement per-service routing (`default`, `llm`, `gmail`).
-- [ ] **#145** Add gatekeeper hook: structured logging of every call (monitoring).
+- [x] **#145** Add gatekeeper hook: structured logging of every call (monitoring).
 - [ ] **#146** Add validation hook: forbid any path that bypasses `execute()`.
-- [ ] **#147** Write positive test `test_gatekeeper.py` (call passes through, logged).
+- [x] **#147** Write positive test `test_gatekeeper.py` (call passes through, logged).
 - [ ] **#148** Write edge-case fixture: rate-limited call is queued then executed.
-- [ ] **#149** Write edge-case fixture: full queue → backpressure; transient failure → retried.
+- [x] **#149** Write edge-case fixture: full queue → backpressure; transient failure → retried.
 - [ ] **#150** Inject docstrings mirroring the Guidelines §5.1 interface.
 
 ### 3.F rate_limits.json
@@ -224,25 +224,25 @@
 - [ ] **#154** Phase-3 review: 100 % external calls routed via gatekeeper (design check).
 
 ### 3.G Token Economics, Telemetry & Budget Tracker (NEW mechanism — see [`PRD_token_budget.md`](./PRD_token_budget.md))
-- [ ] **#387** Author [`PRD_token_budget.md`](./PRD_token_budget.md) (math baseline, telemetry contract, ceiling).
-- [ ] **#388** Add `token_budget` block to `config/setup.json` (rates, lifecycle budget, ceiling, warn_ratio, per-turn estimate) — versioned.
+- [x] **#387** Author [`PRD_token_budget.md`](./PRD_token_budget.md) (math baseline, telemetry contract, ceiling).
+- [x] **#388** Add `token_budget` block to `config/setup.json` (rates, lifecycle budget, ceiling, warn_ratio, per-turn estimate) — versioned.
 - [ ] **#389** Create `infra/cost_model.py`: pure `cost(P, C)` from config rates ($0.15/M in, $0.60/M out).
-- [ ] **#390** Create `infra/token_tracker.py` skeleton: thread-safe accumulators + `TelemetrySnapshot` typing.
-- [ ] **#391** Implement `record(service, prompt_tokens, completion_tokens, model, estimated)` with lock.
+- [x] **#390** Create `infra/token_tracker.py` skeleton: thread-safe accumulators + `TelemetrySnapshot` typing.
+- [x] **#391** Implement `record(service, prompt_tokens, completion_tokens, model, estimated)` with lock.
 - [ ] **#392** Implement `status` computation (OK / WARN / CEILING_HIT) vs `warn_ratio`·ceiling and ceiling.
-- [ ] **#393** Implement atomic live-stream snapshot to `data/token_usage.json` (temp + `os.replace`).
+- [x] **#393** Implement atomic live-stream snapshot to `data/token_usage.json` (temp + `os.replace`).
 - [ ] **#394** Implement `snapshot()` + startup reload of accumulators (crash-resumable).
-- [ ] **#395** Wire gatekeeper token-interception hook (`PRD_gatekeeper.md §4`) → `TokenTracker.record` (delegation only).
+- [x] **#395** Wire gatekeeper token-interception hook (`PRD_gatekeeper.md §4`) → `TokenTracker.record` (delegation only).
 - [ ] **#396** Implement estimator fallback (`len/4`, `estimated=True`) when provider omits usage.
 - [ ] **#397** Implement graceful ceiling enforcement: gatekeeper returns `BudgetExceeded` for billable LLM calls when `CEILING_HIT` (no crash; Gmail/mocked still allowed).
 - [ ] **#398** SDK: inject `telemetry` block into `internal_game.json` and `bonus_report.json`.
 - [ ] **#399** Ensure telemetry is **excluded** from the K3 `agreement_view` hash (`PRD_gmail_oauth.md §4.3`).
 - [ ] **#400** Add validation hook: reject negative/garbage token counts (treat as 0 + log).
 - [ ] **#401** Add validation hook: telemetry persistence failures are isolated (never break gameplay).
-- [ ] **#402** Write positive test `test_cost_model.py`: lifecycle 1.5M/180k ⇒ `0.333000` USD.
-- [ ] **#403** Write positive test `test_token_tracker.py`: 150×(850,90) ⇒ 127,500 / 13,500.
-- [ ] **#404** Write edge-case fixture: missing usage → estimate; ceiling-hit → `BudgetExceeded`; concurrent records → no lost updates; atomic-write integrity.
-- [ ] **#405** Inject Ruff-compliant docstrings across token modules.
+- [x] **#402** Write positive test `test_cost_model.py`: lifecycle 1.5M/180k ⇒ `0.333000` USD.
+- [x] **#403** Write positive test `test_token_tracker.py`: 150×(850,90) ⇒ 127,500 / 13,500.
+- [x] **#404** Write edge-case fixture: missing usage → estimate; ceiling-hit → `BudgetExceeded`; concurrent records → no lost updates; atomic-write integrity.
+- [x] **#405** Inject Ruff-compliant docstrings across token modules.
 
 ---
 
