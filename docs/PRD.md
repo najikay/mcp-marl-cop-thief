@@ -255,9 +255,10 @@ JSON-only report via Gmail API; `README.md` contains the formal Dec-POMDP model 
 analysis; and `PRD.md`, `PLAN.md`, `TODO.md` (+ per-mechanism PRDs) are approved.
 
 ## 10. Companion Per-Mechanism PRDs (Guidelines §2.3 — mandatory for each central mechanism)
-- [`PRD_rl_qtable.md`](./PRD_rl_qtable.md) — Tabular Q-Learning strategy (Bellman update, ε-greedy, reward shaping).
-- [`PRD_nl_protocol.md`](./PRD_nl_protocol.md) — Natural-language Dec-POMDP message protocol & LLM parsing.
-- [`PRD_gatekeeper.md`](./PRD_gatekeeper.md) — API Gatekeeper (FIFO, rate limit, retry, backpressure).
-- [`PRD_gmail_oauth.md`](./PRD_gmail_oauth.md) — OAuth2 Desktop client & Gmail JSON reporter.
+- [`PRD_rl_qtable.md`](./PRD_rl_qtable.md) — Tabular Q-Learning strategy (Bellman update, ε-greedy, reward shaping, 3-tier stack).
+- [`PRD_nl_protocol.md`](./PRD_nl_protocol.md) — Natural-language Dec-POMDP message protocol, defensive parser & Diplomat negotiation.
+- [`PRD_gatekeeper.md`](./PRD_gatekeeper.md) — API Gatekeeper (FIFO, rate limit, retry, backpressure, token-interception).
+- [`PRD_gmail_oauth.md`](./PRD_gmail_oauth.md) — OAuth2 Desktop client & Gmail JSON reporter, K3 agreement hashing.
+- [`PRD_token_budget.md`](./PRD_token_budget.md) — **Token economics, real-time telemetry & budget tracker** (architecture expansion).
 
 *End of PRD — approve before proceeding to PLAN.md.*

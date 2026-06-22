@@ -223,6 +223,27 @@
 - [ ] **#153** Edge fixture: zero-depth queue & 1-rpm service behave correctly.
 - [ ] **#154** Phase-3 review: 100 % external calls routed via gatekeeper (design check).
 
+### 3.G Token Economics, Telemetry & Budget Tracker (NEW mechanism — see [`PRD_token_budget.md`](./PRD_token_budget.md))
+- [ ] **#387** Author [`PRD_token_budget.md`](./PRD_token_budget.md) (math baseline, telemetry contract, ceiling).
+- [ ] **#388** Add `token_budget` block to `config/setup.json` (rates, lifecycle budget, ceiling, warn_ratio, per-turn estimate) — versioned.
+- [ ] **#389** Create `infra/cost_model.py`: pure `cost(P, C)` from config rates ($0.15/M in, $0.60/M out).
+- [ ] **#390** Create `infra/token_tracker.py` skeleton: thread-safe accumulators + `TelemetrySnapshot` typing.
+- [ ] **#391** Implement `record(service, prompt_tokens, completion_tokens, model, estimated)` with lock.
+- [ ] **#392** Implement `status` computation (OK / WARN / CEILING_HIT) vs `warn_ratio`·ceiling and ceiling.
+- [ ] **#393** Implement atomic live-stream snapshot to `data/token_usage.json` (temp + `os.replace`).
+- [ ] **#394** Implement `snapshot()` + startup reload of accumulators (crash-resumable).
+- [ ] **#395** Wire gatekeeper token-interception hook (`PRD_gatekeeper.md §4`) → `TokenTracker.record` (delegation only).
+- [ ] **#396** Implement estimator fallback (`len/4`, `estimated=True`) when provider omits usage.
+- [ ] **#397** Implement graceful ceiling enforcement: gatekeeper returns `BudgetExceeded` for billable LLM calls when `CEILING_HIT` (no crash; Gmail/mocked still allowed).
+- [ ] **#398** SDK: inject `telemetry` block into `internal_game.json` and `bonus_report.json`.
+- [ ] **#399** Ensure telemetry is **excluded** from the K3 `agreement_view` hash (`PRD_gmail_oauth.md §4.3`).
+- [ ] **#400** Add validation hook: reject negative/garbage token counts (treat as 0 + log).
+- [ ] **#401** Add validation hook: telemetry persistence failures are isolated (never break gameplay).
+- [ ] **#402** Write positive test `test_cost_model.py`: lifecycle 1.5M/180k ⇒ `0.333000` USD.
+- [ ] **#403** Write positive test `test_token_tracker.py`: 150×(850,90) ⇒ 127,500 / 13,500.
+- [ ] **#404** Write edge-case fixture: missing usage → estimate; ceiling-hit → `BudgetExceeded`; concurrent records → no lost updates; atomic-write integrity.
+- [ ] **#405** Inject Ruff-compliant docstrings across token modules.
+
 ---
 
 ## PHASE 4 — The SDK Layer Encapsulation
@@ -538,5 +559,5 @@
 
 ---
 
-*End of TODO — 386 numbered tasks across the 10 sequential engineering phases.*
+*End of TODO — 405 numbered tasks across the 10 sequential engineering phases (incl. the token-budget mechanism, #387–#405).*
 *Update this file continuously during development (Guidelines §2.5, step 6).*
