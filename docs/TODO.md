@@ -439,14 +439,14 @@
 ## PHASE 8 — OAuth2 Desktop Client & Gmail API JSON Reporter
 
 ### 8.A Companion PRD
-- [ ] **#300** Author [`PRD_gmail_oauth.md`](./PRD_gmail_oauth.md) (desktop OAuth flow, scopes, JSON-only body, criteria).
+- [x] **#300** Author [`PRD_gmail_oauth.md`](./PRD_gmail_oauth.md) (desktop OAuth flow, scopes, JSON-only body, criteria).
 
 ### 8.B Google Cloud setup (manual, documented)
-- [ ] **#301** Create Google Cloud project; open Google Auth Platform.
-- [ ] **#302** Configure audience = External; add the Gmail test account as a **Test User**.
-- [ ] **#303** Enable the Gmail API for the project.
-- [ ] **#304** Under Data access, add scopes `gmail.modify` (+ `calendar` per guide, unused).
-- [ ] **#305** Create an OAuth client of type **Desktop**; download JSON.
+- [x] **#301** Create Google Cloud project; open Google Auth Platform.
+- [x] **#302** Configure audience = External; add the Gmail test account as a **Test User**.
+- [x] **#303** Enable the Gmail API for the project.
+- [x] **#304** Under Data access, add scopes `gmail.modify` (+ `calendar` per guide, unused).
+- [x] **#305** Create an OAuth client of type **Desktop**; download JSON.
 - [ ] **#306** Rename to `credentials.json` in project root; confirm it is git-ignored.
 - [ ] **#307** Document the whole flow with screenshots in `assets/` and README.
 
@@ -475,21 +475,21 @@
 - [ ] **#327** Phase-8 review: secrets clean, JSON-only enforced, single-send verified.
 
 ### 8.E SubmissionSafetyGuard — SEC-03 burner loopback interlock (`src/cop_thief/reporting/guard.py`)
-- [ ] **#406** Create `reporting/guard.py` skeleton: `SubmissionSafetyGuard` + typing; safety-interlock boolean (`burner_verified`).
-- [ ] **#407** Implement the interlock gate: refuse the live Examiner send until a successful burner→burner dry-run has flipped the boolean.
-- [ ] **#408** Add validation hook: burner & examiner addresses are config-sourced (`reporting.burner_email` / `reporting.examiner_email`); fail-closed when interlock is false.
-- [ ] **#409** Write positive test `test_guard.py` (interlock true → live allowed; false → blocked with clear error).
-- [ ] **#410** Edge-case fixture (double-arm idempotent; reset) + inject Ruff-compliant docstrings.
+- [x] **#406** Create `reporting/guard.py` skeleton: `SubmissionSafetyGuard` + typing; safety-interlock boolean (`burner_verified`).
+- [x] **#407** Implement the interlock gate: refuse the live Examiner send until a successful burner→burner dry-run has flipped the boolean.
+- [x] **#408** Add validation hook: burner & examiner addresses are config-sourced (`reporting.burner_email` / `reporting.examiner_email`); fail-closed when interlock is false.
+- [x] **#409** Write positive test `test_guard.py` (interlock true → live allowed; false → blocked with clear error).
+- [x] **#410** Edge-case fixture (double-arm idempotent; reset) + inject Ruff-compliant docstrings.
 
 ### 8.F Observer GUI — UI-01 native tkinter window (`src/cop_thief/gui/window.py`)
-- [ ] **#411** Create `gui/window.py` skeleton (stdlib `tkinter`, zero extra deps) + typing; omitted from coverage.
-- [ ] **#412** Implement the left 5×5 (config-driven) `Canvas` layout with cell grid.
-- [ ] **#413** Implement agent/barrier rendering: **Blue = Cop, Red = Thief, Black = active Barriers**, re-drawn from `DecPomdpGameState`.
-- [ ] **#414** Implement the right-hand scrolling text feed live-streaming the NL prose banter.
-- [ ] **#415** Implement the thread-safe queue consumer (`queue.Queue` + `after()` polling) — the GUI never blocks the game loop.
-- [ ] **#416** Wire an observer hook so each `execute_single_turn_cycle` tick pushes `(state, prose)` onto the GUI queue.
-- [ ] **#417** Write a positive visual unit test (headless-safe): push a state+prose, assert canvas items/colours and feed text; skip gracefully when no display is available.
-- [ ] **#418** Inject Ruff-compliant docstrings; confirm ≤150 LOC (split renderer if needed).
+- [x] **#411** Create `gui/window.py` skeleton (stdlib `tkinter`, zero extra deps) + typing; omitted from coverage.
+- [x] **#412** Implement the left 5×5 (config-driven) `Canvas` layout with cell grid.
+- [x] **#413** Implement agent/barrier rendering: **Blue = Cop, Red = Thief, Black = active Barriers**, re-drawn from `DecPomdpGameState`.
+- [x] **#414** Implement the right-hand scrolling text feed live-streaming the NL prose banter.
+- [x] **#415** Implement the thread-safe queue consumer (`queue.Queue` + `after()` polling) — the GUI never blocks the game loop.
+- [x] **#416** Wire an observer hook so each `execute_single_turn_cycle` tick pushes `(state, prose)` onto the GUI queue.
+- [x] **#417** Write a positive visual unit test (headless-safe): push a state+prose, assert canvas items/colours and feed text; skip gracefully when no display is available.
+- [x] **#418** Inject Ruff-compliant docstrings; confirm ≤150 LOC (split renderer if needed).
 
 ---
 
