@@ -66,6 +66,8 @@ class NLParser:
         return BeliefUpdate(row, col, moved, barrier, min(1.0, cues / 3))
 
     def _parse_via_llm(self, text: str) -> BeliefUpdate | None:
+        # Any LLM-path failure (bad JSON, rate-limit backpressure, outage) is
+        # non-fatal: return None so parse() falls back to the heuristic.
         try:
             raw = self._call(_PROMPT.format(text=text))
             data = json.loads(raw)
@@ -76,7 +78,7 @@ class NLParser:
                 barrier_mentioned=bool(data.get("barrier_mentioned", False)),
                 confidence=float(data.get("confidence", 0.5)),
             )
-        except (ValueError, TypeError, KeyError, json.JSONDecodeError):
+        except Exception:  # noqa: BLE001 - defensive: degrade to heuristic on any error
             return None
 
     def _call(self, prompt: str) -> str:

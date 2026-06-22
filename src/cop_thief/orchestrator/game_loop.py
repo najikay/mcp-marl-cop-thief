@@ -58,28 +58,38 @@ class GameLoopController:
     def play_game(self, rng: random.Random | None = None) -> GameResult:
         """Play ``num_games`` valid sub-games, re-running any technical voids."""
         rng = rng or random.Random(self._config.seed)
-        records: list[SubGameRecord] = []
-        while len(records) < self._config.num_games:
-            record = self._play_sub_game(len(records) + 1, rng)
-            if record.outcome is not SubGameOutcome.VOID_TECHNICAL:
-                records.append(record)
+        records = self.play_sub_games(self._config.num_games, rng)
         cop_total = sum(r.cop_score for r in records)
         thief_total = sum(r.thief_score for r in records)
         return GameResult(sub_games=records, cop_total=cop_total, thief_total=thief_total)
 
+    def play_sub_games(self, count: int, rng: random.Random) -> list[SubGameRecord]:
+        """Play ``count`` valid sub-games, re-running any technical voids."""
+        records: list[SubGameRecord] = []
+        while len(records) < count:
+            record = self._play_sub_game(len(records) + 1, rng)
+            if record.outcome is not SubGameOutcome.VOID_TECHNICAL:
+                records.append(record)
+        return records
+
     def _play_sub_game(self, index: int, rng: random.Random) -> SubGameRecord:
         state = self._machine.initial_state(self._config.random_start, rng)
         mover = self._rules.first_mover()
+        self._cop.reset()
+        self._thief.reset()
         transcript: list[str] = []
+        last_message: str | None = None
         outcome = self._rules.terminal_check(state)
         while outcome is None:
             agent = self._cop if mover is AgentRole.COP else self._thief
+            agent.observe(last_message)  # perceive opponent only via free NL
             turn = agent.take_turn(state, self._rules)
             action = turn.action
             if not self._rules.validate(state, action):
                 action = Action.move(mover, Direction.STAY)  # safe fallback
             state = self._machine.apply(state, action)
             transcript.append(turn.message)
+            last_message = turn.message
             outcome = self._resolve(mover, state)
             mover = self._rules.next_mover(mover)
         cop_score, thief_score = self._scoring.score(outcome)

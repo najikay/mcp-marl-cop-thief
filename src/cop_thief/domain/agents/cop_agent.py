@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from ...constants import ActionType, AgentRole
 from ..action import Action
-from ..nl import NLEncoder
+from ..nl import NLEncoder, NLParser
 from ..strategy import BaseStrategy
 from .base_agent import BaseAgent
 
@@ -12,8 +12,13 @@ from .base_agent import BaseAgent
 class CopAgent(BaseAgent):
     """The Cop: closes distance and reports the result at game end."""
 
-    def __init__(self, strategy: BaseStrategy, encoder: NLEncoder | None = None) -> None:
-        super().__init__(AgentRole.COP, strategy, encoder)
+    def __init__(
+        self,
+        strategy: BaseStrategy,
+        encoder: NLEncoder | None = None,
+        parser: NLParser | None = None,
+    ) -> None:
+        super().__init__(AgentRole.COP, strategy, encoder, parser)
 
     def narrate(self, action: Action) -> str:
         """Pursuit-flavoured free-NL narration."""
