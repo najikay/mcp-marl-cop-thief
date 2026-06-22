@@ -22,6 +22,7 @@ from ..orchestrator import (
     GameLoopController,
     GameResult,
     GroupSide,
+    run_remote_game,
 )
 
 
@@ -56,6 +57,10 @@ class CopThiefSDK:
     def play_game(self) -> GameResult:
         """Play a full game (``num_games`` valid sub-games) and return totals."""
         return GameLoopController(self._config, self.build_cop(), self.build_thief()).play_game()
+
+    def play_remote_game(self, cop_target, thief_target) -> GameResult:
+        """Drive a full game across two remote MCP servers (URLs or apps)."""
+        return run_remote_game(self._config, cop_target, thief_target)
 
     def build_cop(self) -> CopAgent:
         """Construct a Cop agent (belief-driven when partial observability is on)."""

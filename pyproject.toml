@@ -16,6 +16,7 @@ dependencies = [
 cop-thief = "cop_thief.main:main"
 cop-server = "cop_thief.servers.run_server:run_cop"
 thief-server = "cop_thief.servers.run_server:run_thief"
+cop-thief-match = "cop_thief.run_match:main"
 
 [dependency-groups]
 dev = [
@@ -44,7 +45,14 @@ pythonpath = ["src"]
 
 [tool.coverage.run]
 source = ["src"]
-omit = ["**/main.py", "tests/*", "**/gui/*", "**/run_server.py", "**/oauth_flow.py"]
+omit = [
+    "**/main.py",
+    "tests/*",
+    "**/gui/*",
+    "**/run_server.py",
+    "**/run_match.py",
+    "**/oauth_flow.py",
+]
 
 [tool.coverage.report]
 fail_under = 90
