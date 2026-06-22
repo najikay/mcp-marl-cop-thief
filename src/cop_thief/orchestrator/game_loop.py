@@ -113,7 +113,11 @@ class GameLoopController:
 
 
 def record_sub_game_frames(controller: GameLoopController, rng=None) -> list[dict]:
-    """Play one sub-game and collect per-move frames (positions + message)."""
+    """Play one sub-game and collect per-move frames (positions + message).
+
+    Defaults to a fresh unseeded RNG so each call (e.g. the GUI's "New game")
+    produces a different chase.
+    """
     frames: list[dict] = []
 
     def capture(state, message) -> None:
@@ -126,5 +130,5 @@ def record_sub_game_frames(controller: GameLoopController, rng=None) -> list[dic
             }
         )
 
-    controller.record_sub_game(rng, capture)
+    controller.record_sub_game(rng or random.Random(), capture)
     return frames

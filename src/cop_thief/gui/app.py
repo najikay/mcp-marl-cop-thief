@@ -19,7 +19,10 @@ class GameWindow:  # pragma: no cover - interactive UI
     """A window that animates one recorded sub-game at a time."""
 
     def __init__(self, sdk: CopThiefSDK | None = None) -> None:
-        self._sdk = sdk or CopThiefSDK(partial_observability=True)
+        # Full-observability heuristic: visually engaging (real captures) while
+        # still showing each agent's free-NL message. Partial-observability play
+        # exists too, but its coarse region-belief tends to stalemate.
+        self._sdk = sdk or CopThiefSDK()
         rows, cols = self._sdk.config.grid_size
         self._root = tk.Tk()
         self._root.title("Cop & Thief — Dec-POMDP pursuit")
