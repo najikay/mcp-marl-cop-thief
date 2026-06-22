@@ -20,6 +20,7 @@ from cop_thief.config.setup_models import (
     GameConfig,
     LLMEndpoint,
     LLMRouting,
+    ProviderRate,
     RLConfig,
     ScoringConfig,
     ServerConfig,
@@ -56,6 +57,7 @@ __all__ = [
     "LLMRouting",
     "RLConfig",
     "TokenBudget",
+    "ProviderRate",
     "RateLimitsInner",
     "ServiceLimit",
 ]

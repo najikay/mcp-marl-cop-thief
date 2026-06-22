@@ -1,0 +1,47 @@
+{
+  "version": "1.00",
+  "description": "API Gatekeeper rate-limit & backpressure buckets per service. Schema per PRD_gatekeeper.md. Values are config-sourced (never hardcoded).",
+  "rate_limits": {
+    "services": {
+      "default": {
+        "requests_per_minute": 30,
+        "requests_per_hour": 500,
+        "tokens_per_minute": 120000,
+        "concurrent_max": 5,
+        "retry_after_seconds": 30,
+        "max_retries": 3,
+        "queue_max_depth": 100
+      },
+      "deepseek": {
+        "comment": "Primary LLM provider (llm_routing.primary).",
+        "requests_per_minute": 25,
+        "requests_per_hour": 600,
+        "tokens_per_minute": 150000,
+        "concurrent_max": 4,
+        "retry_after_seconds": 20,
+        "max_retries": 3,
+        "queue_max_depth": 200
+      },
+      "anthropic": {
+        "comment": "Fallback LLM provider (llm_routing.fallback).",
+        "requests_per_minute": 20,
+        "requests_per_hour": 400,
+        "tokens_per_minute": 80000,
+        "concurrent_max": 3,
+        "retry_after_seconds": 30,
+        "max_retries": 3,
+        "queue_max_depth": 200
+      },
+      "gmail": {
+        "comment": "Gmail API reporting. Low volume, conservative concurrency, generous retries.",
+        "requests_per_minute": 5,
+        "requests_per_hour": 100,
+        "tokens_per_minute": 0,
+        "concurrent_max": 1,
+        "retry_after_seconds": 30,
+        "max_retries": 5,
+        "queue_max_depth": 20
+      }
+    }
+  }
+}

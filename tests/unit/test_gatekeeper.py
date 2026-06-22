@@ -20,12 +20,17 @@ from cop_thief.config.rate_limit_models import RateLimitConfig
 from cop_thief.infra.gatekeeper import (
     ApiGatekeeper,
     BackpressureOverflowError,
+    ProviderUpstreamError,
     TokenTracker,
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 REAL_CONFIG_DIR = PROJECT_ROOT / "config"
-_ENV = lambda key, default="": "test-key"  # noqa: E731
+
+
+def _env(key: str, default: str = "") -> str:
+    """Stub env reader returning a fixed token for tests."""
+    return "test-key"
 
 
 def _ok(payload: dict) -> mock.Mock:
@@ -58,7 +63,7 @@ def _build_gatekeeper(client: mock.Mock, tmp_path: Path) -> ApiGatekeeper:
     cfg = ConfigManager(config_dir=REAL_CONFIG_DIR)
     tracker = TokenTracker(usage_file=tmp_path / "token_usage.json")
     return ApiGatekeeper(cfg.rate_limits, cfg.setup.llm_routing,
-                         token_tracker=tracker, client=client, get_env=_ENV)
+                         token_tracker=tracker, client=client, get_env=_env)
 
 
 def test_happy_path_deepseek_accumulates(tmp_path: Path) -> None:
@@ -104,10 +109,33 @@ def test_backpressure_overflow_raises(tmp_path: Path) -> None:
     cfg = ConfigManager(config_dir=REAL_CONFIG_DIR)
     gk = ApiGatekeeper(tiny, cfg.setup.llm_routing,
                        token_tracker=TokenTracker(usage_file=tmp_path / "u.json"),
-                       client=mock.Mock(), get_env=_ENV)
+                       client=mock.Mock(), get_env=_env)
     gk._queue.put_nowait(1)  # pre-saturate the single slot
     with pytest.raises(BackpressureOverflowError):
         gk.execute_llm_call("prompt", "system")
+
+
+def test_dual_provider_failure_raises(tmp_path: Path) -> None:
+    """Both providers down (502 then 503) -> ProviderUpstreamError, no crash."""
+    client = mock.Mock()
+    client.post = mock.Mock(side_effect=[_http_error(502), _http_error(503)])
+    gk = _build_gatekeeper(client, tmp_path)
+
+    with pytest.raises(ProviderUpstreamError):
+        gk.execute_llm_call("prompt", "system")
+    assert client.post.call_count == 2
+
+
+def test_corrupt_ledger_recovers(tmp_path: Path) -> None:
+    """A corrupt token_usage.json is tolerated; the tracker starts clean."""
+    ledger = tmp_path / "token_usage.json"
+    ledger.write_text("{ this is not valid json", encoding="utf-8")
+
+    tracker = TokenTracker(usage_file=ledger)
+    assert tracker.get_current_economics()["turns"] == 0  # recovered, not crashed
+
+    tracker.log_turn("DEEPSEEK", "deepseek-chat", 100, 10)
+    assert tracker.get_current_economics()["turns"] == 1
 
 
 def test_token_accounting_math(tmp_path: Path) -> None:

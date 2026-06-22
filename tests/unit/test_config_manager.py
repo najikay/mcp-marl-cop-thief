@@ -51,6 +51,10 @@ def _valid_setup() -> dict:
             "rates": {"input_per_million_usd": 0.15, "output_per_million_usd": 0.60},
             "ceiling_usd": 5.0,
         },
+        "economics": {
+            "DEEPSEEK": {"input": 0.15, "output": 0.60},
+            "ANTHROPIC": {"input": 3.00, "output": 15.00},
+        },
     }
 
 

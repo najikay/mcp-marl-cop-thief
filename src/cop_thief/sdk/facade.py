@@ -8,8 +8,14 @@ and the match coordinator, and inherits adversarial tactics from
 
 from __future__ import annotations
 
-from cop_thief.config import ConfigManager, get_config_manager
-from cop_thief.domain.constants import ActionType
+from pydantic import ValidationError
+
+from cop_thief.config import (
+    ConfigManager,
+    ConfigurationVersionError,
+    get_config_manager,
+)
+from cop_thief.domain.constants import ActionType, AgentRole
 from cop_thief.domain.state import DecPomdpGameState
 from cop_thief.infra.gatekeeper import ApiGatekeeper, TokenTracker
 from cop_thief.sdk.exceptions import SdkInitializationError
@@ -24,7 +30,7 @@ class CopThiefSDK(WarfareOperationsMixin):
         """Instantiate config, gatekeeper and match coordinator (fail fast)."""
         try:
             self._config = ConfigManager(config_dir) if config_dir else get_config_manager()
-        except Exception as exc:  # noqa: BLE001 - re-raised as a typed SDK error
+        except (OSError, ValueError, ConfigurationVersionError, ValidationError) as exc:
             raise SdkInitializationError(str(exc)) from exc
         setup = self._config.setup
         self._tracker = TokenTracker(
@@ -55,6 +61,51 @@ class CopThiefSDK(WarfareOperationsMixin):
     ) -> DecPomdpGameState:
         """Apply one immutable agent action via the coordinator."""
         return self._coordinator.execute_agent_step(state, action, target)
+
+    @property
+    def current_role(self) -> AgentRole:
+        """Our assigned role for the active sub-game."""
+        return self._coordinator.current_role
+
+    @property
+    def grid_shape(self) -> tuple[int, int]:
+        """Configured board shape as a (rows, cols) tuple."""
+        rows, cols = self._config.setup.game.grid_size
+        return (rows, cols)
+
+    @property
+    def max_moves(self) -> int:
+        """Configured maximum moves per sub-game."""
+        return self._config.setup.game.max_moves
+
+    def evaluate_terminal(self, state: DecPomdpGameState):
+        """Delegate terminal evaluation to the match coordinator."""
+        return self._coordinator.evaluate_terminal_condition(state)
+
+    def resolve_prose(self, inbound_prose: str, role: AgentRole) -> str:
+        """Produce the agent's outgoing natural-language reply for ``role``.
+
+        Placeholder deterministic responder; the Phase-7 NL encoder/parser will
+        replace this with belief-driven prose generation via the gatekeeper.
+        """
+        _ = inbound_prose
+        return (
+            f"[{role.value}] Acknowledged your message; holding position and "
+            "reassessing the grid."
+        )
+
+    def public_telemetry(self) -> dict:
+        """Return a sanitized agreement view (no secret strategy weights)."""
+        econ = self._coordinator.economics()
+        return {
+            "current_role": self._coordinator.current_role.value,
+            "current_sub_game": self._coordinator.current_sub_game,
+            "telemetry": {
+                "input_accumulated": econ.get("input_accumulated", 0),
+                "output_accumulated": econ.get("output_accumulated", 0),
+                "estimated_cost_usd": econ.get("estimated_cost_usd", 0.0),
+            },
+        }
 
     def generate_canonical_reports(self) -> dict:
         """Return the canonical match record with injected token telemetry."""

@@ -94,6 +94,26 @@ class TokenRates(_Frozen):
     output_per_million_usd: float
 
 
+class ProviderRate(_Frozen):
+    """Per-provider USD pricing (per million input/output tokens)."""
+
+    input: float
+    output: float
+
+
+class NlParserConfig(_Frozen):
+    """Defensive NL parser thresholds."""
+
+    min_confidence: float = 0.60
+    max_tokens: int = 200
+
+
+class NlConfig(_Frozen):
+    """Natural-language subsystem configuration (encoder keys tolerated)."""
+
+    parser: NlParserConfig = NlParserConfig()
+
+
 class TokenBudget(_Frozen):
     """Token economics & hard cost ceiling."""
 
@@ -115,3 +135,5 @@ class SetupConfig(_Frozen):
     llm_routing: LLMRouting
     rl: RLConfig
     token_budget: TokenBudget
+    economics: dict[str, ProviderRate]
+    nl: NlConfig = NlConfig()

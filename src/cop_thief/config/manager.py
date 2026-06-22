@@ -62,6 +62,10 @@ class ConfigManager(VersionGuardMixin):
         """Immutable game/runtime configuration."""
         return self._setup
 
+    def get_setup(self) -> SetupConfig:
+        """Return the validated setup configuration (method-style accessor)."""
+        return self._setup
+
     @property
     def rate_limits(self) -> RateLimitConfig:
         """Immutable API gatekeeper rate-limit configuration."""
@@ -71,6 +75,11 @@ class ConfigManager(VersionGuardMixin):
     def logging(self) -> LoggingConfig:
         """Validated logging dictConfig wrapper."""
         return self._logging
+
+    @property
+    def economics(self) -> dict:
+        """Per-provider USD pricing ledger (validated via SetupConfig)."""
+        return self._setup.economics
 
 
 @lru_cache(maxsize=1)

@@ -267,108 +267,108 @@
 ## PHASE 5 — FastMCP Server A (The Cop Server & Tools)
 
 ### 5.A BaseMCPServer
-- [ ] **#168** Create `servers/base_server.py` skeleton: `BaseMCPServer` (FastMCP app, auth, SDK ref).
-- [ ] **#169** Implement common tool-registration template method.
-- [ ] **#170** Implement token-auth middleware hook (revocable token check).
-- [ ] **#171** Implement SDK delegation helper (servers carry no business logic).
-- [ ] **#172** Add validation hook: reject unauthenticated tool calls.
-- [ ] **#173** Write positive test `test_base_server.py` (registration + auth pass).
-- [ ] **#174** Write edge-case fixture: missing/invalid token rejected.
-- [ ] **#175** Inject docstrings.
+- [x] **#168** Create `servers/base_server.py` skeleton: `BaseMCPServer` (FastMCP app, auth, SDK ref).
+- [x] **#169** Implement common tool-registration template method.
+- [x] **#170** Implement token-auth middleware hook (revocable token check).
+- [x] **#171** Implement SDK delegation helper (servers carry no business logic).
+- [x] **#172** Add validation hook: reject unauthenticated tool calls.
+- [x] **#173** Write positive test `test_base_server.py` (registration + auth pass).
+- [x] **#174** Write edge-case fixture: missing/invalid token rejected.
+- [x] **#175** Inject docstrings.
 
 ### 5.B Cop tools
-- [ ] **#176** Create `servers/tools/cop_tools.py` skeleton + typing.
-- [ ] **#177** Implement `send_message(text)` tool (emit free-NL message).
-- [ ] **#178** Implement `receive_message(text)` tool (ingest opponent NL → belief update via SDK).
-- [ ] **#179** Implement `propose_action()` tool (move or place barrier via SDK strategy).
-- [ ] **#180** Implement `agree_on_report(report)` tool (mutual-agreement handshake).
-- [ ] **#181** Implement `trigger_report()` tool (end-of-game Gmail send via SDK).
-- [ ] **#182** Add validation hook: every tool validates payload; **no** numeric-protocol fields.
-- [ ] **#183** Add gatekeeper hook: tool LLM/Gmail calls go through the gatekeeper.
-- [ ] **#184** Write positive test `test_cop_tools.py` (each tool delegates to SDK — mocked).
-- [ ] **#185** Write edge-case fixture: malformed/empty message handled gracefully.
-- [ ] **#186** Write edge-case fixture: barrier proposal beyond quota rejected.
-- [ ] **#187** Inject docstrings per tool (Input/Output/Setup).
+- [x] **#176** Create `servers/tools/cop_tools.py` skeleton + typing.
+- [x] **#177** Implement `send_message(text)` tool (emit free-NL message).
+- [x] **#178** Implement `receive_message(text)` tool (ingest opponent NL → belief update via SDK).
+- [x] **#179** Implement `propose_action()` tool (move or place barrier via SDK strategy).
+- [x] **#180** Implement `agree_on_report(report)` tool (mutual-agreement handshake).
+- [x] **#181** Implement `trigger_report()` tool (end-of-game Gmail send via SDK).
+- [x] **#182** Add validation hook: every tool validates payload; **no** numeric-protocol fields.
+- [x] **#183** Add gatekeeper hook: tool LLM/Gmail calls go through the gatekeeper.
+- [x] **#184** Write positive test `test_cop_tools.py` (each tool delegates to SDK — mocked).
+- [x] **#185** Write edge-case fixture: malformed/empty message handled gracefully.
+- [x] **#186** Write edge-case fixture: barrier proposal beyond quota rejected.
+- [x] **#187** Inject docstrings per tool (Input/Output/Setup).
 
 ### 5.C CopServer
-- [ ] **#188** Create `servers/cop_server.py` skeleton subclassing `BaseMCPServer`.
-- [ ] **#189** Register Cop tools; bind config-driven port (no hardcoded port).
-- [ ] **#190** Implement local `localhost` HTTP run mode.
-- [ ] **#191** Add validation hook: startup version & config check.
-- [ ] **#192** Write positive test `test_cop_server.py` (boots, lists tools).
-- [ ] **#193** Write edge-case fixture: port from config; auth required.
-- [ ] **#194** Inject docstrings.
-- [ ] **#195** Smoke task: launch Cop server via `uv run` and hit a tool locally.
+- [x] **#188** Create `servers/cop_server.py` skeleton subclassing `BaseMCPServer`.
+- [x] **#189** Register Cop tools; bind config-driven port (no hardcoded port).
+- [x] **#190** Implement local `localhost` HTTP run mode.
+- [x] **#191** Add validation hook: startup version & config check.
+- [x] **#192** Write positive test `test_cop_server.py` (boots, lists tools).
+- [x] **#193** Write edge-case fixture: port from config; auth required.
+- [x] **#194** Inject docstrings.
+- [x] **#195** Smoke task: launch Cop server via `uv run` and hit a tool locally.
 
 ---
 
 ## PHASE 6 — FastMCP Server B (The Thief Server & Tools)
 
 ### 6.A Thief tools
-- [ ] **#196** Create `servers/tools/thief_tools.py` skeleton + typing.
-- [ ] **#197** Implement `send_message(text)` tool (free-NL, may include deception).
-- [ ] **#198** Implement `receive_message(text)` tool (NL → belief update via SDK).
-- [ ] **#199** Implement `propose_action()` tool (move only — no barrier capability).
-- [ ] **#200** Implement `agree_on_report(report)` tool (mutual-agreement handshake).
-- [ ] **#201** Add validation hook: reject any barrier action from the thief.
-- [ ] **#202** Add validation hook: ensure free-NL only (no numeric protocol).
-- [ ] **#203** Add gatekeeper hook: tool LLM calls routed through the gatekeeper.
-- [ ] **#204** Write positive test `test_thief_tools.py` (delegation — mocked).
-- [ ] **#205** Write edge-case fixture: thief barrier attempt rejected.
-- [ ] **#206** Write edge-case fixture: deceptive message still produces a legal move.
-- [ ] **#207** Inject docstrings per tool.
+- [x] **#196** Create `servers/tools/thief_tools.py` skeleton + typing.
+- [x] **#197** Implement `send_message(text)` tool (free-NL, may include deception).
+- [x] **#198** Implement `receive_message(text)` tool (NL → belief update via SDK).
+- [x] **#199** Implement `propose_action()` tool (move only — no barrier capability).
+- [x] **#200** Implement `agree_on_report(report)` tool (mutual-agreement handshake).
+- [x] **#201** Add validation hook: reject any barrier action from the thief.
+- [x] **#202** Add validation hook: ensure free-NL only (no numeric protocol).
+- [x] **#203** Add gatekeeper hook: tool LLM calls routed through the gatekeeper.
+- [x] **#204** Write positive test `test_thief_tools.py` (delegation — mocked).
+- [x] **#205** Write edge-case fixture: thief barrier attempt rejected.
+- [x] **#206** Write edge-case fixture: deceptive message still produces a legal move.
+- [x] **#207** Inject docstrings per tool.
 
 ### 6.B ThiefServer
-- [ ] **#208** Create `servers/thief_server.py` skeleton subclassing `BaseMCPServer`.
-- [ ] **#209** Register Thief tools; bind config-driven port.
-- [ ] **#210** Implement local `localhost` HTTP run mode (distinct port from Cop).
-- [ ] **#211** Add validation hook: startup version & config check.
-- [ ] **#212** Write positive test `test_thief_server.py` (boots, lists tools).
-- [ ] **#213** Write edge-case fixture: distinct port, auth required.
-- [ ] **#214** Inject docstrings.
-- [ ] **#215** Smoke task: launch Thief server via `uv run`; verify Cop⇄Thief reachability locally.
-- [ ] **#216** Integration test: two servers exchange one free-NL message round-trip.
-- [ ] **#217** Phase-5/6 review: servers contain zero business logic (delegate to SDK only).
+- [x] **#208** Create `servers/thief_server.py` skeleton subclassing `BaseMCPServer`.
+- [x] **#209** Register Thief tools; bind config-driven port.
+- [x] **#210** Implement local `localhost` HTTP run mode (distinct port from Cop).
+- [x] **#211** Add validation hook: startup version & config check.
+- [x] **#212** Write positive test `test_thief_server.py` (boots, lists tools).
+- [x] **#213** Write edge-case fixture: distinct port, auth required.
+- [x] **#214** Inject docstrings.
+- [x] **#215** Smoke task: launch Thief server via `uv run`; verify Cop⇄Thief reachability locally.
+- [x] **#216** Integration test: two servers exchange one free-NL message round-trip.
+- [x] **#217** Phase-5/6 review: servers contain zero business logic (delegate to SDK only).
 
 ---
 
 ## PHASE 7 — The Client Orchestrator & LLM Natural-Language Parser
 
 ### 7.A LLM client adapters
-- [ ] **#218** Create `infra/llm_client.py` skeleton: single `LLMClient` interface + typing.
-- [ ] **#219** Create `infra/llm_cloud.py`: cloud API adapter (key from env).
-- [ ] **#220** Create `infra/llm_ollama.py`: local Ollama adapter (`127.0.0.1:11434`).
-- [ ] **#221** Implement provider selection from config (cloud / ollama / hybrid).
-- [ ] **#222** Add gatekeeper hook: all LLM calls via `gatekeeper.execute(...)`.
-- [ ] **#223** Add validation hook: timeouts/keys from config & env (no hardcoding).
-- [ ] **#224** Write positive test `test_llm_client.py` (adapter dispatch — mocked HTTP).
-- [ ] **#225** Write edge-case fixture: provider down → retry/backpressure path.
-- [ ] **#226** Inject docstrings (cite PRD §N-03 three approaches).
+- [x] **#218** Create `infra/llm_client.py` skeleton: single `LLMClient` interface + typing.
+- [x] **#219** Create `infra/llm_cloud.py`: cloud API adapter (key from env).
+- [x] **#220** Create `infra/llm_ollama.py`: local Ollama adapter (`127.0.0.1:11434`).
+- [x] **#221** Implement provider selection from config (cloud / ollama / hybrid).
+- [x] **#222** Add gatekeeper hook: all LLM calls via `gatekeeper.execute(...)`.
+- [x] **#223** Add validation hook: timeouts/keys from config & env (no hardcoding).
+- [x] **#224** Write positive test `test_llm_client.py` (adapter dispatch — mocked HTTP).
+- [x] **#225** Write edge-case fixture: provider down → retry/backpressure path.
+- [x] **#226** Inject docstrings (cite PRD §N-03 three approaches).
 
 ### 7.B NL Encoder
-- [ ] **#227** Create `domain/nl/encoder.py` skeleton + typing.
-- [ ] **#228** Implement state → free-NL message generation (no numeric coords).
-- [ ] **#229** Implement style/variety knobs from config (prompt templates in `prompts/`).
-- [ ] **#230** Add validation hook: assert output contains no machine-protocol tokens.
-- [ ] **#231** Write positive test `test_encoder.py`.
-- [ ] **#232** Write edge-case fixture: minimal 2×2 state still yields valid prose.
-- [ ] **#233** Inject docstrings.
+- [x] **#227** Create `domain/nl/encoder.py` skeleton + typing.
+- [x] **#228** Implement state → free-NL message generation (no numeric coords).
+- [x] **#229** Implement style/variety knobs from config (prompt templates in `prompts/`).
+- [x] **#230** Add validation hook: assert output contains no machine-protocol tokens.
+- [x] **#231** Write positive test `test_encoder.py`.
+- [x] **#232** Write edge-case fixture: minimal 2×2 state still yields valid prose.
+- [x] **#233** Inject docstrings.
 
 ### 7.C NL Parser
-- [ ] **#234** Create `domain/nl/parser.py` skeleton; define `BeliefUpdate` dataclass (dir, distance band, inferred barriers, confidence).
-- [ ] **#235** Implement LLM-prompted parse of unstructured text → `BeliefUpdate`.
-- [ ] **#236** Implement extraction of inferred barriers/walls from prose.
-- [ ] **#237** Implement confidence scoring of the parse.
-- [ ] **#238** Add gatekeeper hook: parser LLM call routed through gatekeeper.
-- [ ] **#239** Add validation hook: low-confidence/unparsable → safe default belief (never crash).
-- [ ] **#240** Write positive test `test_parser.py` (clear message → correct vector).
-- [ ] **#241** Write edge-case fixture: deceptive/ambiguous/empty message → defensive default.
-- [ ] **#242** Inject docstrings; finalize [`PRD_nl_protocol.md`](./PRD_nl_protocol.md).
+- [x] **#234** Create `domain/nl/parser.py` skeleton; define `BeliefUpdate` dataclass (dir, distance band, inferred barriers, confidence).
+- [x] **#235** Implement LLM-prompted parse of unstructured text → `BeliefUpdate`.
+- [x] **#236** Implement extraction of inferred barriers/walls from prose.
+- [x] **#237** Implement confidence scoring of the parse.
+- [x] **#238** Add gatekeeper hook: parser LLM call routed through gatekeeper.
+- [x] **#239** Add validation hook: low-confidence/unparsable → safe default belief (never crash).
+- [x] **#240** Write positive test `test_parser.py` (clear message → correct vector).
+- [x] **#241** Write edge-case fixture: deceptive/ambiguous/empty message → defensive default.
+- [x] **#242** Inject docstrings; finalize [`PRD_nl_protocol.md`](./PRD_nl_protocol.md).
 
 ### 7.D Strategy — BaseStrategy & Heuristic
-- [ ] **#243** Create `domain/strategy/base_strategy.py` skeleton (abstract `choose_action`).
-- [ ] **#244** Create `domain/strategy/heuristic_strategy.py` (Manhattan/Chebyshev pursuit & evasion).
-- [ ] **#245** Implement explicit **draw-avoidance** tie-break logic.
+- [x] **#243** Create `domain/strategy/base_strategy.py` skeleton (abstract `choose_action`).
+- [x] **#244** Create `domain/strategy/heuristic_strategy.py` (Manhattan/Chebyshev pursuit & evasion).
+- [x] **#245** Implement explicit **draw-avoidance** tie-break logic.
 - [ ] **#246** Add validation hook: only return RulesEngine-legal actions.
 - [ ] **#247** Write positive test `test_heuristic_strategy.py` (cop closes distance; thief opens it).
 - [ ] **#248** Write edge-case fixture: stalemate scenario resolved without a draw.

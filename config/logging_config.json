@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+  "formatters": {
+    "console": {
+      "format": "%(asctime)s | %(levelname)-7s | %(name)s | %(message)s",
+      "datefmt": "%H:%M:%S"
+    },
+    "json": {
+      "()": "cop_thief.infra.logger.JsonFormatter",
+      "fields": ["timestamp", "level", "logger", "event", "message", "game_id", "sub_game", "turn", "role"]
+    }
+  },
+  "handlers": {
+    "console": {
+      "class": "logging.StreamHandler",
+      "level": "INFO",
+      "formatter": "console",
+      "stream": "ext://sys.stdout"
+    },
+    "telemetry_file": {
+      "class": "logging.handlers.RotatingFileHandler",
+      "level": "DEBUG",
+      "formatter": "json",
+      "filename": "logs/game_telemetry.json",
+      "maxBytes": 5242880,
+      "backupCount": 5,
+      "encoding": "utf-8"
+    }
+  },
+  "loggers": {
+    "cop_thief": {
+      "level": "DEBUG",
+      "handlers": ["console", "telemetry_file"],
+      "propagate": false
+    }
+  },
+  "root": {
+    "level": "WARNING",
+    "handlers": ["console"]
+  }
+}

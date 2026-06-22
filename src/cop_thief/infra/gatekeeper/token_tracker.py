@@ -1,12 +1,11 @@
 """Thread-safe token-usage accumulator with atomic persistence.
 
 Records every LLM turn and computes real-time cost economics. Persistence is
-atomic (temp file + ``os.replace``) so the ledger is never left half-written.
+atomic (temp file + ``replace``) so the ledger is never left half-written.
 
-NOTE: ``LEDGER_RATES`` is an explicit per-provider pricing ledger (per the batch
-mandate). Strictly, Guidelines §7.2 would place such values in config; these are
-isolated here as a single named constant and can be promoted to ``setup.json``
-without touching call sites.
+Per-provider pricing is loaded dynamically from ``config/setup.json`` (the
+``economics`` block) via :class:`ConfigManager` — no rates are hardcoded
+(Guidelines §7.2).
 """
 
 from __future__ import annotations
@@ -15,23 +14,37 @@ import json
 import threading
 from pathlib import Path
 
-LEDGER_RATES: dict[str, dict[str, float]] = {
-    "DEEPSEEK": {"input": 0.15, "output": 0.60},
-    "ANTHROPIC": {"input": 3.00, "output": 15.00},
-}
+from cop_thief.config import get_config_manager
+
+_FALLBACK_RATE = {"input": 0.0, "output": 0.0}
 
 
 class TokenTracker:
     """Accumulate per-turn token usage and expose live cost economics."""
 
-    def __init__(self, usage_file: str | Path = "data/token_usage.json") -> None:
-        """Initialise the tracker, loading any existing ledger from disk."""
+    def __init__(
+        self,
+        usage_file: str | Path = "data/token_usage.json",
+        config_manager=None,
+        rates: dict | None = None,
+    ) -> None:
+        """Initialise the tracker, loading existing ledger and config rates."""
         self._path = Path(usage_file)
         self._lock = threading.Lock()
         self._turns: list[dict] = self._load()
+        self._rates = rates if rates is not None else self._load_rates(config_manager)
+
+    @staticmethod
+    def _load_rates(config_manager) -> dict:
+        """Build the per-provider rate table from config economics."""
+        cfg = config_manager or get_config_manager()
+        return {
+            provider: {"input": rate.input, "output": rate.output}
+            for provider, rate in cfg.setup.economics.items()
+        }
 
     def _load(self) -> list[dict]:
-        """Read previously persisted turns, tolerating a missing/empty file."""
+        """Read previously persisted turns, tolerating a missing/corrupt file."""
         if not self._path.exists():
             return []
         try:
@@ -69,7 +82,7 @@ class TokenTracker:
         total_in = total_out = 0
         cost = 0.0
         for turn in self._turns:
-            rate = LEDGER_RATES.get(turn["provider"], LEDGER_RATES["DEEPSEEK"])
+            rate = self._rates.get(turn["provider"]) or _FALLBACK_RATE
             total_in += turn["input_tokens"]
             total_out += turn["output_tokens"]
             cost += turn["input_tokens"] / 1e6 * rate["input"]

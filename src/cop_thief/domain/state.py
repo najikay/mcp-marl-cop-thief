@@ -27,6 +27,7 @@ class DecPomdpGameState(BaseModel):
     grid: Grid = Field(default_factory=Grid)
     turn_counter: int = 0
     cop_barriers_left: int = 5
+    turn_role: AgentRole = AgentRole.THIEF
 
     @staticmethod
     def _sector(origin: Coord, target: Coord) -> str:
@@ -80,6 +81,7 @@ class DecPomdpGameState(BaseModel):
             cop = target
         else:
             thief = target
+        next_role = AgentRole.COP if self.turn_role is AgentRole.THIEF else AgentRole.THIEF
         return self.model_copy(
             update={
                 "cop_pos": cop,
@@ -87,5 +89,6 @@ class DecPomdpGameState(BaseModel):
                 "grid": grid,
                 "turn_counter": self.turn_counter + 1,
                 "cop_barriers_left": barriers_left,
+                "turn_role": next_role,
             }
         )
