@@ -44,7 +44,9 @@ def main() -> None:
     payload = report.to_json()
     print(payload)
     if args.out:
-        Path(args.out).write_text(payload, encoding="utf-8")
+        out_path = Path(args.out)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(payload, encoding="utf-8")
         print(f"# report written to {args.out}")
 
 

@@ -10,6 +10,7 @@ from __future__ import annotations
 from ..config import ConfigManager
 from ..config.models import GameConfig
 from ..domain.agents import CopAgent, ThiefAgent
+from ..domain.nl import BeliefUpdate, NLEncoder, NLParser
 from ..domain.reporting import InternalReport
 from ..domain.strategy import BaseStrategy, HeuristicStrategy
 from ..infra import ApiGatekeeper, LLMClient, make_llm_client
@@ -30,6 +31,7 @@ class CopThiefSDK:
         self._gatekeeper = gatekeeper or ApiGatekeeper()
         self._llm = llm or make_llm_client()
         self._strategy_factory = strategy_factory
+        self._encoder = NLEncoder()
 
     @classmethod
     def from_config_path(cls, path: str | None = None) -> CopThiefSDK:
@@ -43,9 +45,18 @@ class CopThiefSDK:
 
     def play_game(self) -> GameResult:
         """Play a full game (``num_games`` valid sub-games) and return totals."""
-        cop = CopAgent(self._strategy_factory())
-        thief = ThiefAgent(self._strategy_factory())
+        cop = CopAgent(self._strategy_factory(), self._encoder)
+        thief = ThiefAgent(self._strategy_factory(), self._encoder)
         return GameLoopController(self._config, cop, thief).play_game()
+
+    def parse_message(self, text: str) -> BeliefUpdate:
+        """Parse an opponent's free-text message into an actionable belief.
+
+        Uses the configured LLM through the gatekeeper, falling back to the
+        offline heuristic parser when no provider is wired.
+        """
+        parser = NLParser(llm=self._llm, gatekeeper=self._gatekeeper)
+        return parser.parse(text)
 
     def build_internal_report(
         self,

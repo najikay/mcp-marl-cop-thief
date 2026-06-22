@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ...constants import AgentRole
 from ..action import Action
+from ..nl import NLEncoder
 from ..strategy import BaseStrategy
 from .base_agent import BaseAgent
 
@@ -11,8 +12,8 @@ from .base_agent import BaseAgent
 class ThiefAgent(BaseAgent):
     """The Thief: opens distance and survives ``max_moves``."""
 
-    def __init__(self, strategy: BaseStrategy) -> None:
-        super().__init__(AgentRole.THIEF, strategy)
+    def __init__(self, strategy: BaseStrategy, encoder: NLEncoder | None = None) -> None:
+        super().__init__(AgentRole.THIEF, strategy, encoder)
 
     def narrate(self, action: Action) -> str:
         """Evasion-flavoured free-NL narration (may bluff in later versions)."""
