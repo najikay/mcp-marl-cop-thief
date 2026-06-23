@@ -1,22 +1,22 @@
-"""Strict, immutable Pydantic v2 models for ``config/setup.json``.
+"""Core Pydantic v2 models for ``config/setup.json`` and the root ``SetupConfig``.
 
-Split out of ``models.py`` to honour the 150-line-per-file limit (Guidelines
-§3.2). All models are ``frozen=True`` for runtime immutability and
-``extra="ignore"`` so descriptive ``comment`` keys in the JSON are tolerated.
+Leaf sub-models (token economics, NL, reporting, network) live in
+``aux_models.py``; the shared frozen base lives in ``base_model.py``.
 """
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict
+from cop_thief.config.aux_models import (
+    NetworkConfig,
+    NlConfig,
+    ProviderRate,
+    ReportingConfig,
+    TokenBudget,
+)
+from cop_thief.config.base_model import FrozenModel
 
 
-class _Frozen(BaseModel):
-    """Base config model: immutable and tolerant of descriptive extra keys."""
-
-    model_config = ConfigDict(frozen=True, extra="ignore")
-
-
-class GameConfig(_Frozen):
+class GameConfig(FrozenModel):
     """Immutable Dec-POMDP board parameters."""
 
     grid_size: list[int]
@@ -29,7 +29,7 @@ class GameConfig(_Frozen):
     thief_moves_first: bool = True
 
 
-class ScoringConfig(_Frozen):
+class ScoringConfig(FrozenModel):
     """Immutable scoring matrix mapped from ex06 Table 1."""
 
     cop_win: int
@@ -38,7 +38,7 @@ class ScoringConfig(_Frozen):
     thief_loss: int
 
 
-class ServerConfig(_Frozen):
+class ServerConfig(FrozenModel):
     """A single MCP server endpoint (cop or thief)."""
 
     mode: str
@@ -47,7 +47,7 @@ class ServerConfig(_Frozen):
     local_port: int | None = None
 
 
-class LLMEndpoint(_Frozen):
+class LLMEndpoint(FrozenModel):
     """One LLM provider endpoint in the dual-failover routing."""
 
     provider: str
@@ -57,14 +57,14 @@ class LLMEndpoint(_Frozen):
     timeout_seconds: int = 60
 
 
-class LLMRouting(_Frozen):
+class LLMRouting(FrozenModel):
     """Primary/fallback LLM routing."""
 
     primary: LLMEndpoint
     fallback: LLMEndpoint
 
 
-class RewardConfig(_Frozen):
+class RewardConfig(FrozenModel):
     """Reward-shaping values for the Q-Learning strategy."""
 
     r_capture: float
@@ -75,7 +75,7 @@ class RewardConfig(_Frozen):
     r_corner: float = -0.5
 
 
-class RLConfig(_Frozen):
+class RLConfig(FrozenModel):
     """Tabular Q-Learning hyper-parameters."""
 
     enabled: bool = True
@@ -88,53 +88,7 @@ class RLConfig(_Frozen):
     rewards: RewardConfig
 
 
-class TokenRates(_Frozen):
-    """Per-million-token USD rates."""
-
-    input_per_million_usd: float
-    output_per_million_usd: float
-
-
-class ProviderRate(_Frozen):
-    """Per-provider USD pricing (per million input/output tokens)."""
-
-    input: float
-    output: float
-
-
-class NlParserConfig(_Frozen):
-    """Defensive NL parser thresholds."""
-
-    min_confidence: float = 0.60
-    max_tokens: int = 200
-
-
-class NlConfig(_Frozen):
-    """Natural-language subsystem configuration (encoder keys tolerated)."""
-
-    parser: NlParserConfig = NlParserConfig()
-
-
-class ReportingConfig(_Frozen):
-    """Reporting addresses and the production submission safety interlock."""
-
-    examiner_email: str = "rmisegal+uoh26b@gmail.com"
-    burner_email: str = "mcp.marl.telemetry@gmail.com"
-    production_submission_locked: bool = True
-
-
-class TokenBudget(_Frozen):
-    """Token economics & hard cost ceiling."""
-
-    version: str
-    rates: TokenRates
-    ceiling_usd: float
-    warn_ratio: float = 0.80
-    enforce_ceiling: bool = True
-    usage_file: str = "data/token_usage.json"
-
-
-class SetupConfig(_Frozen):
+class SetupConfig(FrozenModel):
     """Root schema for ``config/setup.json`` (immutable game parameters)."""
 
     version: str
@@ -147,3 +101,4 @@ class SetupConfig(_Frozen):
     economics: dict[str, ProviderRate]
     nl: NlConfig = NlConfig()
     reporting: ReportingConfig = ReportingConfig()
+    network: NetworkConfig = NetworkConfig()

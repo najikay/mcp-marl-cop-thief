@@ -29,6 +29,21 @@ These cross-cutting milestones are **done and verified** (full suite green, `ruf
   locally (scope `gmail.modify`, zero passwords). One-time browser consent already completed.
 - [x] **Gatekeeper generic passthrough** — `ApiGatekeeper.execute(func, *args, service, **kwargs)`
   added as the FIFO-gated chokepoint for non-LLM dispatches (e.g. Gmail), per `PRD_gatekeeper.md §2.1`.
+- [x] **Milestone 3 — Broadcast "Television" & JSONL audit logger** — one-way SSE server
+  (`ui/server.py`, Starlette) + single-file vanilla `ui/static/index.html` (5×5 matrix, comms
+  intercept, turn/epistemic/cost top-bar; zero CDN), and append-only `reporting/logger.py`
+  (`data/game_audit.jsonl`, `jq`-parseable). UI is strictly receive-and-render (no game logic).
+
+### Milestone 4 — Cloudflare Tunneling & Inter-Group Verification (OPEN)
+- [x] **M4.0** Network matrix in config — `config/setup.json → network` (two URLs/team: cop + thief)
+  parsed by `ConfigManager.network` (`config/aux_models.py::NetworkConfig`); config-split keeps every
+  config module < 120 lines.
+- [x] **M4.0** `cloudflared` secured as a userland binary in `bin/` (git-ignored; non-root install).
+- [ ] **M4.1** Spin two Cloudflare tunnels → local Cop (`:8001`) / Thief (`:8002`); write public HTTPS
+  URLs into the `network` block; assert revocable-token security.
+- [ ] **M4.2** Wire `network` endpoints into the FastMCP client/orchestrator for cross-host play.
+- [ ] **M4.3** Inter-group bonus handshake: full 6-sub-game bilateral series, **mutual SHA-256
+  agreement** sealed and emailed (both groups send the byte-identical result).
 
 ### Architecture / Tooling notes
 - **`src/cop_thief/diagnostic_runner.py`** — permanent **offline, zero-cost** Dec-POMDP reactor probe.

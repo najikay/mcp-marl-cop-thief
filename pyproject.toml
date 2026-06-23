@@ -25,6 +25,8 @@ dependencies = [
     "httpx>=0.27,<1.0",
     "numpy>=1.26,<3.0",
     "pyyaml>=6.0,<7.0",
+    "starlette>=0.37,<2.0",
+    "uvicorn>=0.30,<1.0",
 ]
 
 [project.optional-dependencies]
@@ -83,6 +85,7 @@ omit = [
     "src/cop_thief/diagnostic_runner.py",
     "*/tests/*",
     "src/cop_thief/gui/*",
+    "src/cop_thief/ui/server.py",
 ]
 
 [tool.coverage.report]

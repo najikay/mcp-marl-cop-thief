@@ -45,6 +45,40 @@ regression-test pursuit math without spending API tokens:
 uv run python -m cop_thief.diagnostic_runner
 ```
 
+### Broadcast television (live SSE observer)
+
+A one-way Server-Sent-Events UI streams the game to a browser as a strict **"Dumb
+Television"** (receive-and-render only; zero game logic, cannot mutate Python state). Start it:
+
+```bash
+uv run python -m cop_thief.ui.server      # serves http://127.0.0.1:8800
+```
+
+Open `http://127.0.0.1:8800` — left panel is a 5×5 matrix (Cop `C` blue, Thief `T` red, capture `!`
+gold-on-purple), right panel is a live Comms-Intercept feed of raw agent prose, top bar shows
+turn / epistemic flag (Q-Policy vs Conway Scaffolding) / accumulated cost. Until wired to a live
+game it replays a sterile 5-turn mock sequence. Every turn is also appended to
+`data/game_audit.jsonl` by `GameTelemetryLogger` for `jq`-based audit.
+
+### Distributed play & Cloudflare tunnels
+
+The game runs over public HTTP/HTTPS. Each group exposes **exactly two URLs — one Cop, one Thief**.
+Local servers (`:8001` Cop, `:8002` Thief) are published as dynamically-managed public URLs via
+**Cloudflare tunnels** (`bin/cloudflared`, a git-ignored userland binary). The full two-team URL
+matrix is **config-driven** (`config/setup.json → network`, parsed by `ConfigManager.network`) — no
+endpoints are hardcoded:
+
+```jsonc
+"network": {
+  "team_alpha_cop_url":   "http://127.0.0.1:8001",
+  "team_alpha_thief_url": "http://127.0.0.1:8002",
+  "team_beta_cop_url":    "",   // filled with the rival group's tunnel URL
+  "team_beta_thief_url":  ""
+}
+```
+
+Replace the local defaults with the live `https://*.trycloudflare.com` URLs for inter-group play.
+
 ### Gmail reporting (OAuth2)
 
 - Reports are sent via the **Gmail API** using an **OAuth2 Desktop** client (scope `gmail.modify`,

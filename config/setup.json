@@ -129,5 +129,13 @@
   "economics": {
     "DEEPSEEK": { "input": 0.15, "output": 0.60 },
     "ANTHROPIC": { "input": 3.00, "output": 15.00 }
+  },
+
+  "_network_note": "Two-team public URL matrix (ex06 §9.2): one Cop + one Thief URL per group. Local defaults; replace with Cloudflare tunnel URLs for distributed play.",
+  "network": {
+    "team_alpha_cop_url": "http://127.0.0.1:8001",
+    "team_alpha_thief_url": "http://127.0.0.1:8002",
+    "team_beta_cop_url": "",
+    "team_beta_thief_url": ""
   }
 }

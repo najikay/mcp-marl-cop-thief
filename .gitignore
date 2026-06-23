@@ -25,3 +25,6 @@ coverage.xml
 private-google-client.json
 token.json
 data/
+
+# userland binaries (cloudflared, etc.) — never commit 30MB+ blobs
+bin/

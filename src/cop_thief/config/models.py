@@ -11,6 +11,13 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict
 
+from cop_thief.config.aux_models import (
+    NetworkConfig,
+    NlConfig,
+    ProviderRate,
+    ReportingConfig,
+    TokenBudget,
+)
 from cop_thief.config.rate_limit_models import (
     RateLimitConfig,
     RateLimitsInner,
@@ -20,12 +27,10 @@ from cop_thief.config.setup_models import (
     GameConfig,
     LLMEndpoint,
     LLMRouting,
-    ProviderRate,
     RLConfig,
     ScoringConfig,
     ServerConfig,
     SetupConfig,
-    TokenBudget,
 )
 
 
@@ -58,6 +63,9 @@ __all__ = [
     "RLConfig",
     "TokenBudget",
     "ProviderRate",
+    "NlConfig",
+    "ReportingConfig",
+    "NetworkConfig",
     "RateLimitsInner",
     "ServiceLimit",
 ]

@@ -83,6 +83,11 @@ class ConfigManager(VersionGuardMixin):
         """Per-provider USD pricing ledger (validated via SetupConfig)."""
         return self._setup.economics
 
+    @property
+    def network(self):
+        """Two-team public URL matrix for distributed/inter-group play."""
+        return self._setup.network
+
 
 @lru_cache(maxsize=1)
 def get_config_manager() -> ConfigManager:
