@@ -19,8 +19,10 @@ from cop_thief.config import get_config_manager
 from cop_thief.domain.constants import SubGameOutcome
 from cop_thief.orchestrator.controller import GameLoopController
 from cop_thief.reporting import GmailApiReporter
+from cop_thief.ui import broadcast
 
 _ALPHA, _BETA = "Team-Alpha", "Team-Beta"
+_COP_WIN_OUTCOMES = (SubGameOutcome.COP_WINS, SubGameOutcome.THIEF_TRAPPED)
 _TZ = "Asia/Jerusalem"
 _REPO_ALPHA = "https://github.com/team-alpha/marl-cop-thief"
 _REPO_BETA = "https://github.com/team-beta/marl-cop-thief"
@@ -52,7 +54,7 @@ def sub_game_urls(teams: dict, cop_team: str) -> tuple[str, str]:
 def score_for(outcome, cop_team: str, thief_team: str, totals: dict) -> dict:
     """Apply Section 4.4 scoring for one outcome and update the running ledger."""
     sc = get_config_manager().setup.scoring
-    cop_pts, thief_pts = (sc.cop_win, sc.thief_loss) if outcome is SubGameOutcome.COP_WINS else (sc.cop_loss, sc.thief_win)
+    cop_pts, thief_pts = (sc.cop_win, sc.thief_loss) if outcome in _COP_WIN_OUTCOMES else (sc.cop_loss, sc.thief_win)
     totals[cop_team] = totals.get(cop_team, 0) + cop_pts
     totals[thief_team] = totals.get(thief_team, 0) + thief_pts
     return {"cop_team": cop_team, "thief_team": thief_team, "outcome": outcome.value, "cop_points": cop_pts, "thief_points": thief_pts}
@@ -104,7 +106,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--production-drop", action="store_true")
     args = parser.parse_args(argv)
     teams = resolve_teams(get_config_manager().network)
-    sub_games, totals = run_series(teams)
+    sub_games, totals = run_series(teams, GameLoopController(observer=broadcast.feed))
     report = build_bonus_report(teams, sub_games, totals)
     reporter = GmailApiReporter()
     reporter.bootstrap_oauth()

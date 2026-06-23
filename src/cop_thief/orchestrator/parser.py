@@ -11,6 +11,7 @@ import json
 from pydantic import ValidationError
 
 from cop_thief.config import get_config_manager
+from cop_thief.domain.agent import harden
 from cop_thief.domain.constants import AgentRole, Direction
 from cop_thief.infra.gatekeeper import (
     ApiGatekeeper,
@@ -58,7 +59,7 @@ class DefensiveNlParser:
         """Parse ``prose`` into a ``BeliefUpdate``; default safely on any failure."""
         _ = sender_role
         try:
-            text, _usage = self._gatekeeper.execute_llm_call(prose, _PARSER_SYSTEM)
+            text, _usage = self._gatekeeper.execute_llm_call(prose, harden(_PARSER_SYSTEM))
             data = json.loads(text)
             belief = BeliefUpdate(
                 estimated_direction=Direction[data["estimated_direction"]],

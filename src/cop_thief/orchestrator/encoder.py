@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from cop_thief.domain.agent import harden
 from cop_thief.domain.constants import AgentRole
 from cop_thief.domain.state import DecPomdpGameState
 from cop_thief.infra.gatekeeper import ApiGatekeeper, build_default_gatekeeper
@@ -45,7 +46,7 @@ class NaturalLanguageEncoder:
         """
         _ = state
         prompt = self._build_user_prompt(role, observation)
-        text, _usage = self._gatekeeper.execute_llm_call(prompt, _ENCODER_SYSTEM)
+        text, _usage = self._gatekeeper.execute_llm_call(prompt, harden(_ENCODER_SYSTEM))
         if not text or not text.strip():
             raise NaturalLanguageTranslationError("LLM returned empty prose.")
         return text

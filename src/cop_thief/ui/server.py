@@ -45,9 +45,11 @@ async def homepage(_request) -> FileResponse:
 
 
 async def stream(_request) -> StreamingResponse:
-    """Stream turn snapshots as Server-Sent Events (one-way broadcast)."""
+    """Stream live turn snapshots from the broadcast bus as Server-Sent Events."""
+    from cop_thief.ui import broadcast
+
     async def event_source():
-        async for packet in mock_game_generator():
+        async for packet in broadcast.subscribe():
             yield f"data: {json.dumps(packet)}\n\n"
 
     return StreamingResponse(event_source(), media_type="text/event-stream")

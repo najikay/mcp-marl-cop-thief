@@ -11,7 +11,7 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict, Field
 
 from cop_thief.domain.constants import ActionType, AgentRole
-from cop_thief.domain.geometry import calculate_manhattan
+from cop_thief.domain.geometry import calculate_manhattan, get_adjacent_coords
 from cop_thief.domain.grid import Grid
 
 Coord = tuple[int, int]
@@ -75,8 +75,9 @@ class DecPomdpGameState(BaseModel):
         grid, cop, thief = self.grid, self.cop_pos, self.thief_pos
         barriers_left = self.cop_barriers_left
         if action_type is ActionType.PLACE_BARRIER:
-            grid = grid.model_copy(update={"barriers": grid.barriers | {target}})
-            barriers_left -= 1
+            if role is AgentRole.COP and barriers_left > 0 and self._barrier_ok(target):
+                grid = grid.model_copy(update={"barriers": grid.barriers | {target}})
+                barriers_left -= 1
         elif role is AgentRole.COP:
             cop = target
         else:
@@ -92,3 +93,18 @@ class DecPomdpGameState(BaseModel):
                 "turn_role": next_role,
             }
         )
+
+    def _barrier_ok(self, target: Coord) -> bool:
+        """Adjacent Barrier Law: in-bounds, Chebyshev<=1 from Cop, free cell."""
+        d_row, d_col = abs(self.cop_pos[0] - target[0]), abs(self.cop_pos[1] - target[1])
+        return (
+            self.grid.is_within_bounds(target)
+            and max(d_row, d_col) <= 1
+            and target not in self.grid.barriers
+            and target != self.thief_pos
+        )
+
+    def legal_moves(self, role: AgentRole) -> list[Coord]:
+        """Non-STAY legal destinations for ``role`` (an empty list means trapped)."""
+        pos = self.cop_pos if role is AgentRole.COP else self.thief_pos
+        return [c for c in get_adjacent_coords(pos, self.grid.shape) if self.grid.is_legal_move(pos, c)]

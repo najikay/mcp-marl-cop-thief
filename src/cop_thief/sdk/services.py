@@ -63,9 +63,18 @@ class MatchCoordinator:
     def evaluate_terminal_condition(
         self, state: DecPomdpGameState
     ) -> SubGameOutcome | None:
-        """Return the sub-game outcome, or ``None`` if play continues."""
+        """Return the sub-game outcome, or ``None`` if play continues.
+
+        Trapped-Death (V1.1): an agent that begins its turn with zero legal moves
+        is resolved immediately — Thief trapped is a Cop win (THIEF_TRAPPED),
+        Cop trapped means the Cop can never capture, so the Thief wins.
+        """
         if state.cop_pos == state.thief_pos:
             return SubGameOutcome.COP_WINS
+        if state.turn_role is AgentRole.THIEF and not state.legal_moves(AgentRole.THIEF):
+            return SubGameOutcome.THIEF_TRAPPED
+        if state.turn_role is AgentRole.COP and not state.legal_moves(AgentRole.COP):
+            return SubGameOutcome.THIEF_WINS
         if state.turn_counter >= self.max_moves:
             return SubGameOutcome.THIEF_WINS
         return None

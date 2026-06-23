@@ -86,6 +86,7 @@ omit = [
     "*/tests/*",
     "src/cop_thief/gui/*",
     "src/cop_thief/ui/server.py",
+    "src/cop_thief/ui/broadcast.py",
     "src/cop_thief/infra/network/switchboard.py",
     "src/cop_thief/infra/network/dual_mcp_host.py",
     "src/cop_thief/orchestrator/treaty_runner.py",

@@ -50,5 +50,6 @@ class SubGameOutcome(str, Enum):
 
     COP_WINS = "cop_wins"
     THIEF_WINS = "thief_wins"
+    THIEF_TRAPPED = "thief_trapped"
     DRAW = "draw"
     VOID_TECHNICAL = "void_technical"

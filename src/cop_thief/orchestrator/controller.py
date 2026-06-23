@@ -34,13 +34,14 @@ def _opponent(role: AgentRole) -> AgentRole:
 class GameLoopController:
     """Drive a single turn cycle and autonomous sub-game simulation."""
 
-    def __init__(self, sdk=None, encoder=None, parser=None, firewall=None, strategy=None) -> None:
-        """Wire the SDK, encoder, parser, firewall and Q-learning strategy."""
+    def __init__(self, sdk=None, encoder=None, parser=None, firewall=None, strategy=None, observer=None) -> None:
+        """Wire the SDK, encoder, parser, firewall, strategy and live observer."""
         self._sdk = sdk or CopThiefSDK()
         self._encoder = encoder or NaturalLanguageEncoder()
         self._parser = parser or DefensiveNlParser()
         self._firewall = firewall or CognitiveFirewall()
         self._strategy = strategy or QTableStrategy()
+        self._observer = observer
         self._rewards = get_config_manager().get_setup().rl.rewards
 
     def _geometry_target(self, state: DecPomdpGameState, role: AgentRole) -> tuple:
@@ -107,7 +108,9 @@ class GameLoopController:
             if outcome is not None:
                 self._strategy.decay_epsilon()
                 return outcome
-            state, _ = self.execute_single_turn_cycle(
+            state, prose = self.execute_single_turn_cycle(
                 state, rival_group_id, inbound_opponent_prose="I edge along the wall."
             )
+            if self._observer is not None:
+                self._observer(state, prose, self._strategy.is_informed(state, AgentRole.COP))
         return self._sdk.evaluate_terminal(state) or SubGameOutcome.THIEF_WINS
