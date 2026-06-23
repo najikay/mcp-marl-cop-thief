@@ -13,6 +13,7 @@ import json
 from functools import lru_cache
 from pathlib import Path
 
+from cop_thief.config.env_loader import load_env_once
 from cop_thief.config.models import LoggingConfig, RateLimitConfig, SetupConfig
 from cop_thief.config.version_guard import VersionGuardMixin
 
@@ -31,6 +32,7 @@ class ConfigManager(VersionGuardMixin):
             config_dir: Directory holding the JSON config files. Defaults to the
                 project-root ``config/`` directory.
         """
+        load_env_once()  # populate os.environ from .env before anything reads secrets
         self._dir = Path(config_dir) if config_dir else _DEFAULT_CONFIG_DIR
         self._setup = self._load_setup()
         self._rate_limits = self._load_rate_limits()
