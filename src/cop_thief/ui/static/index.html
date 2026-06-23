@@ -1,0 +1,54 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Cop &amp; Thief — live</title>
+<style>
+  body { background:#0f172a; color:#e2e8f0; font-family:Segoe UI,system-ui,sans-serif;
+         display:flex; flex-direction:column; align-items:center; gap:14px; padding:24px; }
+  h1 { font-size:20px; margin:0; font-weight:600; }
+  #score { font-size:15px; color:#94a3b8; }
+  #msg { min-height:22px; font-size:14px; color:#cbd5e1; max-width:560px; text-align:center; }
+  canvas { background:#1e293b; border-radius:10px; }
+  .cop { color:#3b82f6; } .thief { color:#ef4444; }
+</style>
+<h1>Cop &amp; Thief — Dec-POMDP pursuit (live)</h1>
+<div id="score"><span class="cop">Cop 0</span> &nbsp;·&nbsp; <span class="thief">Thief 0</span></div>
+<canvas id="board" width="440" height="440"></canvas>
+<div id="msg">Connecting…</div>
+<script>
+  const cv = document.getElementById("board"), ctx = cv.getContext("2d");
+  const score = document.getElementById("score"), msg = document.getElementById("msg");
+  let rows = 5, cols = 5, pad = 10;
+  const COP = "#3b82f6", THIEF = "#ef4444", BARRIER = "#0f172a", GRID = "#475569";
+
+  function cell() { return Math.floor((cv.width - pad * 2) / cols); }
+  function draw(frame) {
+    const c = cell();
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    for (let r = 0; r < rows; r++) for (let k = 0; k < cols; k++) {
+      ctx.strokeStyle = GRID; ctx.lineWidth = 2;
+      ctx.strokeRect(pad + k * c, pad + r * c, c, c);
+    }
+    for (const b of frame.barriers || []) {
+      ctx.fillStyle = BARRIER; ctx.fillRect(pad + b[1] * c, pad + b[0] * c, c, c);
+    }
+    token(frame.thief, THIEF, c); token(frame.cop, COP, c);
+  }
+  function token(p, color, c) {
+    const m = c * 0.22, x = pad + p[1] * c, y = pad + p[0] * c;
+    ctx.fillStyle = color; ctx.beginPath();
+    ctx.arc(x + c / 2, y + c / 2, c / 2 - m, 0, Math.PI * 2); ctx.fill();
+  }
+
+  const es = new EventSource("/events");
+  es.onmessage = (e) => {
+    const d = JSON.parse(e.data);
+    if (d.type === "config") { rows = d.rows; cols = d.cols; }
+    else if (d.type === "frame") { draw(d); if (d.message) msg.textContent = d.message; }
+    else if (d.type === "outcome") {
+      score.innerHTML = `<span class="cop">Cop ${d.cop_wins}</span> &nbsp;·&nbsp; ` +
+                        `<span class="thief">Thief ${d.thief_wins}</span>`;
+      msg.textContent = d.captured ? "👮 Cop caught the thief!" : "🦹 Thief escaped!";
+    }
+  };
+  es.onerror = () => { msg.textContent = "Disconnected — is the server running?"; };
+</script>

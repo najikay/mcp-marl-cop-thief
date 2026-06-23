@@ -19,6 +19,7 @@ thief-server = "cop_thief.servers.run_server:run_thief"
 cop-thief-match = "cop_thief.run_match:main"
 cop-thief-train = "cop_thief.run_train:main"
 cop-thief-gui = "cop_thief.gui.app:main"
+cop-thief-web = "cop_thief.ui.server:main"
 
 [dependency-groups]
 dev = [
@@ -55,6 +56,7 @@ omit = [
     "**/run_match.py",
     "**/run_train.py",
     "**/oauth_flow.py",
+    "**/ui/server.py",
 ]
 
 [tool.coverage.report]
