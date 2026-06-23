@@ -1,9 +1,11 @@
 {
   "version": "1.00",
   "description": "Immutable game parameters and runtime routing for marl-cop-thief (Dec-POMDP Cop & Thief).",
-
   "game": {
-    "grid_size": [5, 5],
+    "grid_size": [
+      5,
+      5
+    ],
     "max_moves": 25,
     "num_games": 6,
     "max_barriers": 5,
@@ -12,7 +14,6 @@
     "random_seed": null,
     "thief_moves_first": true
   },
-
   "scoring": {
     "comment": "Mapped exactly from ex06 Table 1. Values are IMMUTABLE and may not change.",
     "cop_win": 20,
@@ -22,7 +23,6 @@
     "full_game_max_per_group": 90,
     "full_game_min_per_group": 30
   },
-
   "servers": {
     "cop": {
       "mode": "cloud",
@@ -37,7 +37,6 @@
       "local_port": 8102
     }
   },
-
   "llm_routing": {
     "comment": "Dual-LLM failover. Gatekeeper tries primary, falls back on exhausted retries / hard errors.",
     "primary": {
@@ -55,7 +54,6 @@
       "timeout_seconds": 60
     }
   },
-
   "nl": {
     "encoder": {
       "tone": "terse",
@@ -66,7 +64,7 @@
       "prompt_template": "prompts/encoder_default.txt"
     },
     "parser": {
-      "min_confidence": 0.60,
+      "min_confidence": 0.6,
       "max_tokens": 200,
       "prompt_template": "prompts/parser_default.txt"
     },
@@ -75,7 +73,6 @@
       "prompt_template": "prompts/diplomat_default.txt"
     }
   },
-
   "rl": {
     "enabled": true,
     "alpha": 0.1,
@@ -97,13 +94,15 @@
       "r_corner": -0.5
     }
   },
-
   "vision": {
     "comment": "Partial-observability band used by Tier-2 Vision-Hunting and sanity stage 3.",
     "radius": 2,
-    "distance_bands": { "adjacent": 1, "near": 2, "far": 4 }
+    "distance_bands": {
+      "adjacent": 1,
+      "near": 2,
+      "far": 4
+    }
   },
-
   "reporting": {
     "examiner_email": "rmisegal+uoh26b@gmail.com",
     "burner_email": "mcp.marl.telemetry@gmail.com",
@@ -113,28 +112,40 @@
     "json_only_body": true,
     "single_send_per_game": true
   },
-
   "token_budget": {
     "version": "1.00",
-    "rates": { "input_per_million_usd": 0.15, "output_per_million_usd": 0.60 },
-    "lifecycle_budget": { "input_tokens": 1500000, "output_tokens": 180000 },
-    "ceiling_usd": 5.00,
-    "warn_ratio": 0.80,
-    "per_turn_estimate": { "input": 850, "output": 90 },
+    "rates": {
+      "input_per_million_usd": 0.15,
+      "output_per_million_usd": 0.6
+    },
+    "lifecycle_budget": {
+      "input_tokens": 1500000,
+      "output_tokens": 180000
+    },
+    "ceiling_usd": 5.0,
+    "warn_ratio": 0.8,
+    "per_turn_estimate": {
+      "input": 850,
+      "output": 90
+    },
     "enforce_ceiling": true,
     "usage_file": "data/token_usage.json"
   },
-
   "_economics_note": "Per-provider USD pricing ledger (per million tokens). Migrated out of code per Guidelines §7.2 (no hardcoding).",
   "economics": {
-    "DEEPSEEK": { "input": 0.15, "output": 0.60 },
-    "ANTHROPIC": { "input": 3.00, "output": 15.00 }
+    "DEEPSEEK": {
+      "input": 0.15,
+      "output": 0.6
+    },
+    "ANTHROPIC": {
+      "input": 3.0,
+      "output": 15.0
+    }
   },
-
   "_network_note": "Two-team public URL matrix (ex06 §9.2): one Cop + one Thief URL per group. Local defaults; replace with Cloudflare tunnel URLs for distributed play.",
   "network": {
-    "team_alpha_cop_url": "http://127.0.0.1:8001",
-    "team_alpha_thief_url": "http://127.0.0.1:8002",
+    "team_alpha_cop_url": "https://whether-babies-itself-segment.trycloudflare.com",
+    "team_alpha_thief_url": "https://finest-easier-march-temp.trycloudflare.com",
     "team_beta_cop_url": "",
     "team_beta_thief_url": ""
   }
