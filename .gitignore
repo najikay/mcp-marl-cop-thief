@@ -24,3 +24,4 @@ htmlcov/
 coverage.xml
 private-google-client.json
 token.json
+data/

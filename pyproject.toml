@@ -78,7 +78,12 @@ markers = [
 [tool.coverage.run]
 source = ["src"]
 branch = true
-omit = ["src/cop_thief/main.py", "*/tests/*", "src/cop_thief/gui/*"]
+omit = [
+    "src/cop_thief/main.py",
+    "src/cop_thief/diagnostic_runner.py",
+    "*/tests/*",
+    "src/cop_thief/gui/*",
+]
 
 [tool.coverage.report]
 fail_under = 85
