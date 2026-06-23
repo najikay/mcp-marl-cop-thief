@@ -109,3 +109,10 @@ class GmailApiReporter:
         message = self._encode_message(recipient_email, json.dumps(report))
         report["_delivery"] = self._gatekeeper.execute(self._send, message, service="gmail")
         return report
+
+    def dispatch_payload(self, report: dict, recipient_email: str) -> dict:
+        """Guard, encode and dispatch an arbitrary JSON report (e.g. bonus_game)."""
+        self._guard.verify_safe_recipient(recipient_email)
+        message = self._encode_message(recipient_email, json.dumps(report))
+        report["_delivery"] = self._gatekeeper.execute(self._send, message, service="gmail")
+        return report
