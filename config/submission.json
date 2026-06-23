@@ -1,0 +1,8 @@
+{
+  "version": "1.0.0",
+  "group_name": "Team-Alpha",
+  "github_repo": "https://github.com/najikay/mcp-marl-cop-thief",
+  "students": ["Amjad Abd Alrahim", "Naji"],
+  "cop_mcp_url": "http://localhost:8001",
+  "thief_mcp_url": "http://localhost:8002"
+}

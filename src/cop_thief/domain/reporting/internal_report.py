@@ -34,6 +34,7 @@ class InternalReport(BaseReport):
         github_repo: str,
         cop_mcp_url: str,
         thief_mcp_url: str,
+        students: list[str] | None = None,
     ) -> InternalReport:
         """Build the report from a played game and submission metadata."""
         return cls(
@@ -42,6 +43,7 @@ class InternalReport(BaseReport):
             cop_mcp_url=cop_mcp_url,
             thief_mcp_url=thief_mcp_url,
             result=result,
+            students=students or [],
         )
 
     def to_dict(self) -> dict:

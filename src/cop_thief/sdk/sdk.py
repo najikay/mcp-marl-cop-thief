@@ -137,10 +137,11 @@ class CopThiefSDK:
         github_repo: str,
         cop_mcp_url: str,
         thief_mcp_url: str,
+        students: list[str] | None = None,
     ) -> InternalReport:
         """Assemble the internal game JSON report from a played game."""
         return InternalReport.from_result(
-            result, group_name, github_repo, cop_mcp_url, thief_mcp_url
+            result, group_name, github_repo, cop_mcp_url, thief_mcp_url, students
         )
 
     def token_usage(self) -> dict:
