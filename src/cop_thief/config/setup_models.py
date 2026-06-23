@@ -84,6 +84,7 @@ class RLConfig(_Frozen):
     epsilon_start: float = 1.0
     epsilon_min: float = 0.05
     epsilon_decay: float = 0.995
+    q_confidence_margin: float = 0.05
     rewards: RewardConfig
 
 
@@ -114,6 +115,14 @@ class NlConfig(_Frozen):
     parser: NlParserConfig = NlParserConfig()
 
 
+class ReportingConfig(_Frozen):
+    """Reporting addresses and the production submission safety interlock."""
+
+    examiner_email: str = "rmisegal+uoh26b@gmail.com"
+    burner_email: str = "mcp.marl.telemetry@gmail.com"
+    production_submission_locked: bool = True
+
+
 class TokenBudget(_Frozen):
     """Token economics & hard cost ceiling."""
 
@@ -137,3 +146,4 @@ class SetupConfig(_Frozen):
     token_budget: TokenBudget
     economics: dict[str, ProviderRate]
     nl: NlConfig = NlConfig()
+    reporting: ReportingConfig = ReportingConfig()

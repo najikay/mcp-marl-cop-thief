@@ -106,6 +106,8 @@
 
   "reporting": {
     "examiner_email": "rmisegal+uoh26b@gmail.com",
+    "burner_email": "mcp.marl.telemetry@gmail.com",
+    "production_submission_locked": true,
     "subject_template": "[marl-cop-thief] Game Report — {group_name} — {timestamp}",
     "timezone": "Asia/Jerusalem",
     "json_only_body": true,

@@ -61,6 +61,8 @@ ignore = ["E501"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["N802", "N803"]
+# SubmissionSafetyException is a mandated public API name (kept verbatim per spec).
+"src/cop_thief/reporting/guard.py" = ["N818"]
 
 # --- pytest ------------------------------------------------------------------
 [tool.pytest.ini_options]
