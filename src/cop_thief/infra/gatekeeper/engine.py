@@ -63,6 +63,14 @@ class ApiGatekeeper(PayloadBuilderMixin):
         with contextlib.suppress(queue.Empty):
             self._queue.get_nowait()
 
+    def execute(self, func, *args, service: str = "default", **kwargs):
+        """Generic FIFO-gated chokepoint for non-LLM external calls (PRD §2.1)."""
+        self._acquire()
+        try:
+            return func(*args, **kwargs)
+        finally:
+            self._release()
+
     def execute_llm_call(
         self, prompt: str, system_instruction: str, primary_provider: str = "DEEPSEEK"
     ) -> tuple[str, dict]:
@@ -91,9 +99,8 @@ class ApiGatekeeper(PayloadBuilderMixin):
         """Call DeepSeek's chat-completions endpoint and record usage."""
         url = endpoint.base_url.rstrip("/") + DEEPSEEK_PATH
         headers = self.headers_deepseek(self._get_env(endpoint.api_key_env_var, ""))
-        response = self._client.post(
-            url, json=self.build_deepseek(prompt, system, endpoint.model), headers=headers
-        )
+        payload = self.build_deepseek(prompt, system, endpoint.model)
+        response = self._client.post(url, json=payload, headers=headers)
         response.raise_for_status()
         text, usage = self.parse_deepseek(response.json())
         self._tracker.log_turn(endpoint.provider, endpoint.model, **usage)
@@ -103,9 +110,8 @@ class ApiGatekeeper(PayloadBuilderMixin):
         """Call Anthropic's messages endpoint and record usage."""
         url = endpoint.base_url.rstrip("/") + ANTHROPIC_PATH
         headers = self.headers_anthropic(self._get_env(endpoint.api_key_env_var, ""))
-        response = self._client.post(
-            url, json=self.build_anthropic(prompt, system, endpoint.model), headers=headers
-        )
+        payload = self.build_anthropic(prompt, system, endpoint.model)
+        response = self._client.post(url, json=payload, headers=headers)
         response.raise_for_status()
         text, usage = self.parse_anthropic(response.json())
         self._tracker.log_turn(endpoint.provider, endpoint.model, **usage)

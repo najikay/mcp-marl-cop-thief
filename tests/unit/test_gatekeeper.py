@@ -138,6 +138,14 @@ def test_corrupt_ledger_recovers(tmp_path: Path) -> None:
     assert tracker.get_current_economics()["turns"] == 1
 
 
+def test_generic_execute_passthrough(tmp_path: Path) -> None:
+    """The generic execute() chokepoint runs an arbitrary callable and returns it."""
+    gk = _build_gatekeeper(mock.Mock(), tmp_path)
+    result = gk.execute(lambda value: {"sent": value}, "payload", service="gmail")
+    assert result == {"sent": "payload"}
+    assert gk._queue.qsize() == 0  # slot acquired then released
+
+
 def test_token_accounting_math(tmp_path: Path) -> None:
     """Ledger math: DeepSeek 0.15/0.60 + Anthropic 3.00/15.00 per million."""
     tracker = TokenTracker(usage_file=tmp_path / "u.json")
