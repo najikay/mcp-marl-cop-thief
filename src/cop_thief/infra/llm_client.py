@@ -10,6 +10,8 @@ from __future__ import annotations
 import os
 from abc import ABC, abstractmethod
 
+from .token_tracker import TokenTracker, estimate_tokens
+
 
 class LLMClient(ABC):
     """A text-in / text-out language-model client behind the gatekeeper."""
@@ -18,6 +20,24 @@ class LLMClient(ABC):
     def complete(self, prompt: str) -> str:
         """Return the model's completion for ``prompt``."""
         raise NotImplementedError
+
+
+class MeteredLLMClient(LLMClient):
+    """Wrap any client to count token usage on every completion."""
+
+    def __init__(self, inner: LLMClient, tracker: TokenTracker | None = None) -> None:
+        self._inner = inner
+        self._tracker = tracker or TokenTracker()
+
+    def complete(self, prompt: str) -> str:
+        """Delegate, recording estimated input/output tokens for the call."""
+        output = self._inner.complete(prompt)
+        self._tracker.record(estimate_tokens(prompt), estimate_tokens(output))
+        return output
+
+    def usage(self) -> dict:
+        """Return the accumulated token-usage snapshot."""
+        return self._tracker.usage()
 
 
 class MockLLMClient(LLMClient):

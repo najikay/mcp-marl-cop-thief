@@ -26,6 +26,24 @@ class InternalReport(BaseReport):
     students: list[str] = field(default_factory=list)
     timezone: str = "Asia/Jerusalem"
 
+    @classmethod
+    def from_result(
+        cls,
+        result: GameResult,
+        group_name: str,
+        github_repo: str,
+        cop_mcp_url: str,
+        thief_mcp_url: str,
+    ) -> InternalReport:
+        """Build the report from a played game and submission metadata."""
+        return cls(
+            group_name=group_name,
+            github_repo=github_repo,
+            cop_mcp_url=cop_mcp_url,
+            thief_mcp_url=thief_mcp_url,
+            result=result,
+        )
+
     def to_dict(self) -> dict:
         """Serialise to the internal JSON schema with per-sub-game detail."""
         return {

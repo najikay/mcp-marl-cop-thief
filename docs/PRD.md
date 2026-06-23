@@ -259,5 +259,6 @@ analysis; and `PRD.md`, `PLAN.md`, `TODO.md` (+ per-mechanism PRDs) are approved
 - [`PRD_nl_protocol.md`](./PRD_nl_protocol.md) — Natural-language Dec-POMDP message protocol & LLM parsing.
 - [`PRD_gatekeeper.md`](./PRD_gatekeeper.md) — API Gatekeeper (FIFO, rate limit, retry, backpressure).
 - [`PRD_gmail_oauth.md`](./PRD_gmail_oauth.md) — OAuth2 Desktop client & Gmail JSON reporter.
+- [`PRD_token_budget.md`](./PRD_token_budget.md) — LLM token-budget tracking & cost estimation.
 
 *End of PRD — approve before proceeding to PLAN.md.*

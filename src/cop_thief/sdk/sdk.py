@@ -15,7 +15,7 @@ from ..domain.nl import BeliefUpdate, NLEncoder, NLParser
 from ..domain.reporting import BonusReport, InternalReport
 from ..domain.strategy import BaseStrategy, BeliefHeuristicStrategy, HeuristicStrategy
 from ..domain.turn_advisor import propose_turn as _propose_turn
-from ..infra import ApiGatekeeper, LLMClient, make_llm_client
+from ..infra import ApiGatekeeper, LLMClient, MeteredLLMClient, make_llm_client
 from ..orchestrator import (
     BonusSeriesController,
     BonusSeriesResult,
@@ -40,7 +40,7 @@ class CopThiefSDK:
     ) -> None:
         self._config = config or ConfigManager().load()
         self._gatekeeper = gatekeeper or ApiGatekeeper()
-        self._llm = llm or make_llm_client()
+        self._llm = MeteredLLMClient(llm or make_llm_client())
         self._strategy_factory = strategy_factory
         self._partial = partial_observability
         self._encoder = NLEncoder()
@@ -139,10 +139,10 @@ class CopThiefSDK:
         thief_mcp_url: str,
     ) -> InternalReport:
         """Assemble the internal game JSON report from a played game."""
-        return InternalReport(
-            group_name=group_name,
-            github_repo=github_repo,
-            cop_mcp_url=cop_mcp_url,
-            thief_mcp_url=thief_mcp_url,
-            result=result,
+        return InternalReport.from_result(
+            result, group_name, github_repo, cop_mcp_url, thief_mcp_url
         )
+
+    def token_usage(self) -> dict:
+        """Estimated LLM token usage so far (calls, input/output, total)."""
+        return self._llm.usage()
