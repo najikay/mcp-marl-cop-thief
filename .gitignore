@@ -22,3 +22,4 @@ htmlcov/
 .vscode/
 .cursor/
 coverage.xml
+private-google-client.json
