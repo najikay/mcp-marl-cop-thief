@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dec-POMDP Pursuit — Broadcast</title>
+  <style>
+    :root {
+      --bg: #0d1117; --panel: #161b22; --line: #30363d; --txt: #c9d1d9;
+      --cop: #3b82f6; --thief: #ef4444; --capture: #f59e0b; --capbg: #6d28d9;
+      --q: #34d399; --conway: #fbbf24;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Courier New", monospace; background: var(--bg); color: var(--txt); }
+    header {
+      display: flex; gap: 24px; align-items: center; flex-wrap: wrap;
+      padding: 12px 20px; background: var(--panel); border-bottom: 1px solid var(--line);
+    }
+    header .item { font-size: 15px; letter-spacing: 1px; }
+    header .label { opacity: 0.6; margin-right: 6px; }
+    #turn { font-weight: bold; }
+    #epistemic { font-weight: bold; padding: 2px 10px; border-radius: 4px; background: #21262d; }
+    #cost { color: var(--capture); font-weight: bold; }
+    #status { margin-left: auto; font-size: 13px; opacity: 0.7; }
+    main { display: flex; gap: 16px; padding: 16px; align-items: stretch; }
+    #left { flex: 0 0 auto; }
+    #matrix {
+      display: grid; gap: 6px; background: var(--panel);
+      padding: 12px; border: 1px solid var(--line); border-radius: 8px;
+    }
+    .cell {
+      width: 64px; height: 64px; display: flex; align-items: center; justify-content: center;
+      font-size: 28px; font-weight: bold; background: #0b0f14;
+      border: 1px solid var(--line); border-radius: 6px; transition: background 0.15s;
+    }
+    .cop { color: var(--cop); border-color: var(--cop); }
+    .thief { color: var(--thief); border-color: var(--thief); }
+    .capture { color: var(--capture); background: var(--capbg); border-color: var(--capture); }
+    #right { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; }
+    #right h2 { margin: 0 0 8px; font-size: 14px; letter-spacing: 2px; opacity: 0.7; }
+    #comms {
+      flex: 1 1 auto; overflow-y: auto; background: var(--panel);
+      border: 1px solid var(--line); border-radius: 8px; padding: 12px; height: 420px;
+    }
+    .msg { margin: 0 0 8px; line-height: 1.4; word-break: break-word; }
+    .msg .who { font-weight: bold; }
+    .msg.cop .who { color: var(--cop); }
+    .msg.thief .who { color: var(--thief); }
+    .msg .t { opacity: 0.45; font-size: 12px; margin-right: 6px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="item"><span class="label">TURN</span><span id="turn">0/10</span></div>
+    <div class="item"><span class="label">EPISTEMIC</span><span id="epistemic">—</span></div>
+    <div class="item"><span class="label">COST</span><span id="cost">$0.000000</span></div>
+    <div id="status">● connecting…</div>
+  </header>
+  <main>
+    <div id="left"><div id="matrix"></div></div>
+    <div id="right">
+      <h2>COMMS INTERCEPT</h2>
+      <div id="comms"></div>
+    </div>
+  </main>
+
+  <script>
+    "use strict";
+    const $ = (id) => document.getElementById(id);
+    const eq = (a, b) => a[0] === b[0] && a[1] === b[1];
+
+    function renderMatrix(p) {
+      const n = p.grid, m = $("matrix");
+      m.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+      m.innerHTML = "";
+      for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          const here = [r, c];
+          if (p.captured && eq(here, p.cop) && eq(here, p.thief)) {
+            cell.classList.add("capture"); cell.textContent = "!";
+          } else if (eq(here, p.cop)) {
+            cell.classList.add("cop"); cell.textContent = "C";
+          } else if (eq(here, p.thief)) {
+            cell.classList.add("thief"); cell.textContent = "T";
+          }
+          m.appendChild(cell);
+        }
+      }
+    }
+
+    function logMsg(role, prose, turn) {
+      const comms = $("comms");
+      const div = document.createElement("div");
+      div.className = "msg " + role;
+      div.innerHTML = `<span class="t">[T${turn}]</span>` +
+        `<span class="who">${role.toUpperCase()}:</span> ` +
+        `"${prose.replace(/[<>&]/g, "")}"`;
+      comms.appendChild(div);
+      comms.scrollTop = comms.scrollHeight;
+    }
+
+    function render(p) {
+      $("turn").textContent = `${p.turn}/${p.total}`;
+      const flag = $("epistemic");
+      flag.textContent = p.epistemic;
+      flag.style.color = p.epistemic === "Q-Policy" ?
+        "var(--q)" : "var(--conway)";
+      $("cost").textContent = "$" + Number(p.cost_usd).toFixed(6);
+      renderMatrix(p);
+      logMsg("cop", p.cop_prose, p.turn);
+      logMsg("thief", p.thief_prose, p.turn);
+    }
+
+    const es = new EventSource("/stream");
+    es.onopen = () => { $("status").textContent = "● live"; };
+    es.onmessage = (e) => render(JSON.parse(e.data));
+    es.onerror = () => { $("status").textContent = "● stream closed"; };
+  </script>
+</body>
+</html>
