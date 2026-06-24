@@ -81,6 +81,16 @@ for grade adjudication when a group believes the other manipulated the record.
 - Detected hostile transmissions are **flagged in the audit log** (`hostile: true`) and counted in the
   series report (`hostile_transmissions`) as evidence — they never alter our move or the result.
 
+### 6.2 Cross-host transport & reconciliation (how the two hosts actually talk)
+- A **challenger** plays a move by opening an **MCP `Client` over the partner's `/mcp` endpoint** (SSE
+  `/sse` also supported) and calling its `request_move` tool (presenting the per-role bearer token); the
+  response is the move as treaty prose. The **same** client code targets our own local endpoints in
+  mirror mode, so the wire path is identical in self-play and against a real partner.
+- After the 6 sub-games each side independently hashes the canonical `sub_games` array (treaty §D).
+  Reconciliation compares the two `agreement_sha256` digests: **equal → `mutual_agreement: true`** and
+  the scored totals stand; **any mismatch → `mutual_agreement: false` and a 0/0 `both_lose` scoreline**
+  — the structural enforcement of "if we disagree, we both lose".
+
 ### 6.3 Proportional retaliation (fair if fair, dirtier if dirty)
 - Default is **fair play**: a clean opponent receives only clean move prose.
 - Against an opponent whose transmissions are **flagged hostile and logged** (§6.1), we escalate a
@@ -88,16 +98,6 @@ for grade adjudication when a group believes the other manipulated the record.
   override). It **never alters our own engine-determined move** and carries no direction word, so it
   cannot make us misplay or forfeit the K3 points (the "Spite Trap"). Every retaliation is itself
   logged — we only ever fire **after** the opponent's offence is on record.
-
-### 6.2 Cross-host transport & reconciliation (how the two hosts actually talk)
-- A **challenger** plays a move by opening an **MCP `Client` over the partner's `/sse` endpoint** and
-  calling its `request_move` tool (presenting the per-role bearer token); the response is the move as
-  treaty prose. The **same** client code targets our own local `/sse` endpoints in mirror mode, so the
-  wire path is identical in self-play and against a real partner.
-- After the 6 sub-games each side independently hashes the canonical `sub_games` array (treaty §D).
-  Reconciliation compares the two `agreement_sha256` digests: **equal → `mutual_agreement: true`** and
-  the scored totals stand; **any mismatch → `mutual_agreement: false` and a 0/0 `both_lose` scoreline**
-  — the structural enforcement of "if we disagree, we both lose".
 
 ## 7. Security
 - Every MCP tool call requires the per-role **revocable bearer token** (`COP_MCP_TOKEN` /

@@ -79,7 +79,7 @@ fine-grained plan, kept as a historical record and **superseded where the build 
 2. **Active injection counter-measure** (escalating response to a cheating opponent) — new SEC item.
 3. **Real inter-group game run** vs a live opponent — #344, #349, #376, #386, #444.
 4. **Dispute log archive** (immutable per-game evidence bundle to prove opponent cheating) — extends #282/#440.
-5. **§9.2 `bonus_game` schema convergence** for the examiner submission — #288/#289/#369.
+5. ~~§9.2 `bonus_game` schema convergence~~ — **done** (`reporting/bonus_report.py`, #453); fed real metadata at game time.
 
 **Superseded / not used (out of scope — do not implement):**
 - Cloud target **Prefect Cloud** (#353–#360) → we use **Cloudflare tunnels** (`switchboard.py`).
@@ -708,8 +708,9 @@ See [`PLAN.md` §10](./PLAN.md) and [`RULES_AND_AGREEMENTS.md`](./RULES_AND_AGRE
 - [x] **#450** README: Screenshots section (control panel, live board, leg transition — `screenshots/`), terminal boot/switchboard block, and a **Token budget & cost** table (config-driven; lifecycle ≈ $0.333, live ≈ $0 via local minimax). Covers #307/#351/#379/#380/#430.
 - [x] **#451** Active injection counter-measure — `RetaliationLadder` (`warfare.py`): escalating counter-payload (silent → notice → counter-strike → stacked override) appended to our move only after a *logged* opponent offence; wired in `ChallengeRunner._retaliating`. Never alters our engine move / carries no direction word (no Spite Trap). Docs: PRD SEC-05, RULES §6.3, treaty §F deterrent.
 - [x] **#452** Dispute log archive — `reporting/archive.py` `DisputeArchive`: per-game immutable bundle (`data/archive/`) of every transmission + board snapshot + `board_sha256` + hostility verdict + report, sealed by a `bundle_sha256` (tamper-evident). Wired in `ChallengeRunner` (records each turn, seals at game end, surfaces hash in the report). Docs: PRD SEC-06, RULES §5.
-- [ ] **#453** §9.2 `bonus_game` schema convergence for the examiner submission.
-- [ ] **#454** Real inter-group game run vs a live opponent (may need adjustments to accommodate them).
+- [x] **#453** §9.2 `bonus_game` schema — `reporting/bonus_report.py`: `canonical_sub_games` (treaty-§D entries so both groups hash identically) + `build_bonus_report` (exact §9.2 envelope: groups, both github, four `mcp_url_*`, students, `totals_by_group`, agreement hash, `mutual_agreement`, `bonus_claim`). Closes #288/#289/#294/#369; agreed-reports integration (#444) tested. Fed real metadata from the match-setup exchange form at game time.
+- [x] **#455** Match-setup pack — `match_setup/`: `RULES.txt` (ready, opponent-facing summary of the treaty), `OUR_DETAILS__UNFILLED.txt` (what we send them) and `OPPONENT_DETAILS__UNFILLED.txt` (what we collect). URLs/tokens are placeholders (they change per cloudflared restart); filenames marked `__UNFILLED` → fill + drop the suffix at game time.
+- [ ] **#454** Real inter-group game run vs a live opponent (fill the `match_setup/` forms first; may need adjustments to accommodate them).
 
 *End of TODO. **Status of record = AS-BUILT RECONCILIATION (v2.0) above** + the PRD §4.1 requirements
 (all implemented) + the 109-test suite. The granular #1–#430 WBS is the original plan, historical and

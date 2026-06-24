@@ -46,7 +46,8 @@ Then open **`http://127.0.0.1:8800`**.
 
 1. `uv run python -m cop_thief.app` → the panel opens; wait for **Servers ●** and **Tunnels ●** green.
 2. The status card shows your two public `…/mcp/` URLs + per-role tokens (copy buttons). **Send these to
-   your opponent** along with [`docs/INTER_GROUP_TREATY_SPEC.md`](docs/INTER_GROUP_TREATY_SPEC.md).
+   your opponent** along with [`docs/INTER_GROUP_TREATY_SPEC.md`](docs/INTER_GROUP_TREATY_SPEC.md). Use
+   the fill-in forms in [`match_setup/`](match_setup/) (`RULES.txt`, `OUR_DETAILS`, `OPPONENT_DETAILS`).
 3. Paste the opponent's two `…/mcp/` URLs (and tokens, if any) into the **challenge form**, then
    **START CHALLENGE** — the 6 sub-games play cross-host on the TV and the report is emailed.
 4. No partner yet? Click **MIRROR SELF-TEST ⟳** — it fills your own localhost endpoints + tokens and

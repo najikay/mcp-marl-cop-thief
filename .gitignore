@@ -26,5 +26,9 @@ private-google-client.json
 token.json
 data/
 
+# match-setup: keep the __UNFILLED templates; ignore the filled copies (they hold live tokens)
+match_setup/OUR_DETAILS.txt
+match_setup/OPPONENT_DETAILS.txt
+
 # userland binaries (cloudflared, etc.) — never commit 30MB+ blobs
 bin/
