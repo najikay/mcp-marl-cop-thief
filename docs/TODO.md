@@ -705,7 +705,7 @@ See [`PLAN.md` §10](./PLAN.md) and [`RULES_AND_AGREEMENTS.md`](./RULES_AND_AGRE
 - [x] **#448** **Angel–Devil strategy engine** ([`STRATEGY.md`](./STRATEGY.md)) — game-theoretic alpha-beta minimax (`minimax.py`) over the zero-sum Markov game; Conway Devil barriers in the search action set with a flood-fill *containment* evaluation (`features.py`/`evaluation.py`); advanced self-play RL weight learning (`selfplay.py`). `StrategyResolver` now drives 3 minimax variant profiles; draws structurally avoided. Captures in ~8 turns; tabular Q kept as the documented baseline.
 
 ### Milestone 6 — Pre-game readiness (remaining cycles; see AS-BUILT RECONCILIATION above)
-- [ ] **#450** README polish + UI/terminal screenshots (assets/) — covers #307/#351/#379/#380/#430.
+- [x] **#450** README: Screenshots section (control panel, live board, leg transition — `screenshots/`), terminal boot/switchboard block, and a **Token budget & cost** table (config-driven; lifecycle ≈ $0.333, live ≈ $0 via local minimax). Covers #307/#351/#379/#380/#430.
 - [ ] **#451** Active injection counter-measure: escalate against a cheating opponent (fair if fair, dirtier if dirty), screened + logged.
 - [ ] **#452** Dispute log archive: immutable per-game evidence bundle (transmissions + hashes + verdicts) to prove opponent cheating.
 - [ ] **#453** §9.2 `bonus_game` schema convergence for the examiner submission.

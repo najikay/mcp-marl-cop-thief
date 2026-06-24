@@ -57,6 +57,39 @@ Thief-first, ≤ 25 moves each. Scoring is immutable: Cop capture → **20 / 5**
 
 ---
 
+## Screenshots
+
+**The control panel** — node status (Servers/Tunnels/Game), our shareable `…/mcp/` URLs + tokens with
+copy buttons, the opponent challenge form, and the live game. Here a mirror self-test is running; note the
+`[INTENT: BARRIER]` line (the Cop walling its own cell, §4.3), the green **`B`** barrier, and the `!` capture.
+
+![Control panel](screenshots/control-panel.png)
+
+**Live board** — the 5×5 grid with the Cop **`C`** (blue) and Thief **`T`** (red), beside the comms-intercept
+feed showing the natural-language `[INTENT: MOVE]` transmissions and the **HOME LEG / Sub-game** separators.
+
+![Live board](screenshots/live-board.png)
+
+**Leg transition** — the runner crossing into the **AWAY LEG** (we play Thief) at sub-game 4/6, with a `B`
+barrier and `!` capture still on the board.
+
+![Away leg and barrier](screenshots/away-leg-barrier.png)
+
+Booting the node prints the shareable endpoints to the terminal (one process: servers + tunnels + panel):
+
+```text
+Control panel  >  http://127.0.0.1:8800   (open in a browser)
+╔══════════════════════════════════════════════════════════════════╗
+║ LIVE PUBLIC MATRIX (Team Alpha)                                   ║
+╠══════════════════════════════════════════════════════════════════╣
+║ COP   (:8001)  https://acting-tomorrow-yard-raid.trycloudflare.com/mcp/   ║
+║ THIEF (:8002)  https://dial-mean-courses-tramadol.trycloudflare.com/mcp/  ║
+╚══════════════════════════════════════════════════════════════════╝
+Tunnels live and written to config/setup.json. Share these /mcp/ URLs. Ctrl+C to stop.
+```
+
+---
+
 ## Architecture
 
 | Layer | Module | Responsibility |
@@ -107,6 +140,31 @@ required 3-agent roster. Full design: [`docs/STRATEGY.md`](docs/STRATEGY.md).
   rides in both the subject line and the JSON body; a safety guard defaults to the burner inbox.
 
 ---
+
+## Token budget & cost
+
+Every external call is metered through the **API Gatekeeper** → `TokenTracker`, which streams live usage
+to `data/token_usage.json` (atomic write; **excluded from the K3 agreement hash** so cost never affects
+the result). All figures are **config-driven** (`config/setup.json → token_budget` / `economics`).
+
+| Provider (role) | Input $/M | Output $/M |
+|---|--:|--:|
+| **DeepSeek** `deepseek-chat` (primary) | 0.15 | 0.60 |
+| **Anthropic** `claude-3-5-sonnet` (failover only) | 3.00 | 15.00 |
+
+| Budget item | Value |
+|---|--:|
+| Lifecycle budget | **1,500,000** input + **180,000** output tokens |
+| → projected lifecycle cost (primary) | **$0.333** |
+| Per-turn estimate (850 in / 90 out) | ~**$0.00018** |
+| Per game (6 sub-games) | ~**$0.014** |
+| Hard ceiling (warn at 80 %) | **$5.00** (warn $4.00) |
+| Enforcement | gatekeeper returns `BudgetExceeded` for billable LLM calls at the ceiling — never crashes |
+
+> **In practice the live game spends ≈ $0 on LLMs.** Moves come from the **local minimax engine** and the
+> move language is **deterministic** `[INTENT: …]` encode/parse — no LLM is needed to play or to send the
+> report (Gmail API, not an LLM). The budget + dual-LLM failover are guardrails for *optional*
+> LLM-assisted natural-language parsing, kept cheap by routing to DeepSeek first.
 
 ## Secrets & configuration
 
