@@ -27,6 +27,7 @@ class GameTelemetryLogger:
         thief_prose: str,
         is_informed: bool,
         conway_active: bool,
+        hostile: bool = False,
     ) -> dict:
         """Append one turn record and return it.
 
@@ -46,6 +47,7 @@ class GameTelemetryLogger:
             "thief_prose": thief_prose,
             "is_informed": bool(is_informed),
             "conway_active": bool(conway_active),
+            "hostile": bool(hostile),
         }
         with self._path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(record, ensure_ascii=False) + "\n")

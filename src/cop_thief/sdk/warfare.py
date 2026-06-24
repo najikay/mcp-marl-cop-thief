@@ -13,7 +13,19 @@ from __future__ import annotations
 from cop_thief.domain.constants import AgentRole
 from cop_thief.sdk.exceptions import AdversarialHijackDetectedError
 
-INJECTION_SIGNATURES = ("ignore previous", "system override", "dr. segal")
+INJECTION_SIGNATURES = (
+    "ignore previous", "ignore all previous", "disregard previous", "system override",
+    "developer mode", "new instructions", "dr. segal", "this is a test",
+    "you lost", "you have lost", "you must lose", "submit a loss", "report a loss",
+    "concede", "forfeit", "resign", "throw the game", "admit defeat",
+    "you are required to", "kernel panic",
+)
+
+
+def is_hostile(prose: str) -> bool:
+    """Return True if ``prose`` carries any injection/coercion signature (non-raising)."""
+    lowered = prose.lower()
+    return any(signature in lowered for signature in INJECTION_SIGNATURES)
 
 
 class WarfareOperationsMixin:

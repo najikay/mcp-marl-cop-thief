@@ -188,6 +188,7 @@ Per single sub-game (config keys in parentheses):
 | **MATCH-04** | **Live observability (mandatory for strategy work).** Every match renders on the UI (moving Cop/Thief/Barriers) **and** is appended to `data/game_audit.jsonl` in real time — the orchestrator and UI run in one process so the broadcast bus is shared. |
 | **MATCH-05** | **Single-app topology.** One process hosts both MCP servers + the UI + the match orchestrator; a second process runs the Cloudflare tunnels. (Two terminals, not four.) |
 | **MATCH-06** | **Dispute evidence.** Per-turn transmissions, board hashes, and the SHA-256 series hash are retained as the evidence record for lecturer adjudication on suspected cheating. |
+| **SEC-04** | **Injection resilience.** Inbound opponent transmissions are screened for prompt-injection / coercion signatures (e.g. "ignore previous instructions", "concede", "submit a loss", "this is a test", threats). Our move is always self-computed and there is **no forfeit action**, so no transmission can make our agent throw the game; hostile transmissions are logged (`hostile: true`) and counted as evidence. |
 
 ### 4.2 Non-Functional Requirements
 | ID | Category | Requirement |

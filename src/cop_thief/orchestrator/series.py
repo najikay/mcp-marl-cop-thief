@@ -18,6 +18,7 @@ from cop_thief.domain.grid import Grid
 from cop_thief.domain.move_language import apply_prose
 from cop_thief.domain.state import DecPomdpGameState
 from cop_thief.sdk.services import MatchCoordinator
+from cop_thief.sdk.warfare import is_hostile
 
 _GRID = 5
 _BURNER = "mcp.marl.telemetry@gmail.com"
@@ -39,13 +40,14 @@ class SeriesRunner:
         self._recipient = recipient
         self._coord = MatchCoordinator(max_moves=max_moves)
         self._delay = turn_delay
+        self._hostile = 0
 
     def _observation(self, state: DecPomdpGameState, role: AgentRole) -> dict:
         return {"role": role.value, "grid": list(state.grid.shape),
                 "cop": list(state.cop_pos), "thief": list(state.thief_pos),
                 "barriers": [list(b) for b in state.grid.barriers]}
 
-    def _record(self, state: DecPomdpGameState, role: AgentRole, prose: str) -> None:
+    def _record(self, state: DecPomdpGameState, role: AgentRole, prose: str, hostile: bool) -> None:
         if self._observer is not None:
             self._observer(state, prose, False)
         if self._logger is not None:
@@ -54,7 +56,7 @@ class SeriesRunner:
                 {"cop": list(state.cop_pos), "thief": list(state.thief_pos),
                  "barriers": [list(b) for b in state.grid.barriers]},
                 prose if role is AgentRole.COP else "",
-                prose if role is AgentRole.THIEF else "", False, False)
+                prose if role is AgentRole.THIEF else "", False, False, hostile)
 
     def play_match(self) -> SubGameOutcome:
         """Play one thief-first match by asking each provider for its move."""
@@ -67,8 +69,9 @@ class SeriesRunner:
             role = state.turn_role
             provider = self._cop if role is AgentRole.COP else self._thief
             prose = provider(self._observation(state, role))
+            self._hostile += int(hostile := is_hostile(prose))
             state = apply_prose(state, role, prose)
-            self._record(state, role, prose)
+            self._record(state, role, prose, hostile)
             if self._delay:
                 time.sleep(self._delay)
         return self._coord.evaluate_terminal_condition(state) or SubGameOutcome.THIEF_WINS
@@ -84,9 +87,11 @@ class SeriesRunner:
         """Run both directions (6 matches), score them, email one merged report."""
         sub_games, totals = [], {"ours": 0, "opponent": 0}
         for game_no, (venue, our_role) in enumerate(_DIRECTIONS, 1):
-            self._banner(f"GAME {game_no} — {venue.upper()} — we play {our_role.value.upper()}")
+            if self._announce is not None:
+                self._announce(f"GAME {game_no} — {venue.upper()} — we play {our_role.value.upper()}")
             for _ in range(3):
-                self._banner(f"MATCH {len(sub_games) + 1}/6")
+                if self._announce is not None:
+                    self._announce(f"MATCH {len(sub_games) + 1}/6")
                 outcome = self.play_match()
                 cop_pts, thief_pts = self._points(outcome)
                 ours, opp = (cop_pts, thief_pts) if our_role is AgentRole.COP else (thief_pts, cop_pts)
@@ -100,20 +105,14 @@ class SeriesRunner:
             self._reporter.dispatch_payload(report, self._recipient)
         return report
 
-    def _banner(self, label: str) -> None:
-        if self._announce is not None:
-            self._announce(label)
-
     def _report(self, sub_games: list, totals: dict) -> dict:
         net = get_config_manager().network
         diff = totals["ours"] - totals["opponent"]
         canon = json.dumps(sub_games, sort_keys=True, separators=(",", ":"))
         return {
-            "report_type": "game_report",
-            "groups": {"ours": "Team-Alpha", "opponent": "Team-Beta"},
-            "our_cop_url": net.team_alpha_cop_url, "our_thief_url": net.team_alpha_thief_url,
-            "opponent_cop_url": net.team_beta_cop_url, "opponent_thief_url": net.team_beta_thief_url,
-            "timezone": "Asia/Jerusalem", "sub_games": sub_games, "totals": totals,
+            "report_type": "game_report", "groups": {"ours": "Team-Alpha", "opponent": "Team-Beta"},
+            "our_cop_url": net.team_alpha_cop_url, "our_thief_url": net.team_alpha_thief_url, "opponent_cop_url": net.team_beta_cop_url, "opponent_thief_url": net.team_beta_thief_url,
+            "timezone": "Asia/Jerusalem", "sub_games": sub_games, "totals": totals, "hostile_transmissions": self._hostile,
             "final_result": "ours" if diff > 0 else "opponent" if diff < 0 else "tie",
             "agreement_sha256": hashlib.sha256(canon.encode("utf-8")).hexdigest(),
         }

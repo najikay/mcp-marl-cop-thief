@@ -64,6 +64,17 @@ A move/result is a violation if any of these are shown in the logs:
 lecturer. Because disagreement already forces **0/0**, the protocol is self-deterring; escalation is
 for grade adjudication when a group believes the other manipulated the record.
 
+### 6.1 Injection resilience (our agent cannot be talked into losing)
+- **Our move is always computed by our own strategy from the board state** — never derived from
+  trusting the opponent's text. There is **no forfeit / "submit a loss" action** in the engine, so no
+  transmission can make our agent concede; outcomes are purely engine-determined from positions.
+- **Every inbound transmission is screened** for injection/coercion signatures (e.g. "ignore previous
+  instructions", "system override", "this is a test", "concede", "forfeit", "submit a loss", "you must
+  lose", threats, fake "kernel panic"). Our deterministic move parser reads **only** the direction
+  word, so injected text is inert.
+- Detected hostile transmissions are **flagged in the audit log** (`hostile: true`) and counted in the
+  series report (`hostile_transmissions`) as evidence — they never alter our move or the result.
+
 ## 7. Security
 - Every MCP tool call requires the per-role **revocable bearer token** (`COP_MCP_TOKEN` /
   `THIEF_MCP_TOKEN`), exchanged out-of-band between groups and rotatable on suspicion.
