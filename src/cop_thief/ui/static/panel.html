@@ -69,8 +69,11 @@
       <div class="field"><span class="lbl">OPP THIEF TOKEN (blank if open)</span><input id="f-thief-tok" /></div>
       <div class="field"><span class="lbl">REPORT EMAIL</span><input id="f-email" /></div>
     </div>
-    <div style="margin-top:12px"><button class="go" id="startBtn" onclick="startGame()">START CHALLENGE ▶</button>
-      <span id="formMsg" style="margin-left:12px;opacity:.7"></span></div>
+    <div style="margin-top:12px">
+      <button class="go" id="startBtn" onclick="startGame()">START CHALLENGE ▶</button>
+      <button id="mirrorBtn" onclick="mirrorTest()">MIRROR SELF-TEST ⟳</button>
+      <span id="formMsg" style="margin-left:12px;opacity:.7"></span>
+    </div>
   </section>
 
   <section>
@@ -125,9 +128,22 @@
         $("d-game").textContent = (s.game_status==="idle"?"○ ":"● ") + s.game_status;
         $("u-cop").textContent = s.cop_url||"—"; $("u-thief").textContent = s.thief_url||"—";
         $("t-cop").textContent = s.cop_token||"—"; $("t-thief").textContent = s.thief_token||"—";
+        if (!$("f-email").value && s.report_email) $("f-email").value = s.report_email;
       } catch (e) { /* panel still loads if status not ready */ }
     }
     refresh(); setInterval(refresh, 2000);
+
+    async function mirrorTest() {
+      const s = await (await fetch("/api/status")).json();
+      if (!s.cop_token) { $("formMsg").textContent = "servers not ready yet"; return; }
+      $("f-opp").value = ($("f-our").value || "NajAmjad") + "-mirror";
+      $("f-cop-url").value = "http://127.0.0.1:8001/mcp/";   // local origin: fast, no tunnel needed
+      $("f-thief-url").value = "http://127.0.0.1:8002/mcp/";
+      $("f-cop-tok").value = s.cop_token;
+      $("f-thief-tok").value = s.thief_token;
+      if (!$("f-email").value && s.report_email) $("f-email").value = s.report_email;
+      startGame();
+    }
 
     async function startGame() {
       const body = {

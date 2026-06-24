@@ -86,12 +86,12 @@ class GmailApiReporter:
         return {"report_type": "internal_game", "facts": facts,
                 "agreement_sha256": self._agreement_hash(facts), "telemetry": telemetry}
 
-    def _encode_message(self, recipient: str, body: str) -> dict:
+    def _encode_message(self, recipient: str, body: str, subject: str = "marl-cop-thief game report") -> dict:
         """Encode a JSON-only MIME message for the Gmail API."""
         message = MIMEText(body, "plain", "utf-8")
         message["to"] = recipient
         message["from"] = self._sender
-        message["subject"] = "marl-cop-thief game report"
+        message["subject"] = subject
         raw = base64.urlsafe_b64encode(message.as_bytes()).decode("ascii")
         return {"raw": raw}
 
@@ -108,8 +108,10 @@ class GmailApiReporter:
         return report
 
     def dispatch_payload(self, report: dict, recipient_email: str) -> dict:
-        """Guard, encode and dispatch an arbitrary JSON report (e.g. bonus_game)."""
+        """Guard + dispatch a JSON report; carry ``groups.ours`` into the subject line."""
         self._guard.verify_safe_recipient(recipient_email)
-        message = self._encode_message(recipient_email, json.dumps(report))
+        group = report.get("groups", {}).get("ours", "")
+        subject = f"marl-cop-thief game report: {group}".rstrip(": ")
+        message = self._encode_message(recipient_email, json.dumps(report), subject)
         report["_delivery"] = self._gatekeeper.execute(self._send, message, service="gmail")
         return report

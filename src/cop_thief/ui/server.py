@@ -35,10 +35,13 @@ async def stream(_request) -> StreamingResponse:
 
 
 async def status(_request) -> JSONResponse:
-    """Return the live node status (servers, tunnels, URLs, tokens, game phase)."""
+    """Return the live node status (servers, tunnels, URLs, tokens, game phase, email)."""
+    from cop_thief.config import get_config_manager
     from cop_thief.ui.node_state import STATE
 
-    return JSONResponse(STATE.snapshot())
+    snap = STATE.snapshot()
+    snap["report_email"] = get_config_manager().setup.reporting.burner_email
+    return JSONResponse(snap)
 
 
 def _run_challenge(params: dict) -> None:

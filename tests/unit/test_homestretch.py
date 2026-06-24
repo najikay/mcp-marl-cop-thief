@@ -45,6 +45,23 @@ def test_guard_config_default_and_passthrough() -> None:
     assert unlocked.verify_safe_recipient("rmisegal@haifa.ac.il") is None  # lock disengaged
 
 
+def test_dispatch_payload_carries_group_name_in_subject_and_body() -> None:
+    """The acting group name reaches the email subject line and the JSON body."""
+    import base64
+
+    captured = {}
+    gatekeeper = mock.Mock()
+    gatekeeper.execute = mock.Mock(side_effect=lambda fn, msg, service: captured.update(msg) or {})
+    reporter = GmailApiReporter(
+        guard=SubmissionSafetyGuard(locked=False), gatekeeper=gatekeeper, service=None
+    )
+    report = {"report_type": "bonus_game", "groups": {"ours": "NajAmjad", "opponent": "Beta"}}
+    reporter.dispatch_payload(report, "mcp.marl.telemetry@gmail.com")
+    mime = base64.urlsafe_b64decode(captured["raw"]).decode("utf-8")
+    assert "subject: marl-cop-thief game report: najamjad" in mime.lower()
+    assert "NajAmjad" in mime  # also present in the JSON body
+
+
 def test_reporter_builds_canonical_json() -> None:
     """dispatch_game_report yields a structured handshake via the gatekeeper."""
     gatekeeper = mock.Mock()
