@@ -39,11 +39,11 @@ These cross-cutting milestones are **done and verified** (full suite green, `ruf
   parsed by `ConfigManager.network` (`config/aux_models.py::NetworkConfig`); config-split keeps every
   config module < 120 lines.
 - [x] **M4.0** `cloudflared` secured as a userland binary in `bin/` (git-ignored; non-root install).
-- [ ] **M4.1** Spin two Cloudflare tunnels → local Cop (`:8001`) / Thief (`:8002`); write public HTTPS
-  URLs into the `network` block; assert revocable-token security.
-- [x] **M4.2** Wire `network` endpoints into the FastMCP client/orchestrator for cross-host play. *(`RemoteMoveClient` — MCP `Client` over `/sse`; live app challenges its own endpoints in mirror mode, partner URL is a drop-in.)*
-- [ ] **M4.3** Inter-group bonus handshake: full 6-sub-game bilateral series, **mutual SHA-256
-  agreement** sealed and emailed (both groups send the byte-identical result).
+- [x] **M4.1** Spin two Cloudflare tunnels → local Cop (`:8001`) / Thief (`:8002`); write public HTTPS
+  URLs into the `network` block; assert revocable-token security. *(`switchboard.py` + `app.py` boot tunnels with the servers; tokens fail-closed.)*
+- [x] **M4.2** Wire `network` endpoints into the FastMCP client/orchestrator for cross-host play. *(`RemoteMoveClient` — MCP `Client` over `/mcp`; control panel + `challenge` drive cross-host, partner URL is runtime input.)*
+- [x] **M4.3** Inter-group bonus handshake: full 6-sub-game bilateral series, **mutual SHA-256
+  agreement** sealed and emailed. *(`ChallengeRunner` + `reconcile_agreement`; mismatch ⇒ 0/0. Live partner run = remaining cycle #3.)*
 
 ### Architecture / Tooling notes
 - **`src/cop_thief/diagnostic_runner.py`** — permanent **offline, zero-cost** Dec-POMDP reactor probe.
@@ -54,6 +54,40 @@ These cross-cutting milestones are **done and verified** (full suite green, `ruf
   (auto-refreshed); the live browser handshake is **not** re-triggered unless the token is revoked.
 - **Secrets workflow:** populate `.env` (copied from `.env-example`); the autoloader injects them at
   startup. Manual `export FOO=…` / `source .env` steps are **obsolete** and intentionally omitted.
+
+---
+
+## ★★ AS-BUILT RECONCILIATION (v2.0 — authoritative status)
+
+The project is **functionally complete and submission-ready**: every **PRD §4.1 functional requirement**
+is implemented, with **109 tests green / ~95 % coverage / `ruff` clean / all files ≤150 LOC**. This
+section is the **source of truth** for status; the granular WBS (#1–#430) below is the original
+fine-grained plan, kept as a historical record and **superseded where the build consolidated or diverged**.
+
+**Built & verified (as-built modules):**
+- Domain & rules → `domain/` (`state.py`, `grid.py`, `geometry.py`, `constants.py`, `move_language.py`):
+  the planned `RulesEngine`+Mixin decomposition (#19–#63) was **consolidated** here (same behaviour, fewer files).
+- Strategy → `domain/strategy/` minimax + Conway Angel–Devil + self-play RL + opponent model
+  (`minimax.py`, `evaluation.py`, `features.py`, `opponent.py`, `selfplay.py`); tabular Q (`qtable.py`)
+  kept as the documented baseline. See [`STRATEGY.md`](./STRATEGY.md).
+- Config / Gatekeeper / SDK / MCP servers / NL / Reporting / GUI / Logger → built & tested (Phases 2–8).
+- Decentralized match play, control panel, tunnels, cross-host challenge, mutual-agreement reconcile →
+  Milestone 5 (#431–#449).
+
+**Genuinely remaining (the planned next cycles):**
+1. **README polish + screenshots** (UI panel + terminal) — covers #307, #345–#347, #351, #379–#380, #430.
+2. **Active injection counter-measure** (escalating response to a cheating opponent) — new SEC item.
+3. **Real inter-group game run** vs a live opponent — #344, #349, #376, #386, #444.
+4. **Dispute log archive** (immutable per-game evidence bundle to prove opponent cheating) — extends #282/#440.
+5. **§9.2 `bonus_game` schema convergence** for the examiner submission — #288/#289/#369.
+
+**Superseded / not used (out of scope — do not implement):**
+- Cloud target **Prefect Cloud** (#353–#360) → we use **Cloudflare tunnels** (`switchboard.py`).
+- **ngrok / Nginx / Ollama** tunnel & local-LLM alternatives (#361–#366) → cloud LLM API only.
+- `RulesEngine` + `Movement/Capture/Turn/BarrierMixin` (#32–#63) and separate `BaseAgent`/`CopAgent`/
+  `ThiefAgent` classes (#261–#267) → **consolidated** into `domain/` + SDK + strategy.
+- Staged sanity runs 2×2→4×4 (#328–#342) → supported by config (`grid_size`) but not run as separate
+  suites; the 5×5 game is validated end-to-end.
 
 ---
 
@@ -649,7 +683,7 @@ See [`PLAN.md` §10](./PLAN.md) and [`RULES_AND_AGREEMENTS.md`](./RULES_AND_AGRE
 - [x] **#434** Create `domain/strategy/roster.py` `AgentRoster`: 3 strategy variants per role; **game = 3 matches** (agent *i* vs agent *i*).
 - [x] **#435** Deterministic NL move parse↔apply parity helper (both sides resolve identical board) reusing `[INTENT]` + direction vocabulary.
 - [x] **#436** Unit tests: thief-first ordering, 3-match game tally, deterministic apply parity, roster wiring.
-- [ ] **#437** Live smoke: run `app.py`, watch a 3-match game render on `localhost:8800` with moving C/T and comms feed.
+- [x] **#437** Live smoke: `app.py` control panel verified end-to-end (servers/tunnels up, status API, URLs populated, game renders on `:8800`).
 
 ### Phase B — Inter-group (defender / challenger + mutual agreement)
 - [x] **#438** Defender tool `request_move(observation_prose, auth_token) -> move_prose` on each MCP server (token-guarded, hard-armored).
@@ -666,9 +700,17 @@ See [`PLAN.md` §10](./PLAN.md) and [`RULES_AND_AGREEMENTS.md`](./RULES_AND_AGRE
 ### Phase C — Actual strategy in live play (priority #3)
 - [x] **#445** `[INTENT: BARRIER]` move-language (`encode_barrier` / `parse_intent`); `apply_prose` walls the **Cop's own current cell** (ex06 §4.3); intent read only from the bracketed tag (spoof-proof).
 - [x] **#446** **Barrier rule corrected to §4.3** — `is_barrier_legal` now allows only the Cop's current cell (was wrongly Chebyshev ≤ 1 / adjacent). Removed the illegal adjacent auto-seal heuristic (`barrier_target`); the geometry resolver no longer auto-emits barriers. *Smart current-cell barrier USE (herding → `thief_trapped`) is owned by the strategy layer → #448.*
-- [x] **#447** Slice 3b — `StrategyResolver` (server-held, persistent) routes `request_move` through the 3-variant `AgentRoster`; each sub-game's `variant` index selects the agent (epsilon-greedy Q-policy, geometry fallback, barrier policy). Variant labels surface in the report + UI banner; **the 6 sub-games now differ**.
+- [x] **#447** Slice 3b — `StrategyResolver` per-variant wiring via the `variant` index; variant labels surface in the report + UI banner. *(Superseded by #448: the live policy is now the minimax engine, not an epsilon-greedy Q-policy; tabular Q is the documented baseline.)*
 - [x] **#449** **Adaptive strategy** — risk/expectimax knob in `minimax.py` (pessimism: minimax↔expectimax); online `OpponentModel` (`opponent.py`) sets pessimism from the opponent's observed rational-rate; variants carry a `risk`. **Random openings** (§4.2) via `geometry.random_start_positions` + `game.start_mode`/`random_seed`, seeded so both groups reproduce the opening. 109 tests green.
 - [x] **#448** **Angel–Devil strategy engine** ([`STRATEGY.md`](./STRATEGY.md)) — game-theoretic alpha-beta minimax (`minimax.py`) over the zero-sum Markov game; Conway Devil barriers in the search action set with a flood-fill *containment* evaluation (`features.py`/`evaluation.py`); advanced self-play RL weight learning (`selfplay.py`). `StrategyResolver` now drives 3 minimax variant profiles; draws structurally avoided. Captures in ~8 turns; tabular Q kept as the documented baseline.
 
-*End of TODO — Milestone 5 (#431–#444) opens decentralized match play; supersedes the self-play-only runner. Prior tally: 430 tasks (#1–#430).*
-*Update this file continuously during development (Guidelines §2.5, step 6).*
+### Milestone 6 — Pre-game readiness (remaining cycles; see AS-BUILT RECONCILIATION above)
+- [ ] **#450** README polish + UI/terminal screenshots (assets/) — covers #307/#351/#379/#380/#430.
+- [ ] **#451** Active injection counter-measure: escalate against a cheating opponent (fair if fair, dirtier if dirty), screened + logged.
+- [ ] **#452** Dispute log archive: immutable per-game evidence bundle (transmissions + hashes + verdicts) to prove opponent cheating.
+- [ ] **#453** §9.2 `bonus_game` schema convergence for the examiner submission.
+- [ ] **#454** Real inter-group game run vs a live opponent (may need adjustments to accommodate them).
+
+*End of TODO. **Status of record = AS-BUILT RECONCILIATION (v2.0) above** + the PRD §4.1 requirements
+(all implemented) + the 109-test suite. The granular #1–#430 WBS is the original plan, historical and
+superseded where noted. Update continuously (Guidelines §2.5).*

@@ -9,6 +9,14 @@
 | Drives | [`TODO.md`](./TODO.md) |
 | Standard | Dr. Segal *Guidelines for Professional Software Excellence v3.00* |
 
+> **As-built note (v2.0):** Sections 1–9 are the original design. The **authoritative as-built
+> architecture is [§10 — Architecture v2 (Decentralized Match Play)](#10-architecture-v2--decentralized-match-play--single-app-topology-milestone-5)**,
+> plus the [`STRATEGY.md`](./STRATEGY.md) engine. Where they differ, §10 / STRATEGY win: the
+> `RulesEngine`+Mixin tree (§2.2) and the fine-grained file tree (§3) were **consolidated** into
+> `domain/` (`state.py`, `grid.py`, `geometry.py`, `move_language.py`), the strategy is **minimax +
+> Conway Angel–Devil + self-play RL** (not tabular-Q-in-live), and the topology is the single-command
+> control panel (servers + tunnels + UI). See `TODO.md` → *AS-BUILT RECONCILIATION*.
+
 ---
 
 ## 1. System Architecture — C4 Model
@@ -336,7 +344,7 @@ Full detail in [`PRD_gatekeeper.md`](./PRD_gatekeeper.md).
 
 ## 7. Networking, Deployment & Security Plan
 - **Local:** Cop & Thief servers on `localhost`, distinct ports, HTTP; orchestrator connects locally.
-- **Cloud:** promote both servers to public URLs (e.g. Prefect Cloud); **two URLs per group**
+- **Cloud:** promote both servers to public URLs via **Cloudflare tunnels** (`switchboard.py`); **two URLs per group**
   (cop, thief), token-authenticated and revocable; outbound-only HTTPS for the hybrid LLM model.
 - **Tunneling (if exposing local):** ngrok Traffic Policy / Basic Auth, Localtonet, or Nginx
   (SSL termination + htpasswd + Certbot + firewall on the Ollama port).

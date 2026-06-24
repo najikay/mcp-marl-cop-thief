@@ -208,7 +208,7 @@ Per single sub-game (config keys in parentheses):
 | N-04 | **Gmail API reporting** | Reporting goes through the Gmail API (Google API Client), not raw SMTP, for reliability and to avoid mail-server failures. Body = JSON only. |
 | N-05 | Reliability | Gatekeeper retries transient failures; orchestrator survives sub-game faults (re-run void sub-games). |
 | N-06 | Performance / cost | Prefer cloud LLM API for stability & near-zero token cost on short messages; batch where possible; track token cost. |
-| N-07 | Portability | Two cloud URLs per group (one Cop, one Thief); cloud-target agnostic (e.g. Prefect Cloud). |
+| N-07 | Portability | Two public URLs per group (one Cop, one Thief) via **Cloudflare tunnels** (`switchboard.py`); transport-agnostic MCP-over-HTTP. |
 | N-08 | Maintainability | Modular packages, SDK boundary, ≤150-LOC files, ISO/IEC 25010 alignment. |
 | N-09 | Observability | Per-run logs (success & failure), pass/fail test reports, optional CLI/GUI live view. |
 | N-10 | Networking transport | Servers communicate over **HTTP/HTTPS** (HTTP mandatory locally). |
@@ -258,6 +258,14 @@ The following are **explicitly out of scope** for this deliverable:
 ---
 
 ## 8. Release Milestones (summary; detail in `PLAN.md` / `TODO.md`)
+
+> **Status (v2.0):** M1–M7 are **implemented and verified** (109 tests / ~95 % coverage / `ruff` clean /
+> files ≤150 LOC); all §4.1 functional requirements (incl. MATCH-01…06, SEC-04, NET-05/06, REC-01,
+> STRAT-01…05, GAME-02) are met. M8 sanity progression is **supported by config** (5×5 validated; 2×2→4×4
+> not run as separate suites). M9 uses **Cloudflare tunnels** (not Prefect Cloud). Remaining pre-game
+> cycles: README+screenshots, active injection counter-measure, dispute log archive, §9.2 schema
+> convergence, and the live inter-group run — see `TODO.md` → Milestone 6 / AS-BUILT RECONCILIATION.
+
 1. **M1 — Core domain & state machine** (Phase 1).
 2. **M2 — Enterprise infra: config, versioning, uv, ruff** (Phase 2).
 3. **M3 — API Gatekeeper & rate limiting** (Phase 3).
