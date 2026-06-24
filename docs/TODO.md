@@ -707,7 +707,7 @@ See [`PLAN.md` §10](./PLAN.md) and [`RULES_AND_AGREEMENTS.md`](./RULES_AND_AGRE
 ### Milestone 6 — Pre-game readiness (remaining cycles; see AS-BUILT RECONCILIATION above)
 - [x] **#450** README: Screenshots section (control panel, live board, leg transition — `screenshots/`), terminal boot/switchboard block, and a **Token budget & cost** table (config-driven; lifecycle ≈ $0.333, live ≈ $0 via local minimax). Covers #307/#351/#379/#380/#430.
 - [x] **#451** Active injection counter-measure — `RetaliationLadder` (`warfare.py`): escalating counter-payload (silent → notice → counter-strike → stacked override) appended to our move only after a *logged* opponent offence; wired in `ChallengeRunner._retaliating`. Never alters our engine move / carries no direction word (no Spite Trap). Docs: PRD SEC-05, RULES §6.3, treaty §F deterrent.
-- [ ] **#452** Dispute log archive: immutable per-game evidence bundle (transmissions + hashes + verdicts) to prove opponent cheating.
+- [x] **#452** Dispute log archive — `reporting/archive.py` `DisputeArchive`: per-game immutable bundle (`data/archive/`) of every transmission + board snapshot + `board_sha256` + hostility verdict + report, sealed by a `bundle_sha256` (tamper-evident). Wired in `ChallengeRunner` (records each turn, seals at game end, surfaces hash in the report). Docs: PRD SEC-06, RULES §5.
 - [ ] **#453** §9.2 `bonus_game` schema convergence for the examiner submission.
 - [ ] **#454** Real inter-group game run vs a live opponent (may need adjustments to accommodate them).
 

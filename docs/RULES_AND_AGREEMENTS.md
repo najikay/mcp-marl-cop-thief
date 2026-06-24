@@ -53,6 +53,10 @@ groups can bring their logs + hashes to the lecturer for adjudication.** Keep it
   (treaty spec §D: `sort_keys=True, separators=(",", ":")`). Both groups email the **byte-identical**
   report; matching hashes ⇒ `mutual_agreement: true`.
 - Logs + hashes are the **evidence record**. Each group retains its own; on dispute they are compared.
+- **Sealed dispute archive:** each inter-group game also writes an immutable bundle to `data/archive/`
+  — every transmission (both sides) + board snapshot + `board_sha256` + hostility verdict + the report,
+  sealed with a `bundle_sha256` over the whole record (any later edit breaks the seal). The seal hash is
+  included in the emailed report, so a cheater cannot rewrite history after the fact.
 
 ## 6. Cheating — definitions & escalation
 A move/result is a violation if any of these are shown in the logs:

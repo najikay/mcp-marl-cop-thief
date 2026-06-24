@@ -12,6 +12,7 @@ from __future__ import annotations
 from cop_thief.domain.constants import AgentRole
 from cop_thief.orchestrator.reconcile import canonical_hash
 from cop_thief.orchestrator.series import SeriesRunner
+from cop_thief.reporting.archive import DisputeArchive
 from cop_thief.sdk.warfare import RetaliationLadder, is_hostile
 from cop_thief.servers.tools.strategy_resolver import StrategyResolver
 
@@ -21,14 +22,15 @@ _TZ = "Asia/Jerusalem"
 class ChallengeRunner:
     """Play 6 sub-games against a live opponent (our role local, their role remote)."""
 
-    def __init__(self, our_group, opp_group, their_cop, their_thief,
-                 our_resolver=None, observer=None, announce=None, turn_delay=0.0):
+    def __init__(self, our_group, opp_group, their_cop, their_thief, our_resolver=None,
+                 observer=None, announce=None, turn_delay=0.0, archive_dir="data/archive"):
         """Wire group names, the opponent's remote move clients, our resolver and hooks."""
         self._our_group, self._opp_group = our_group, opp_group
         self._their_cop, self._their_thief = their_cop, their_thief
         self._our = our_resolver or StrategyResolver().resolve
         self._observer, self._announce, self._delay = observer, announce, turn_delay
         self._ladder = RetaliationLadder()
+        self._archive = DisputeArchive(our_group, opp_group, archive_dir)
 
     def _say(self, msg: str) -> None:
         if self._announce is not None:
@@ -42,13 +44,17 @@ class ChallengeRunner:
         """
         def opponent(observation):
             prose = theirs(observation)
-            self._ladder.register(is_hostile(prose))
+            hostile = is_hostile(prose)
+            self._ladder.register(hostile)
+            self._archive.record(observation, prose, hostile)
             return prose
 
         def mine(observation):
             prose = ours(observation)
             payload = self._ladder.counter_payload(AgentRole(observation["role"]))
-            return f"{prose} {payload}" if payload else prose
+            prose = f"{prose} {payload}" if payload else prose
+            self._archive.record(observation, prose, False)
+            return prose
 
         return mine, opponent
 
@@ -73,7 +79,12 @@ class ChallengeRunner:
                 sub_games.append({"match": len(sub_games) + 1, "venue": venue,
                                   "our_role": our_role.value, "outcome": outcome.value,
                                   "our_points": ours, "opponent_points": opp})
-        return self._report(sub_games, totals)
+        report = self._report(sub_games, totals)
+        bundle = self._archive.seal(report)
+        report["dispute_bundle_sha256"] = bundle["bundle_sha256"]
+        self._say(f"Dispute evidence sealed — {bundle['evidence']['hostile_count']} hostile / "
+                  f"{bundle['evidence']['transmissions']} transmissions — seal {bundle['bundle_sha256'][:12]}")
+        return report
 
     def _report(self, sub_games: list, totals: dict) -> dict:
         """Assemble the scored bonus report with the canonical sub_games hash."""
