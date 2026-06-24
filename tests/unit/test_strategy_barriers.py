@@ -41,6 +41,15 @@ def test_apply_prose_barrier_walls_vacated_cell_and_steps_off() -> None:
     assert walled.cop_barriers_left == 2
 
 
+def test_barrier_move_is_one_turn() -> None:
+    """The whole barrier-move (wall + step) is a SINGLE turn: +1 move, role flips, −1 barrier."""
+    state = _state(cop=(2, 2), left=3)  # turn_counter 0, turn_role COP
+    after = apply_prose(state, AgentRole.COP, encode_barrier(AgentRole.COP, (2, 2), (2, 3)))
+    assert after.turn_counter == state.turn_counter + 1   # counts as exactly one move
+    assert after.turn_role is AgentRole.THIEF             # then it's the opponent's turn
+    assert after.cop_barriers_left == state.cop_barriers_left - 1
+
+
 def test_thief_barrier_is_a_no_op() -> None:
     """The Thief cannot place barriers (§4.3); a BARRIER prose from it changes nothing."""
     state = DecPomdpGameState(cop_pos=(2, 2), thief_pos=(4, 4), turn_role=AgentRole.THIEF)

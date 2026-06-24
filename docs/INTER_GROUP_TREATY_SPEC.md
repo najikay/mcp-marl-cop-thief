@@ -44,9 +44,10 @@ Rules:
 1. **8-Way Chebyshev (King) movement.** A legal move is to any of the 8 surrounding cells with
    Chebyshev distance ≤ 1 that is in-bounds and not a barrier. Diagonals are first-class moves.
 2. **Barrier-Move Law (ex06 §4.3).** Only the Cop places barriers, **≤ 5 per sub-game**. A barrier-move
-   walls the cell the Cop **currently occupies** and, in the same turn, **steps the Cop to an adjacent
-   free cell** — the Cop must vacate, because **no agent may ever stand on a barrier**. A placed barrier
-   is **strictly impassable by BOTH agents** for the remainder of the sub-game.
+   walls the cell the Cop **currently occupies** and, in the **same single turn**, **steps the Cop to an
+   adjacent free cell** — the Cop must vacate, because **no agent may ever stand on a barrier**. The wall
+   plus the step together count as **one turn** (one of the ≤ 25 moves and one of the ≤ 5 barriers); then
+   it is the opponent's turn. A placed barrier is **strictly impassable by BOTH agents** for the sub-game.
 3. **Capture.** The Cop captures when it occupies the **same cell** as the Thief.
 4. **Trapped-Death (stalemate resolution).** Evaluated at the **start of an agent's turn** using
    *non-HOLD* legal moves (i.e. the 8 King neighbours that are in-bounds and barrier-free):

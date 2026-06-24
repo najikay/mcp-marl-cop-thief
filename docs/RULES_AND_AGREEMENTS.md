@@ -32,7 +32,8 @@ groups can bring their logs + hashes to the lecturer for adjudication.** Keep it
 - **8-way Chebyshev (King) movement** — any of the 8 neighbours, in-bounds, not a barrier.
 - **Barriers:** Cop only, **≤ 5 / match** (ex06 §4.3). A **barrier-move** walls the cell the Cop
   **vacates** and steps it to an adjacent free cell — **impassable by both** thereafter, and **no agent
-  ever stands on a barrier** (the Cop must step off the cell it walls).
+  ever stands on a barrier** (the Cop must step off the cell it walls). The wall **and** the step are a
+  **single turn**: it spends one of the ≤ 25 moves and one of the ≤ 5 barriers, then the opponent moves.
 - **Start (ex06 §4.2):** each sub-game opens from a **seeded-random** Cop/Thief placement (distinct
   cells); the seed is deterministic so both groups reproduce the same opening (no result drift).
 - **Capture:** Cop occupies the Thief's cell → Cop wins.
