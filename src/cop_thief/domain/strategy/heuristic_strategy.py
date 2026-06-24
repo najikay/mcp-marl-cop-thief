@@ -22,11 +22,23 @@ def chebyshev(a: Cell, b: Cell) -> int:
 
 
 def best_direction_toward(
-    origin: Cell, target: Cell, pursue: bool, state: BoardState, rules: RulesEngine
+    origin: Cell,
+    target: Cell,
+    pursue: bool,
+    state: BoardState,
+    rules: RulesEngine,
+    allow_stay: bool = True,
 ) -> Direction:
-    """Pick the legal direction that best closes (pursue) or opens distance."""
+    """Pick the legal direction that best closes (pursue) or opens distance.
+
+    With ``allow_stay=False`` the agent must move if any non-STAY move is legal,
+    so a pursuer never parks on a stale guess.
+    """
     legal = [d for d in MOVE_PRIORITY if rules.is_move_legal(rules.grid, state, origin, d)]
-    best_dir = Direction.STAY
+    if not allow_stay:
+        moving = [d for d in legal if d is not Direction.STAY]
+        legal = moving or legal
+    best_dir = legal[0] if legal else Direction.STAY
     best_dist: int | None = None
     for direction in legal:
         dist = chebyshev(origin.step(direction), target)

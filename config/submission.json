@@ -3,6 +3,6 @@
   "group_name": "Team-Alpha",
   "github_repo": "https://github.com/najikay/mcp-marl-cop-thief",
   "students": ["Amjad Abd Alrahim", "Naji"],
-  "cop_mcp_url": "http://localhost:8001",
-  "thief_mcp_url": "http://localhost:8002"
+  "cop_mcp_url": "https://eclipse-tribes-cst-dawn.trycloudflare.com/mcp/",
+  "thief_mcp_url": "https://eggs-prizes-collector-preview.trycloudflare.com/mcp/"
 }
