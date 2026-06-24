@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import asyncio
 
-from cop_thief.infra.network.move_client import RemoteMoveClient, fetch_remote_move
+from cop_thief.infra.network.move_client import (
+    RemoteMoveClient,
+    fetch_remote_move,
+    list_remote_tools,
+)
 from cop_thief.orchestrator.reconcile import canonical_hash, reconcile_agreement
 from cop_thief.servers import create_cop_server, create_thief_server
 from cop_thief.servers.auth import SecurityMiddleware
@@ -28,6 +32,20 @@ def test_fetch_remote_move_thief_server() -> None:
     obs = {**_OBS, "role": "thief"}
     prose = asyncio.run(fetch_remote_move(_server(create_thief_server), obs, "secret"))
     assert "[INTENT:" in prose
+
+
+def test_list_remote_tools_discovers_request_move() -> None:
+    """The interop probe lists the opponent's tool names + arg keys."""
+    tools = asyncio.run(list_remote_tools(_server(create_cop_server)))
+    by_name = {t["name"]: t["args"] for t in tools}
+    assert "request_move" in by_name
+    assert set(by_name["request_move"]) >= {"observation", "auth_token"}
+
+
+def test_remote_move_client_custom_tool_name() -> None:
+    """A configurable tool name lets us call an opponent whose move tool differs."""
+    client = RemoteMoveClient(_server(create_cop_server), "secret", tool_name="request_move")
+    assert client(_OBS).startswith("[INTENT:")
 
 
 def test_reconcile_match_keeps_totals_and_result() -> None:
