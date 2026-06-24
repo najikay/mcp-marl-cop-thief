@@ -55,7 +55,8 @@ def test_minimax_offers_barrier_and_thief_avoids_suicide() -> None:
     """The Cop action set includes a self-wall; the Thief never steps onto the Cop."""
     planner = MinimaxPlanner(depth=2)
     cop_turn = DecPomdpGameState(cop_pos=(2, 2), thief_pos=(4, 4), turn_role=AgentRole.COP, cop_barriers_left=3)
-    assert (ActionType.PLACE_BARRIER, (2, 2)) in planner.actions(cop_turn, AgentRole.COP)
+    acts = planner.actions(cop_turn, AgentRole.COP)
+    assert (ActionType.PLACE_BARRIER, (2, 3)) in acts  # barrier-move: wall (2,2), step east
     thief_turn = DecPomdpGameState(cop_pos=(2, 2), thief_pos=(2, 3), turn_role=AgentRole.THIEF)
     _at, target = planner.best_action(thief_turn)
     assert target != (2, 2)

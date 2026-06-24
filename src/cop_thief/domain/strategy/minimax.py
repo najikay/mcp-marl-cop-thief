@@ -26,11 +26,11 @@ class MinimaxPlanner:
         self._pessimism = pessimism
 
     def actions(self, state: DecPomdpGameState, role: AgentRole) -> list[Action]:
-        """Enumerate legal actions: King moves, plus a Cop wall on its own cell."""
-        acts: list[Action] = [(ActionType.MOVE, cell) for cell in state.legal_moves(role)]
-        if (role is AgentRole.COP and state.cop_barriers_left > 0
-                and state.is_barrier_legal(state.cop_pos)):
-            acts.append((ActionType.PLACE_BARRIER, state.cop_pos))
+        """Enumerate legal actions: King moves, plus Cop barrier-moves (wall vacated, step to cell)."""
+        steps = state.legal_moves(role)
+        acts: list[Action] = [(ActionType.MOVE, cell) for cell in steps]
+        if role is AgentRole.COP and state.cop_barriers_left > 0:
+            acts += [(ActionType.PLACE_BARRIER, cell) for cell in steps]
         if not acts:  # boxed in — HOLD in place (terminal scoring resolves the loss)
             pos = state.cop_pos if role is AgentRole.COP else state.thief_pos
             acts.append((ActionType.MOVE, pos))

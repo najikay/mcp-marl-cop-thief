@@ -15,13 +15,13 @@ def test_8way_king_movement_center_has_eight_moves() -> None:
     assert len(state.legal_moves(AgentRole.COP)) == 8
 
 
-def test_current_cell_barrier_law() -> None:
-    """§4.3: the Cop walls only the cell it stands on; any other target is a no-op."""
+def test_barrier_move_law() -> None:
+    """§4.3 barrier-move: wall the vacated cell and step to an adjacent cell; far/stay = no-op."""
     state = DecPomdpGameState(cop_pos=(2, 2), thief_pos=(4, 4))
-    own = state.apply_action(AgentRole.COP, ActionType.PLACE_BARRIER, (2, 2))
-    assert (2, 2) in own.grid.barriers and own.cop_barriers_left == 4
-    elsewhere = state.apply_action(AgentRole.COP, ActionType.PLACE_BARRIER, (2, 3))
-    assert elsewhere.grid.barriers == frozenset() and elsewhere.cop_barriers_left == 5
+    moved = state.apply_action(AgentRole.COP, ActionType.PLACE_BARRIER, (2, 3))
+    assert (2, 2) in moved.grid.barriers and moved.cop_pos == (2, 3) and moved.cop_barriers_left == 4
+    far = state.apply_action(AgentRole.COP, ActionType.PLACE_BARRIER, (4, 4))  # not a King step
+    assert far.grid.barriers == frozenset() and far.cop_barriers_left == 5
 
 
 def test_thief_trapped_is_cop_win() -> None:

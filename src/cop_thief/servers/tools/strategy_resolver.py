@@ -55,5 +55,5 @@ class StrategyResolver:
         pessimism = 1.0 - risk * (1.0 - self._model.pessimism())
         action_type, target = planner.best_action(state, pessimism)
         if action_type is ActionType.PLACE_BARRIER:
-            return encode_barrier(role)
+            return encode_barrier(role, pos, target)
         return encode_move(role, pos, target)

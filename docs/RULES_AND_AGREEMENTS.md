@@ -30,8 +30,9 @@ groups can bring their logs + hashes to the lecturer for adjudication.** Keep it
 
 ## 3. Movement & board laws (authoritative; see treaty spec §B for the wire form)
 - **8-way Chebyshev (King) movement** — any of the 8 neighbours, in-bounds, not a barrier.
-- **Barriers:** Cop only, **≤ 5 / match**, placed (as an alternative to moving) on **the Cop's own
-  current cell** (ex06 §4.3), **impassable by both** thereafter.
+- **Barriers:** Cop only, **≤ 5 / match** (ex06 §4.3). A **barrier-move** walls the cell the Cop
+  **vacates** and steps it to an adjacent free cell — **impassable by both** thereafter, and **no agent
+  ever stands on a barrier** (the Cop must step off the cell it walls).
 - **Start (ex06 §4.2):** each sub-game opens from a **seeded-random** Cop/Thief placement (distinct
   cells); the seed is deterministic so both groups reproduce the same opening (no result drift).
 - **Capture:** Cop occupies the Thief's cell → Cop wins.
