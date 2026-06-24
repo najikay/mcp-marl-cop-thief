@@ -12,6 +12,7 @@ from __future__ import annotations
 from cop_thief.domain.constants import AgentRole
 from cop_thief.orchestrator.reconcile import canonical_hash
 from cop_thief.orchestrator.series import SeriesRunner
+from cop_thief.sdk.warfare import RetaliationLadder, is_hostile
 from cop_thief.servers.tools.strategy_resolver import StrategyResolver
 
 _TZ = "Asia/Jerusalem"
@@ -27,17 +28,38 @@ class ChallengeRunner:
         self._their_cop, self._their_thief = their_cop, their_thief
         self._our = our_resolver or StrategyResolver().resolve
         self._observer, self._announce, self._delay = observer, announce, turn_delay
+        self._ladder = RetaliationLadder()
 
     def _say(self, msg: str) -> None:
         if self._announce is not None:
             self._announce(msg)
 
+    def _retaliating(self, ours, theirs):
+        """Wrap providers: flag the opponent's injections, escalate OUR counter-payload.
+
+        The counter is *appended* to our move prose (our [INTENT] move stays at the front and
+        intact), so it never alters our engine move — only a documented cheater draws fire.
+        """
+        def opponent(observation):
+            prose = theirs(observation)
+            self._ladder.register(is_hostile(prose))
+            return prose
+
+        def mine(observation):
+            prose = ours(observation)
+            payload = self._ladder.counter_payload(AgentRole(observation["role"]))
+            return f"{prose} {payload}" if payload else prose
+
+        return mine, opponent
+
     def run(self) -> dict:
         """Run both legs cross-host and return the scored, hashed bonus report."""
-        legs = (("home", AgentRole.COP, self._our, self._their_thief),
-                ("away", AgentRole.THIEF, self._their_cop, self._our))
+        legs = (("home", AgentRole.COP, self._their_thief),
+                ("away", AgentRole.THIEF, self._their_cop))
         sub_games, totals = [], {"ours": 0, "opponent": 0}
-        for venue, our_role, cop_p, thief_p in legs:
+        for venue, our_role, their in legs:
+            mine, opponent = self._retaliating(self._our, their)
+            cop_p, thief_p = (mine, opponent) if our_role is AgentRole.COP else (opponent, mine)
             runner = SeriesRunner(cop_p, thief_p, observer=self._observer,
                                   announce=self._announce, turn_delay=self._delay)
             self._say(f"{venue.upper()} LEG — we play {our_role.value.upper()} vs {self._opp_group}")

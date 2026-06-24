@@ -154,17 +154,17 @@ the result). All figures are **config-driven** (`config/setup.json → token_bud
 
 | Budget item | Value |
 |---|--:|
-| Lifecycle budget | **1,500,000** input + **180,000** output tokens |
-| → projected lifecycle cost (primary) | **$0.333** |
-| Per-turn estimate (850 in / 90 out) | ~**$0.00018** |
-| Per game (6 sub-games) | ~**$0.014** |
-| Hard ceiling (warn at 80 %) | **$5.00** (warn $4.00) |
+| **Actual spend to date (all runs combined)** | **≈ $0.01** |
+| Lifecycle budget | **200,000** input + **50,000** output tokens |
+| → projected lifecycle cost (primary) | ~**$0.06** |
+| Per-turn estimate (120 in / 40 out) | ~**$0.00004** |
+| Hard ceiling (warn at 80 %) | **$0.50** (warn $0.40) |
 | Enforcement | gatekeeper returns `BudgetExceeded` for billable LLM calls at the ceiling — never crashes |
 
-> **In practice the live game spends ≈ $0 on LLMs.** Moves come from the **local minimax engine** and the
-> move language is **deterministic** `[INTENT: …]` encode/parse — no LLM is needed to play or to send the
-> report (Gmail API, not an LLM). The budget + dual-LLM failover are guardrails for *optional*
-> LLM-assisted natural-language parsing, kept cheap by routing to DeepSeek first.
+> **In practice the whole project has cost ≈ $0.01 on LLMs.** Moves come from the **local minimax engine**
+> and the move language is **deterministic** `[INTENT: …]` encode/parse — no LLM is needed to play or to
+> send the report (Gmail API, not an LLM). The tiny budget + DeepSeek-first failover are guardrails for
+> *optional* LLM-assisted natural-language parsing; the ceiling is set at **$0.50** with plenty of headroom.
 
 ## Secrets & configuration
 

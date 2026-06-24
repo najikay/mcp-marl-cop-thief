@@ -119,14 +119,14 @@
       "output_per_million_usd": 0.6
     },
     "lifecycle_budget": {
-      "input_tokens": 1500000,
-      "output_tokens": 180000
+      "input_tokens": 200000,
+      "output_tokens": 50000
     },
-    "ceiling_usd": 5.0,
+    "ceiling_usd": 0.5,
     "warn_ratio": 0.8,
     "per_turn_estimate": {
-      "input": 850,
-      "output": 90
+      "input": 120,
+      "output": 40
     },
     "enforce_ceiling": true,
     "usage_file": "data/token_usage.json"

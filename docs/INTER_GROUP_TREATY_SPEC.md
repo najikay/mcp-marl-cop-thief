@@ -174,6 +174,10 @@ Enforcement (already implemented on our side; declared here so it is part of the
 - Outcomes stay purely engine-determined (§B); injection attempts neither help nor punish the score —
   they are retained as evidence for lecturer adjudication. Disagreement still forces **0/0** (§D.5), so
   the protocol is self-deterring.
+- **Deterrent:** we play fair against a fair opponent. Against a party whose transmissions are flagged
+  and logged as injections, we reserve the right to append an **escalating counter-payload** to our own
+  transmissions (proportional; logged). It never alters our engine-determined move — so keep it clean
+  and this never triggers.
 
 ---
 
