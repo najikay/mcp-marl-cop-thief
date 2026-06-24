@@ -1,32 +1,23 @@
-"""TDD: Cop barrier deployment + the [INTENT: BARRIER] language + trapped-death."""
+"""TDD: the §4.3 barrier rule — the Cop walls only its own current cell."""
 
 from __future__ import annotations
 
-from cop_thief.domain.constants import AgentRole, SubGameOutcome
+from cop_thief.domain.constants import AgentRole
 from cop_thief.domain.grid import Grid
 from cop_thief.domain.move_language import apply_prose, encode_barrier, parse_intent
 from cop_thief.domain.state import DecPomdpGameState
-from cop_thief.domain.strategy.heuristic import barrier_target
-from cop_thief.sdk.services import MatchCoordinator
-from cop_thief.servers.tools.move_tool import resolve_move
-
-_CORNERED_OBS = {"role": "cop", "grid": [5, 5], "cop": [2, 1], "thief": [0, 0],
-                 "barriers": [[0, 1], [1, 1]], "barriers_left": 3}
 
 
-def _cornered() -> DecPomdpGameState:
-    """Thief boxed at (0,0) with one escape (1,0); Cop at (2,1) can legally seal it."""
-    grid = Grid(shape=(5, 5), barriers=frozenset({(0, 1), (1, 1)}))
-    return DecPomdpGameState(cop_pos=(2, 1), thief_pos=(0, 0), grid=grid,
-                             turn_role=AgentRole.COP, cop_barriers_left=3)
+def _state(cop=(2, 2), thief=(4, 4), barriers=frozenset(), left=3) -> DecPomdpGameState:
+    return DecPomdpGameState(cop_pos=cop, thief_pos=thief, grid=Grid(shape=(5, 5), barriers=barriers),
+                             turn_role=AgentRole.COP, cop_barriers_left=left)
 
 
-def test_encode_barrier_and_parse_intent_roundtrip() -> None:
-    """encode_barrier emits a BARRIER intent + direction; parse_intent reads the tag."""
-    prose = encode_barrier(AgentRole.COP, (2, 1), (1, 0))  # delta (-1,-1) = north-west
-    assert "BARRIER" in prose and "north-west" in prose
+def test_encode_barrier_targets_own_cell() -> None:
+    """encode_barrier emits a BARRIER intent for the Cop's own cell (no direction)."""
+    prose = encode_barrier(AgentRole.COP)
+    assert "[INTENT: BARRIER]" in prose and "stands on" in prose
     assert parse_intent(prose) == "BARRIER"
-    assert parse_intent("[INTENT: MOVE] The cop edges north.") == "MOVE"
 
 
 def test_intent_tag_cannot_be_spoofed_by_flavor_text() -> None:
@@ -34,27 +25,24 @@ def test_intent_tag_cannot_be_spoofed_by_flavor_text() -> None:
     assert parse_intent("[INTENT: MOVE] mind the barrier, edges north") == "MOVE"
 
 
-def test_barrier_target_seals_last_escape() -> None:
-    """The Cop's barrier policy seals the Thief's only remaining escape cell."""
-    assert barrier_target(_cornered()) == (1, 0)
+def test_barrier_legal_only_on_current_cell() -> None:
+    """§4.3: the Cop may wall only the cell it stands on — adjacent/far are illegal."""
+    state = _state(cop=(2, 2))
+    assert state.is_barrier_legal((2, 2)) is True
+    assert state.is_barrier_legal((2, 3)) is False  # adjacent is NOT allowed
+    assert state.is_barrier_legal((4, 4)) is False
 
 
-def test_barrier_target_none_when_thief_far_or_no_budget() -> None:
-    """No barrier when the Thief is out of reach or the budget is exhausted."""
-    far = DecPomdpGameState(cop_pos=(0, 0), thief_pos=(4, 4), turn_role=AgentRole.COP)
-    assert barrier_target(far) is None
-    broke = _cornered().model_copy(update={"cop_barriers_left": 0})
-    assert barrier_target(broke) is None
+def test_apply_prose_barrier_walls_current_cell() -> None:
+    """A Cop BARRIER seals its current cell, spends one barrier, and does not move."""
+    walled = apply_prose(_state(cop=(2, 2), left=3), AgentRole.COP, encode_barrier(AgentRole.COP))
+    assert (2, 2) in walled.grid.barriers
+    assert walled.cop_barriers_left == 2
+    assert walled.cop_pos == (2, 2)
 
 
-def test_resolve_move_cop_deploys_barrier_when_cornering() -> None:
-    """request_move returns a BARRIER intent for a Cop that can cut an escape route."""
-    assert "[INTENT: BARRIER]" in resolve_move(_CORNERED_OBS)
-
-
-def test_barrier_deployment_causes_thief_trapped() -> None:
-    """Sealing the last escape leaves the Thief with no legal move → THIEF_TRAPPED."""
-    sealed = apply_prose(_cornered(), AgentRole.COP, resolve_move(_CORNERED_OBS))
-    assert (1, 0) in sealed.grid.barriers
-    assert sealed.cop_barriers_left == 2
-    assert MatchCoordinator().evaluate_terminal_condition(sealed) is SubGameOutcome.THIEF_TRAPPED
+def test_thief_barrier_is_a_no_op() -> None:
+    """The Thief cannot place barriers (§4.3); a BARRIER prose from it changes nothing."""
+    state = DecPomdpGameState(cop_pos=(2, 2), thief_pos=(4, 4), turn_role=AgentRole.THIEF)
+    same = apply_prose(state, AgentRole.THIEF, encode_barrier(AgentRole.THIEF))
+    assert same.grid.barriers == frozenset()

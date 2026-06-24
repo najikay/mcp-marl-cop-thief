@@ -144,8 +144,8 @@
   },
   "_network_note": "Two-team public URL matrix (ex06 §9.2): one Cop + one Thief URL per group. Local defaults; replace with Cloudflare tunnel URLs for distributed play.",
   "network": {
-    "team_alpha_cop_url": "https://informational-display-tee-generated.trycloudflare.com/mcp/",
-    "team_alpha_thief_url": "https://birthday-tones-wells-rescue.trycloudflare.com/mcp/",
+    "team_alpha_cop_url": "https://governmental-kde-brisbane-incident.trycloudflare.com/mcp/",
+    "team_alpha_thief_url": "https://ladder-shapes-qualifications-homework.trycloudflare.com/mcp/",
     "team_beta_cop_url": "",
     "team_beta_thief_url": ""
   }

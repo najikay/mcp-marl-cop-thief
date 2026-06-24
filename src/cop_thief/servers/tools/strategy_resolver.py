@@ -11,9 +11,10 @@ Cop's barrier policy (shared ``encode_action``) still applies.
 from __future__ import annotations
 
 from cop_thief.domain.constants import AgentRole
+from cop_thief.domain.move_language import encode_move
 from cop_thief.domain.strategy.heuristic import pursuit_target
 from cop_thief.domain.strategy.roster import AgentRoster
-from cop_thief.servers.tools.move_tool import build_state, encode_action
+from cop_thief.servers.tools.move_tool import build_state
 
 
 class StrategyResolver:
@@ -33,4 +34,4 @@ class StrategyResolver:
         state, role, pos = build_state(observation)
         agent = self._rosters[role].agent(int(observation.get("variant", 0)))
         target = agent.select_target(state, role, fallback=pursuit_target)
-        return encode_action(state, role, pos, target)
+        return encode_move(role, pos, target)

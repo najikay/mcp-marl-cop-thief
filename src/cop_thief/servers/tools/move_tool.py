@@ -1,18 +1,18 @@
 """Shared `request_move` resolver — the move an MCP server returns when challenged.
 
-Rebuilds the board from the challenger's observation, picks the role's action with
-the Conway-aware pursuit heuristic, and returns it as treaty prose. The Cop will
-deploy a barrier (instead of moving) when sealing a cornered Thief's escape route
-is legal and capture is not already available this turn.
+Rebuilds the board from the challenger's observation, picks the role's move with the
+Conway-aware pursuit heuristic, and returns it as treaty prose. Barrier deployment
+(ex06 §4.3 — the Cop walls its own current cell) is a planned tactic owned by the
+strategy layer; it is not auto-emitted here.
 """
 
 from __future__ import annotations
 
 from cop_thief.domain.constants import AgentRole
 from cop_thief.domain.grid import Grid
-from cop_thief.domain.move_language import encode_barrier, encode_move
+from cop_thief.domain.move_language import encode_move
 from cop_thief.domain.state import DecPomdpGameState
-from cop_thief.domain.strategy.heuristic import barrier_target, pursuit_target
+from cop_thief.domain.strategy.heuristic import pursuit_target
 
 
 def build_state(observation: dict) -> tuple[DecPomdpGameState, AgentRole, tuple]:
@@ -33,16 +33,7 @@ def build_state(observation: dict) -> tuple[DecPomdpGameState, AgentRole, tuple]
     return state, role, pos
 
 
-def encode_action(state: DecPomdpGameState, role: AgentRole, pos: tuple, move_target: tuple) -> str:
-    """Encode a barrier (Cop cornering, capture unavailable) or the chosen move as prose."""
-    if role is AgentRole.COP and move_target != state.thief_pos:
-        seal = barrier_target(state)
-        if seal is not None:
-            return encode_barrier(role, pos, seal)
-    return encode_move(role, pos, move_target)
-
-
 def resolve_move(observation: dict) -> str:
-    """Return the deterministic geometry+barrier action (treaty prose) for an observation."""
+    """Return the deterministic geometry move (treaty prose) for an observation."""
     state, role, pos = build_state(observation)
-    return encode_action(state, role, pos, pursuit_target(state, role))
+    return encode_move(role, pos, pursuit_target(state, role))

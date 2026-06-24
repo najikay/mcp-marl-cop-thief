@@ -19,7 +19,7 @@ every transmission **MUST begin** with exactly one bracketed intent signpost, fo
 | Signpost | Meaning | Example transmission |
 |----------|---------|----------------------|
 | `[INTENT: MOVE]` | The sender is relocating one King-step (incl. diagonal). A **capture attempt** is a MOVE onto the opponent's believed cell — no separate tag. | `[INTENT: MOVE] I slide south-east into the damp courtyard, tightening the net.` |
-| `[INTENT: BARRIER]` | The Cop is sealing an **adjacent** cell (Chebyshev ≤ 1) as an impassable wall. Thieves may **never** emit this. | `[INTENT: BARRIER] I drop a slab on the lane to my immediate north.` |
+| `[INTENT: BARRIER]` | The Cop walls **its own current cell** (ex06 §4.3), as an alternative to moving, making it impassable to both. Thieves may **never** emit this. | `[INTENT: BARRIER] I drop a slab on the cell I stand on and dig in.` |
 | `[INTENT: HOLD]` | The sender keeps its cell this turn (only valid when boxed-in; see §B Trapped-Death). | `[INTENT: HOLD] All lanes are sealed; I brace where I stand.` |
 
 Rules:
@@ -38,9 +38,9 @@ Rules:
 
 1. **8-Way Chebyshev (King) movement.** A legal move is to any of the 8 surrounding cells with
    Chebyshev distance ≤ 1 that is in-bounds and not a barrier. Diagonals are first-class moves.
-2. **Adjacent Barrier Law.** Only the Cop places barriers, **≤ 5 per sub-game**. A barrier may be
-   dropped only on a cell within **Chebyshev ≤ 1** of the Cop's current cell, must be in-bounds, not
-   already a barrier, and not the Thief's cell. A placed barrier is **strictly impassable by BOTH
+2. **Current-Cell Barrier Law (ex06 §4.3).** Only the Cop places barriers, **≤ 5 per sub-game**, as an
+   alternative to moving. A barrier is dropped on **the Cop's own current cell** (it does not move that
+   turn), which must not already be a barrier. A placed barrier is **strictly impassable by BOTH
    agents** for the remainder of the sub-game.
 3. **Capture.** The Cop captures when it occupies the **same cell** as the Thief.
 4. **Trapped-Death (stalemate resolution).** Evaluated at the **start of an agent's turn** using

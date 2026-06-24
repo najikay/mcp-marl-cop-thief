@@ -25,10 +25,9 @@ def encode_move(role: AgentRole, before: tuple, after: tuple) -> str:
     return f"[INTENT: {intent}] The {role.value} edges {word}."
 
 
-def encode_barrier(role: AgentRole, before: tuple, target: tuple) -> str:
-    """Render a barrier placement, e.g. ``[INTENT: BARRIER] The cop seals the cell north.``"""
-    word = _WORD.get((target[0] - before[0], target[1] - before[1]), "hold")
-    return f"[INTENT: BARRIER] The {role.value} seals the cell {word}."
+def encode_barrier(role: AgentRole) -> str:
+    """Render a barrier placement on the Cop's own current cell (ex06 §4.3)."""
+    return f"[INTENT: BARRIER] The {role.value} seals the cell it stands on."
 
 
 def parse_target(prose: str, pos: tuple) -> tuple:
@@ -57,13 +56,13 @@ def parse_intent(prose: str) -> str:
 def apply_prose(state, role: AgentRole, prose: str):
     """Apply a peer's prose move to ``state`` (illegal/unparsable → HOLD in place).
 
-    A ``[INTENT: BARRIER]`` declaration seals the named adjacent cell (validated by
-    the Adjacent Barrier Law; an illegal seal is a no-op turn). Otherwise it is a MOVE.
+    A ``[INTENT: BARRIER]`` declaration walls the Cop's own current cell (ex06 §4.3;
+    a Thief barrier or an already-walled cell is a no-op turn). Otherwise it is a MOVE.
     """
     pos = state.cop_pos if role is AgentRole.COP else state.thief_pos
-    target = parse_target(prose, pos)
     if parse_intent(prose) == "BARRIER":
-        return state.apply_action(role, ActionType.PLACE_BARRIER, target)
+        return state.apply_action(role, ActionType.PLACE_BARRIER, pos)
+    target = parse_target(prose, pos)
     if not state.grid.is_legal_move(pos, target):
         target = pos
     return state.apply_action(role, ActionType.MOVE, target)

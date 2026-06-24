@@ -95,14 +95,8 @@ class DecPomdpGameState(BaseModel):
         )
 
     def is_barrier_legal(self, target: Coord) -> bool:
-        """Adjacent Barrier Law: in-bounds, Chebyshev<=1 from Cop, free cell."""
-        d_row, d_col = abs(self.cop_pos[0] - target[0]), abs(self.cop_pos[1] - target[1])
-        return (
-            self.grid.is_within_bounds(target)
-            and max(d_row, d_col) <= 1
-            and target not in self.grid.barriers
-            and target != self.thief_pos
-        )
+        """ex06 §4.3 Barrier law: the Cop may wall only the cell it currently stands on."""
+        return target == self.cop_pos and target not in self.grid.barriers
 
     def legal_moves(self, role: AgentRole) -> list[Coord]:
         """Non-STAY legal destinations for ``role`` (an empty list means trapped)."""

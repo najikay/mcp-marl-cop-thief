@@ -664,8 +664,8 @@ See [`PLAN.md` §10](./PLAN.md) and [`RULES_AND_AGREEMENTS.md`](./RULES_AND_AGRE
 - [x] **#444d** **Web control panel** (`cop_thief.app`): single command boots servers + tunnels + panel UI (`:8800`). Live node status (`NodeState` + `/api/status`), our shareable URLs/tokens with copy, an opponent challenge form (`/api/challenge` → worker thread → cross-host game + email), and the live 5×5 TV — all in the browser. Verified end-to-end (servers/tunnels up, URLs populated).
 
 ### Phase C — Actual strategy in live play (priority #3)
-- [x] **#445** `[INTENT: BARRIER]` move-language (`encode_barrier` / `parse_intent`); `apply_prose` seals the named adjacent cell; intent read only from the bracketed tag (spoof-proof).
-- [x] **#446** Cop barrier policy (`heuristic.barrier_target`): seal a cornered Thief's escape route when in Chebyshev reach and capture is unavailable; `barriers_left` threaded through the observation. **`B` now deploys in live play; `thief_trapped` is reachable** (unit-proven).
+- [x] **#445** `[INTENT: BARRIER]` move-language (`encode_barrier` / `parse_intent`); `apply_prose` walls the **Cop's own current cell** (ex06 §4.3); intent read only from the bracketed tag (spoof-proof).
+- [x] **#446** **Barrier rule corrected to §4.3** — `is_barrier_legal` now allows only the Cop's current cell (was wrongly Chebyshev ≤ 1 / adjacent). Removed the illegal adjacent auto-seal heuristic (`barrier_target`); the geometry resolver no longer auto-emits barriers. *Smart current-cell barrier USE (herding → `thief_trapped`) is owned by the strategy layer → #448.*
 - [x] **#447** Slice 3b — `StrategyResolver` (server-held, persistent) routes `request_move` through the 3-variant `AgentRoster`; each sub-game's `variant` index selects the agent (epsilon-greedy Q-policy, geometry fallback, barrier policy). Variant labels surface in the report + UI banner; **the 6 sub-games now differ**.
 - [ ] **#448** Slice 3c (strategy substance, collaborative) — train/warm the roster Q-tables (reward shaping, self-play warmup, Angel/Devil specialisation) so variants reflect *learned* policy, not just exploration noise.
 

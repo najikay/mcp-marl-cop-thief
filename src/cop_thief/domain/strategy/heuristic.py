@@ -27,25 +27,3 @@ def pursuit_target(state, role) -> tuple:
         traps = [c for c in legal if is_conway_trap_inevitable(c, ref, barriers, state.grid.shape)]
         return min(traps or legal, key=lambda c: calculate_manhattan(c, ref))
     return max(legal, key=lambda c: calculate_manhattan(c, ref))
-
-
-def barrier_target(state, reach: int = 2):
-    """Return a cell the Cop should legally seal to cut a nearby Thief's escape, else None.
-
-    Triggers only when the Thief is within Chebyshev ``reach`` and one of its escape
-    cells is adjacent to the Cop (Adjacent Barrier Law) — sealing the escape route
-    nearest the Thief drives toward a THIEF_TRAPPED win without wasting the budget.
-    """
-    if state.cop_barriers_left <= 0:
-        return None
-    cop, thief = state.cop_pos, state.thief_pos
-    if max(abs(cop[0] - thief[0]), abs(cop[1] - thief[1])) > reach:
-        return None
-    escapes = set(state.legal_moves(AgentRole.THIEF))
-    candidates = [
-        c for c in get_adjacent_coords(cop, state.grid.shape)
-        if c in escapes and state.is_barrier_legal(c)
-    ]
-    if not candidates:
-        return None
-    return min(candidates, key=lambda c: calculate_manhattan(c, thief))
