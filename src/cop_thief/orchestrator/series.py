@@ -1,9 +1,9 @@
-"""Inter-group series runner: the full assignment pipeline (6 matches).
+"""Inter-group game runner: the full assignment pipeline (ONE game = 6 sub-games).
 
-Plays 2 directions × 3 matches — HOME (our Cop hosts vs the guest Thief) and AWAY
-(our Thief visits the opponent's Cop server) — thief-first, with deterministic
-move language, live UI bus + audit log. Emails ONE merged JSON report at the end:
-per-match venue/outcome/points, side totals, final result, SHA-256 agreement.
+Per §4.1 a GAME is 6 sub-games: a HOME leg (our Cop hosts the guest Thief, 3
+sub-games) and an AWAY leg (our Thief visits the opponent's Cop, 3 sub-games) —
+thief-first, deterministic move language, live UI bus + audit log. Emails ONE
+merged JSON report: per-sub-game venue/outcome/points, totals, result, SHA-256.
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ _DIRECTIONS = (("home", AgentRole.COP), ("away", AgentRole.THIEF))
 
 
 class SeriesRunner:
-    """Run a 2-direction, 6-match series and email one merged scored report."""
+    """Run ONE game (6 sub-games over a HOME + AWAY leg) and email one merged report."""
 
     def __init__(self, cop_provider, thief_provider, observer=None, logger=None,
                  reporter=None, announce=None, recipient=_BURNER, max_moves=25, turn_delay=0.0):
@@ -59,7 +59,7 @@ class SeriesRunner:
                 prose if role is AgentRole.THIEF else "", False, False, hostile)
 
     def play_match(self) -> SubGameOutcome:
-        """Play one thief-first match by asking each provider for its move."""
+        """Play one thief-first sub-game by asking each provider for its move."""
         state = DecPomdpGameState(
             cop_pos=(0, 0), thief_pos=(_GRID - 1, _GRID - 1), grid=Grid(shape=(_GRID, _GRID)))
         for _ in range(self._coord.max_moves * 2):
@@ -84,14 +84,14 @@ class SeriesRunner:
         return sc.cop_loss, sc.thief_win
 
     def run_series(self) -> dict:
-        """Run both directions (6 matches), score them, email one merged report."""
+        """Run both legs (6 sub-games), score them, email one merged report."""
         sub_games, totals = [], {"ours": 0, "opponent": 0}
-        for game_no, (venue, our_role) in enumerate(_DIRECTIONS, 1):
+        for venue, our_role in _DIRECTIONS:
             if self._announce is not None:
-                self._announce(f"GAME {game_no} — {venue.upper()} — we play {our_role.value.upper()}")
+                self._announce(f"{venue.upper()} LEG — we play {our_role.value.upper()} (3 sub-games)")
             for _ in range(3):
                 if self._announce is not None:
-                    self._announce(f"MATCH {len(sub_games) + 1}/6")
+                    self._announce(f"Sub-game {len(sub_games) + 1}/6")
                 outcome = self.play_match()
                 cop_pts, thief_pts = self._points(outcome)
                 ours, opp = (cop_pts, thief_pts) if our_role is AgentRole.COP else (thief_pts, cop_pts)

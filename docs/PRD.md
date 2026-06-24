@@ -189,6 +189,8 @@ Per single sub-game (config keys in parentheses):
 | **MATCH-05** | **Single-app topology.** One process hosts both MCP servers + the UI + the match orchestrator; a second process runs the Cloudflare tunnels. (Two terminals, not four.) |
 | **MATCH-06** | **Dispute evidence.** Per-turn transmissions, board hashes, and the SHA-256 series hash are retained as the evidence record for lecturer adjudication on suspected cheating. |
 | **SEC-04** | **Injection resilience.** Inbound opponent transmissions are screened for prompt-injection / coercion signatures (e.g. "ignore previous instructions", "concede", "submit a loss", "this is a test", threats). Our move is always self-computed and there is **no forfeit action**, so no transmission can make our agent throw the game; hostile transmissions are logged (`hostile: true`) and counted as evidence. |
+| **NET-05** | **Real cross-host transport.** Moves are fetched by an MCP `Client` calling the partner's `request_move` tool over its `/sse` endpoint (per-role bearer token). The same `RemoteMoveClient` targets our own local `/sse` endpoints in mirror mode, so the live game runs over real MCP-over-SSE sockets — identical to playing a partner's tunnel URL. |
+| **REC-01** | **Mutual-agreement reconciliation.** After the 6 sub-games both sides hash the canonical `sub_games` array; equal digests ⇒ `mutual_agreement: true` (totals stand), any mismatch ⇒ `mutual_agreement: false` and a 0/0 `both_lose` scoreline. |
 
 ### 4.2 Non-Functional Requirements
 | ID | Category | Requirement |

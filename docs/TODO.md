@@ -41,7 +41,7 @@ These cross-cutting milestones are **done and verified** (full suite green, `ruf
 - [x] **M4.0** `cloudflared` secured as a userland binary in `bin/` (git-ignored; non-root install).
 - [ ] **M4.1** Spin two Cloudflare tunnels → local Cop (`:8001`) / Thief (`:8002`); write public HTTPS
   URLs into the `network` block; assert revocable-token security.
-- [ ] **M4.2** Wire `network` endpoints into the FastMCP client/orchestrator for cross-host play.
+- [x] **M4.2** Wire `network` endpoints into the FastMCP client/orchestrator for cross-host play. *(`RemoteMoveClient` — MCP `Client` over `/sse`; live app challenges its own endpoints in mirror mode, partner URL is a drop-in.)*
 - [ ] **M4.3** Inter-group bonus handshake: full 6-sub-game bilateral series, **mutual SHA-256
   agreement** sealed and emailed (both groups send the byte-identical result).
 
@@ -467,8 +467,8 @@ These cross-cutting milestones are **done and verified** (full suite green, `ruf
 - [ ] **#287** Create `domain/reporting/base_report.py` (`BaseReport` + `SerializationMixin`, version stamp).
 - [ ] **#288** Create `domain/reporting/internal_report.py` matching the internal JSON schema (group_name, students, github_repo, cop_mcp_url, thief_mcp_url, timezone, sub_games, totals{cop,thief}).
 - [ ] **#289** Create `domain/reporting/bonus_report.py` matching the bonus schema (report_type, groups, 2× github, 4× mcp_url, students_group_1/2, sub_games, totals_by_group, bonus_claim, mutual_agreement).
-- [ ] **#290** Create `domain/reporting/agreement.py`: `AgreementReconciler` (byte-identical outcome).
-- [ ] **#291** Implement agreement via shared log hash / canonical serialization.
+- [x] **#290** Create `orchestrator/reconcile.py`: `reconcile_agreement` (byte-identical outcome; mismatch ⇒ both lose 0/0).
+- [x] **#291** Implement agreement via shared log hash / canonical serialization. *(`canonical_hash` = treaty §D pipeline.)*
 - [ ] **#292** Add validation hook: schema validation of both report types.
 - [ ] **#293** Add validation hook: refuse to send if `mutual_agreement` is false.
 - [ ] **#294** Write positive test `test_internal_report.py` / `test_bonus_report.py` (schema match).
@@ -653,9 +653,9 @@ See [`PLAN.md` §10](./PLAN.md) and [`RULES_AND_AGREEMENTS.md`](./RULES_AND_AGRE
 
 ### Phase B — Inter-group (defender / challenger + mutual agreement)
 - [x] **#438** Defender tool `request_move(observation_prose, auth_token) -> move_prose` on each MCP server (token-guarded, hard-armored).
-- [ ] **#439** Challenger transport: MCP `Client` → opponent tunnel URLs; drive a full 6-match series.
-- [ ] **#440** Per-side authoritative state + transmission audit log (dispute evidence per RULES §5/§6).
-- [ ] **#441** SHA-256 mutual-agreement reconcile; mismatch → 0/0; Diplomat reconcile rounds.
+- [x] **#439** Challenger transport: `RemoteMoveClient` (MCP `Client` over `/sse`) drives a full 6-sub-game game; live app challenges its own endpoints (mirror), partner tunnel URL is a drop-in target.
+- [x] **#440** Per-side authoritative state + transmission audit log (dispute evidence per RULES §5/§6).
+- [x] **#441** SHA-256 mutual-agreement reconcile (`reconcile_agreement`); mismatch → 0/0 `both_lose`. *(Multi-round Diplomat negotiation still optional.)*
 - [x] **#442** End-of-series Gmail report (burner default; `--production-drop` to examiner) reusing `treaty_runner`.
 - [ ] **#443** Security assertions: token required on all tools; rotation invalidates; injection rejected + logged.
 - [ ] **#444** Integration test: full local two-roster series with deterministic agreed reports (mocked LLM transport).
