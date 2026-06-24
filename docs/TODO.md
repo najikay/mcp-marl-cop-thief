@@ -657,7 +657,7 @@ See [`PLAN.md` §10](./PLAN.md) and [`RULES_AND_AGREEMENTS.md`](./RULES_AND_AGRE
 - [x] **#440** Per-side authoritative state + transmission audit log (dispute evidence per RULES §5/§6).
 - [x] **#441** SHA-256 mutual-agreement reconcile (`reconcile_agreement`); mismatch → 0/0 `both_lose`. *(Multi-round Diplomat negotiation still optional.)*
 - [x] **#442** End-of-series Gmail report (burner default; `--production-drop` to examiner) reusing `treaty_runner`.
-- [ ] **#443** Security assertions: token required on all tools; rotation invalidates; injection rejected + logged.
+- [x] **#443** Security assertions: token required on all tools; rotation invalidates; injection rejected + logged. *(Opponent-facing law codified in INTER_GROUP_TREATY_SPEC.md v1.2 §F + §E tool contract + §G token exchange.)*
 - [ ] **#444** Integration test: full local two-roster series with deterministic agreed reports (mocked LLM transport).
 - [x] **#444b** Interactive cross-host challenge entrypoint (`cop_thief.challenge`): prompts opponent URLs/tokens/email, preflights their `request_move`, plays 6 sub-games with per-leg routing (our role local, theirs over MCP), emails the `bonus_game` report. `ChallengeRunner` unit-tested.
 - [x] **#444c** One-command host: `cop_thief.serve` runs MCP servers + tunnels together (no orphan-tunnel 530s); servers exposed via streamable-HTTP `/mcp` (matches opponents); switchboard shares full `/mcp/` URLs.
