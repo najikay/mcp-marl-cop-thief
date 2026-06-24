@@ -27,13 +27,19 @@ _TURN_DELAY = 0.35
 
 
 def _build_reporter():
-    """Build a Gmail reporter (vaulted token); disable email on any failure."""
+    """Build a Gmail reporter (vaulted token); disable email on any auth failure.
+
+    A disabled/expired OAuth client must NOT crash the game thread — we degrade to
+    'email off' and let the series run and render on the UI regardless.
+    """
+    from google.auth.exceptions import GoogleAuthError
+
     try:
         reporter = GmailApiReporter()
         reporter.bootstrap_oauth()
         return reporter
-    except (OSError, RuntimeError, ValueError) as exc:
-        print(f"Email disabled ({type(exc).__name__}): {exc}")
+    except (OSError, RuntimeError, ValueError, GoogleAuthError) as exc:
+        print(f"Email disabled ({type(exc).__name__}): {exc} — game continues without email.")
         return None
 
 

@@ -44,6 +44,7 @@ class GmailApiReporter:
 
     def bootstrap_oauth(self):
         """Run the OAuth2 Desktop flow (gmail.modify), persisting token.json."""
+        from google.auth.exceptions import RefreshError
         from google.auth.transport.requests import Request
         from google.oauth2.credentials import Credentials
         from google_auth_oauthlib.flow import InstalledAppFlow
@@ -53,9 +54,12 @@ class GmailApiReporter:
         if self._token_path.exists():
             creds = Credentials.from_authorized_user_file(str(self._token_path), _SCOPES)
         if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-            else:
+            try:
+                if creds and creds.expired and creds.refresh_token:
+                    creds.refresh(Request())
+                else:
+                    raise RefreshError("interactive consent required")
+            except RefreshError:  # stale/revoked token (e.g. disabled_client) -> re-consent
                 flow = InstalledAppFlow.from_client_secrets_file(str(self._cred_path), _SCOPES)
                 creds = flow.run_local_server(port=0)
             self._token_path.write_text(creds.to_json(), encoding="utf-8")
@@ -77,17 +81,10 @@ class GmailApiReporter:
             "barriers": sorted(list(cell) for cell in state.grid.barriers),
         }
         econ = self._tracker.get_current_economics() if self._tracker else dict(_ZERO_ECON)
-        return {
-            "report_type": "internal_game",
-            "facts": facts,
-            "agreement_sha256": self._agreement_hash(facts),
-            "telemetry": {
-                "input_accumulated": econ.get("input_accumulated", 0),
-                "output_accumulated": econ.get("output_accumulated", 0),
-                "estimated_cost_usd": econ.get("estimated_cost_usd", 0.0),
-                "status": "OK",
-            },
-        }
+        telemetry = {k: econ.get(k, _ZERO_ECON[k]) for k in _ZERO_ECON}
+        telemetry["status"] = "OK"
+        return {"report_type": "internal_game", "facts": facts,
+                "agreement_sha256": self._agreement_hash(facts), "telemetry": telemetry}
 
     def _encode_message(self, recipient: str, body: str) -> dict:
         """Encode a JSON-only MIME message for the Gmail API."""
