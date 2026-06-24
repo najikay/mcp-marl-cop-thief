@@ -10,10 +10,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import random
 import time
 
 from cop_thief.config import get_config_manager
 from cop_thief.domain.constants import AgentRole, SubGameOutcome
+from cop_thief.domain.geometry import random_start_positions
 from cop_thief.domain.grid import Grid
 from cop_thief.domain.move_language import apply_prose
 from cop_thief.domain.state import DecPomdpGameState
@@ -41,24 +43,29 @@ class SeriesRunner:
     def _observation(self, state: DecPomdpGameState, role: AgentRole, variant: int = 0) -> dict:
         return {"role": role.value, "grid": list(state.grid.shape),
                 "cop": list(state.cop_pos), "thief": list(state.thief_pos),
-                "barriers": [list(b) for b in state.grid.barriers],
+                "barriers": [list(b) for b in state.grid.barriers], "turn": state.turn_counter,
                 "barriers_left": state.cop_barriers_left, "variant": variant}
+
+    def _start(self, index: int) -> tuple[tuple, tuple]:
+        """Pick the sub-game's opening: seeded-random (ex06 §4.2) or fixed corners."""
+        game = get_config_manager().setup.game
+        if game.start_mode != "random":
+            return (0, 0), (_GRID - 1, _GRID - 1)
+        return random_start_positions(_GRID, _GRID, random.Random((game.random_seed or 0) + index))
 
     def _record(self, state: DecPomdpGameState, role: AgentRole, prose: str, hostile: bool) -> None:
         if self._observer is not None:
             self._observer(state, prose, False)
         if self._logger is not None:
-            self._logger.log_turn(
-                state.turn_counter,
-                {"cop": list(state.cop_pos), "thief": list(state.thief_pos),
-                 "barriers": [list(b) for b in state.grid.barriers]},
-                prose if role is AgentRole.COP else "",
-                prose if role is AgentRole.THIEF else "", False, False, hostile)
+            snap = {"cop": list(state.cop_pos), "thief": list(state.thief_pos),
+                    "barriers": [list(b) for b in state.grid.barriers]}
+            self._logger.log_turn(state.turn_counter, snap, prose if role is AgentRole.COP else "",
+                                  prose if role is AgentRole.THIEF else "", False, False, hostile)
 
-    def play_match(self, variant: int = 0) -> SubGameOutcome:
-        """Play one thief-first sub-game with roster ``variant`` by asking each provider."""
-        state = DecPomdpGameState(
-            cop_pos=(0, 0), thief_pos=(_GRID - 1, _GRID - 1), grid=Grid(shape=(_GRID, _GRID)))
+    def play_match(self, variant: int = 0, index: int = 0) -> SubGameOutcome:
+        """Play one thief-first sub-game (random opening for ``index``) by asking each provider."""
+        cop0, thief0 = self._start(index)
+        state = DecPomdpGameState(cop_pos=cop0, thief_pos=thief0, grid=Grid(shape=(_GRID, _GRID)))
         for _ in range(self._coord.max_moves * 2):
             outcome = self._coord.evaluate_terminal_condition(state)
             if outcome is not None:
@@ -89,14 +96,12 @@ class SeriesRunner:
             for variant in range(3):
                 if self._announce is not None:
                     self._announce(f"Sub-game {len(sub_games) + 1}/6 — {VARIANT_LABELS[variant]} variant")
-                outcome = self.play_match(variant)
+                outcome = self.play_match(variant, index=len(sub_games))
                 cop_pts, thief_pts = self._points(outcome)
                 ours, opp = (cop_pts, thief_pts) if our_role is AgentRole.COP else (thief_pts, cop_pts)
-                totals["ours"] += ours
-                totals["opponent"] += opp
-                sub_games.append({"match": len(sub_games) + 1, "venue": venue,
-                                  "variant": VARIANT_LABELS[variant], "our_role": our_role.value,
-                                  "outcome": outcome.value, "our_points": ours, "opponent_points": opp})
+                totals["ours"], totals["opponent"] = totals["ours"] + ours, totals["opponent"] + opp
+                sub_games.append({"match": len(sub_games) + 1, "venue": venue, "variant": VARIANT_LABELS[variant],
+                                  "our_role": our_role.value, "outcome": outcome.value, "our_points": ours, "opponent_points": opp})
         report = self._report(sub_games, totals)
         if self._reporter is not None:
             self._reporter.dispatch_payload(report, self._recipient)
@@ -111,5 +116,4 @@ class SeriesRunner:
             "our_cop_url": net.team_alpha_cop_url, "our_thief_url": net.team_alpha_thief_url, "opponent_cop_url": net.team_beta_cop_url, "opponent_thief_url": net.team_beta_thief_url,
             "timezone": "Asia/Jerusalem", "sub_games": sub_games, "totals": totals, "hostile_transmissions": self._hostile,
             "final_result": "ours" if diff > 0 else "opponent" if diff < 0 else "tie",
-            "agreement_sha256": hashlib.sha256(canon.encode("utf-8")).hexdigest(),
-        }
+            "agreement_sha256": hashlib.sha256(canon.encode("utf-8")).hexdigest()}

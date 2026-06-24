@@ -1,14 +1,13 @@
-"""Depth-limited alpha-beta minimax over the zero-sum Markov game.
+"""Risk-tunable minimax / expectimax over the zero-sum Markov game.
 
-Game-theory core: the Cop maximizes and the Thief minimizes the cop-signed value,
-each assuming an optimal adversary. The Cop's action set includes walling its own
-cell (the Conway 'Devil' move), so the planner discovers herding-to-trap lines
-without any hand-coded barrier heuristic.
+Game-theory core: WE play optimally; the OPPONENT's nodes are blended between their
+optimal reply (pure minimax, `pessimism = 1` → unexploitable, safe) and the average
+over their legal moves (`pessimism = 0` → expectimax that exploits a sub-optimal
+opponent). The Cop's action set includes walling its own cell (the Conway 'Devil'
+move), so the planner discovers herding-to-trap lines without a hand-coded rule.
 """
 
 from __future__ import annotations
-
-import math
 
 from cop_thief.domain.constants import ActionType, AgentRole
 from cop_thief.domain.state import DecPomdpGameState
@@ -18,12 +17,13 @@ Action = tuple[ActionType, tuple]
 
 
 class MinimaxPlanner:
-    """Alpha-beta planner returning the acting role's optimal action."""
+    """Risk-tunable planner returning the acting role's chosen action."""
 
-    def __init__(self, evaluator: Evaluator | None = None, depth: int = 3) -> None:
-        """Bind the leaf evaluator and the search depth (plies)."""
+    def __init__(self, evaluator: Evaluator | None = None, depth: int = 3, pessimism: float = 1.0) -> None:
+        """Bind the leaf evaluator, search depth (plies) and default opponent pessimism."""
         self._eval = evaluator or Evaluator()
         self._depth = depth
+        self._pessimism = pessimism
 
     def actions(self, state: DecPomdpGameState, role: AgentRole) -> list[Action]:
         """Enumerate legal actions: King moves, plus a Cop wall on its own cell."""
@@ -36,32 +36,28 @@ class MinimaxPlanner:
             acts.append((ActionType.MOVE, pos))
         return acts
 
-    def _search(self, state: DecPomdpGameState, depth: int, alpha: float, beta: float) -> float:
+    def _search(self, state: DecPomdpGameState, depth: int, our_role: AgentRole, pess: float) -> float:
         terminal = self._eval.terminal_value(state)
         if terminal is not None:
             return terminal
         if depth == 0:
             return self._eval.value(state)
         role = state.turn_role
-        maximizing = role is AgentRole.COP
-        best = -math.inf if maximizing else math.inf
-        for action_type, target in self.actions(state, role):
-            score = self._search(state.apply_action(role, action_type, target), depth - 1, alpha, beta)
-            if maximizing:
-                best = max(best, score)
-                alpha = max(alpha, best)
-            else:
-                best = min(best, score)
-                beta = min(beta, best)
-            if beta <= alpha:
-                break
-        return best
+        scores = [
+            self._search(state.apply_action(role, at, tgt), depth - 1, our_role, pess)
+            for at, tgt in self.actions(state, role)
+        ]
+        if role is our_role:  # we always play optimally
+            return max(scores) if role is AgentRole.COP else min(scores)
+        optimal = min(scores) if role is AgentRole.THIEF else max(scores)  # opponent's best reply
+        return pess * optimal + (1.0 - pess) * (sum(scores) / len(scores))
 
-    def best_action(self, state: DecPomdpGameState) -> Action:
+    def best_action(self, state: DecPomdpGameState, pessimism: float | None = None) -> Action:
         """Return the (ActionType, target) the acting role should play now."""
+        pess = self._pessimism if pessimism is None else pessimism
         role = state.turn_role
         scored = [
-            (self._search(state.apply_action(role, at, tgt), self._depth - 1, -math.inf, math.inf), (at, tgt))
+            (self._search(state.apply_action(role, at, tgt), self._depth - 1, role, pess), (at, tgt))
             for at, tgt in self.actions(state, role)
         ]
         chooser = max if role is AgentRole.COP else min

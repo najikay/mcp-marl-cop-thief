@@ -1,10 +1,10 @@
-"""Stateful per-role strategy resolver: Angel–Devil minimax planner variants.
+"""Stateful per-role strategy resolver: risk-tunable Angel–Devil minimax variants.
 
-Each ``request_move`` is answered by a depth-limited alpha-beta planner (game
-theory) whose Cop action set includes walling its own cell (Conway 'Devil' move),
-so barriers and herding-to-trap emerge from search — no hand-coded barrier rule.
-The sub-game ``variant`` index selects one of three planner profiles, giving the
-six sub-games distinct, principled behaviour.
+Each ``request_move`` is answered by a minimax/expectimax planner (game theory) whose
+Cop action set includes walling its own cell (Conway 'Devil' move). An online
+``OpponentModel`` watches the opponent's moves across the session and lowers our
+pessimism toward expectimax only as far as the opponent proves exploitable; each
+variant's ``risk`` controls how much it trusts that signal (defensive = pure minimax).
 """
 
 from __future__ import annotations
@@ -13,38 +13,47 @@ from cop_thief.domain.constants import ActionType, AgentRole
 from cop_thief.domain.move_language import encode_barrier, encode_move
 from cop_thief.domain.strategy.evaluation import Evaluator
 from cop_thief.domain.strategy.minimax import MinimaxPlanner
+from cop_thief.domain.strategy.opponent import OpponentModel, opponent_was_rational
 from cop_thief.domain.strategy.roster import VARIANT_LABELS
 from cop_thief.servers.tools.move_tool import build_state
 
-# (weights, depth) per variant: aggressive (deep, proximity) / balanced / defensive (containment).
+# (weights, depth, risk): aggressive (exploit) / balanced / defensive (pure minimax, safe).
 _VARIANTS = (
-    ((1.2, 0.5, 0.4, 0.1), 4),
-    ((1.0, 0.6, 0.4, 0.1), 3),
-    ((0.7, 1.0, 0.6, 0.2), 3),
+    ((1.2, 0.5, 0.4, 0.1), 3, 1.0),
+    ((1.0, 0.6, 0.4, 0.1), 3, 0.5),
+    ((0.7, 1.0, 0.6, 0.2), 2, 0.0),
 )
 
 
-def _default_planners() -> list[MinimaxPlanner]:
-    """Build the three variant planners (one Evaluator + depth each)."""
-    return [MinimaxPlanner(Evaluator(weights), depth) for weights, depth in _VARIANTS]
-
-
 class StrategyResolver:
-    """Resolve a move via a per-variant Angel–Devil minimax planner."""
+    """Resolve a move via a risk-tunable minimax planner with online opponent modelling."""
 
-    def __init__(self, planners: list[MinimaxPlanner] | None = None) -> None:
-        """Hold the variant planners; build the three defaults if unset."""
-        self._planners = planners or _default_planners()
+    def __init__(self, variants=None) -> None:
+        """Build the variant (planner, risk) pairs and a fresh opponent model."""
+        self._variants = variants or [
+            (MinimaxPlanner(Evaluator(w), depth), risk) for w, depth, risk in _VARIANTS
+        ]
+        self._model = OpponentModel()
+        self._last: dict | None = None
 
     def label(self, role: AgentRole, variant: int) -> str:
         """Return the variant's human label (aggressive / balanced / defensive)."""
         return VARIANT_LABELS[variant % len(VARIANT_LABELS)]
 
+    def _learn(self, observation: dict) -> None:
+        """Update the opponent model from its last move (skip on reset / first call)."""
+        last, self._last = self._last, observation
+        if last is None or observation.get("turn", 0) <= last.get("turn", 0):
+            return
+        self._model.observe(opponent_was_rational(observation["role"], last, observation))
+
     def resolve(self, observation: dict) -> str:
-        """Plan the sub-game variant's action and return it as treaty prose."""
+        """Plan the variant's action (pessimism adapted to the opponent) as treaty prose."""
+        self._learn(observation)
         state, role, pos = build_state(observation)
-        planner = self._planners[int(observation.get("variant", 0)) % len(self._planners)]
-        action_type, target = planner.best_action(state)
+        planner, risk = self._variants[int(observation.get("variant", 0)) % len(self._variants)]
+        pessimism = 1.0 - risk * (1.0 - self._model.pessimism())
+        action_type, target = planner.best_action(state, pessimism)
         if action_type is ActionType.PLACE_BARRIER:
             return encode_barrier(role)
         return encode_move(role, pos, target)

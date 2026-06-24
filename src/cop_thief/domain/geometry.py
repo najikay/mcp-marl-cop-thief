@@ -21,6 +21,19 @@ def calculate_manhattan(p1: Coord, p2: Coord) -> int:
     return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
 
 
+def random_start_positions(rows: int, cols: int, rng) -> tuple[Coord, Coord]:
+    """Return two distinct random cells ``(cop, thief)`` for a fresh sub-game (ex06 §4.2).
+
+    ``rng`` is a ``random.Random`` instance; seeding it deterministically lets both
+    groups reproduce the identical opening (so the agreed result cannot drift).
+    """
+    cop = (rng.randrange(rows), rng.randrange(cols))
+    thief = cop
+    while thief == cop:
+        thief = (rng.randrange(rows), rng.randrange(cols))
+    return cop, thief
+
+
 def get_adjacent_coords(pos: Coord, grid_shape: Shape) -> list[Coord]:
     """Return the in-bounds 8-way neighbours of ``pos`` (STAY excluded)."""
     rows, cols = grid_shape

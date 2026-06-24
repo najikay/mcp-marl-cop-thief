@@ -32,6 +32,8 @@ groups can bring their logs + hashes to the lecturer for adjudication.** Keep it
 - **8-way Chebyshev (King) movement** — any of the 8 neighbours, in-bounds, not a barrier.
 - **Barriers:** Cop only, **≤ 5 / match**, placed (as an alternative to moving) on **the Cop's own
   current cell** (ex06 §4.3), **impassable by both** thereafter.
+- **Start (ex06 §4.2):** each sub-game opens from a **seeded-random** Cop/Thief placement (distinct
+  cells); the seed is deterministic so both groups reproduce the same opening (no result drift).
 - **Capture:** Cop occupies the Thief's cell → Cop wins.
 - **Trapped-Death:** an agent that begins its turn with zero legal (non-HOLD) moves is resolved:
   Thief trapped → Cop win (`thief_trapped`); Cop trapped → Thief win (`thief_wins`).

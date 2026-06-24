@@ -43,7 +43,7 @@ class ChallengeRunner:
             self._say(f"{venue.upper()} LEG — we play {our_role.value.upper()} vs {self._opp_group}")
             for variant in range(3):
                 self._say(f"Sub-game {len(sub_games) + 1}/6")
-                outcome = runner.play_match(variant)
+                outcome = runner.play_match(variant, index=len(sub_games))
                 cop_pts, thief_pts = SeriesRunner._points(outcome)
                 ours, opp = (cop_pts, thief_pts) if our_role is AgentRole.COP else (thief_pts, cop_pts)
                 totals["ours"] += ours

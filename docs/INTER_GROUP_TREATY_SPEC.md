@@ -53,6 +53,10 @@ Rules:
    - **Thief begins its turn with zero legal moves →** `thief_trapped` → **Cop win (+20 / +5)**.
    - **Cop begins its turn with zero legal moves →** the Cop can never capture → it auto-HOLDs and the
      Thief wins by survival → `thief_wins` (**+5 / +10**). (Resolved decisively; no empty turns.)
+6. **Random opening (ex06 §4.2).** Each sub-game begins from a Cop/Thief placement that is **random but
+   seeded** — both groups derive the identical opening per sub-game from an agreed seed (default `0`,
+   offset by sub-game index), so the result cannot drift. Positions are distinct; neither starts on a
+   barrier. (A fixed-corner opening is also permitted if both leads agree in writing.)
 5. **Anti-Draw Protocol.** Draws are forbidden. From **Turn 24** onward both agents play a strictly
    decisive policy: the Cop selects the move that **minimises Chebyshev distance** to its believed
    Thief cell (preferring any move that creates an inevitable trap); the Thief selects the move that
