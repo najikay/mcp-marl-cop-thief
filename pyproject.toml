@@ -65,6 +65,9 @@ ignore = ["E501"]
 "tests/*" = ["N802", "N803"]
 # SubmissionSafetyException is a mandated public API name (kept verbatim per spec).
 "src/cop_thief/reporting/guard.py" = ["N818"]
+# The challenge worker is a thread top-level boundary: it must catch any failure
+# and surface it to the panel rather than dying silently in a background thread.
+"src/cop_thief/ui/server.py" = ["BLE001"]
 
 # --- pytest ------------------------------------------------------------------
 [tool.pytest.ini_options]
@@ -91,6 +94,8 @@ omit = [
     "src/cop_thief/infra/network/switchboard.py",
     "src/cop_thief/infra/network/dual_mcp_host.py",
     "src/cop_thief/orchestrator/treaty_runner.py",
+    "src/cop_thief/challenge.py",
+    "src/cop_thief/serve.py",
 ]
 
 [tool.coverage.report]

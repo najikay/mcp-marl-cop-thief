@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MARL Cop &amp; Thief — Control Panel</title>
+  <style>
+    :root {
+      --bg:#0d1117; --panel:#161b22; --line:#30363d; --txt:#c9d1d9;
+      --cop:#3b82f6; --thief:#ef4444; --capture:#f59e0b; --capbg:#6d28d9;
+      --q:#34d399; --conway:#fbbf24; --ok:#34d399; --down:#6e7681;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:"Courier New",monospace; background:var(--bg); color:var(--txt); }
+    h1 { font-size:16px; letter-spacing:2px; margin:0; }
+    section { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:14px; margin:14px; }
+    .row { display:flex; gap:18px; flex-wrap:wrap; align-items:center; }
+    .dot { font-weight:bold; }
+    .up { color:var(--ok); } .dn { color:var(--down); }
+    .url { display:flex; gap:8px; align-items:center; margin-top:8px; font-size:13px; }
+    .url code { background:#0b0f14; border:1px solid var(--line); border-radius:5px; padding:4px 8px; overflow:auto; }
+    button { font-family:inherit; background:#21262d; color:var(--txt); border:1px solid var(--line);
+             border-radius:6px; padding:6px 12px; cursor:pointer; }
+    button.go { background:var(--cop); color:#fff; border-color:var(--cop); font-weight:bold; }
+    input { font-family:inherit; background:#0b0f14; color:var(--txt); border:1px solid var(--line);
+            border-radius:5px; padding:6px 8px; }
+    .field { display:flex; flex-direction:column; gap:3px; font-size:12px; }
+    .field .lbl { opacity:0.6; letter-spacing:1px; }
+    .grid2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; }
+    #matrix { display:grid; gap:6px; }
+    .cell { width:56px; height:56px; display:flex; align-items:center; justify-content:center;
+            font-size:24px; font-weight:bold; background:#0b0f14; border:1px solid var(--line); border-radius:6px; }
+    .cop { color:var(--cop); border-color:var(--cop); }
+    .thief { color:var(--thief); border-color:var(--thief); }
+    .capture { color:var(--capture); background:var(--capbg); border-color:var(--capture); }
+    .barrier { color:#10B981; border-color:#10B981; background:#0a2a1e; }
+    main { display:flex; gap:14px; flex-wrap:wrap; }
+    #comms { flex:1 1 320px; height:340px; overflow-y:auto; background:#0b0f14;
+             border:1px solid var(--line); border-radius:8px; padding:10px; min-width:280px; }
+    .msg { margin:0 0 7px; line-height:1.4; word-break:break-word; }
+    .msg.cop .who { color:var(--cop); } .msg.thief .who { color:var(--thief); }
+    .msg .who { font-weight:bold; } .msg .t { opacity:0.45; font-size:12px; margin-right:6px; }
+    .divider { color:var(--capture); text-align:center; font-weight:bold; margin:10px 0 6px; }
+  </style>
+</head>
+<body>
+  <section>
+    <h1>MARL COP &amp; THIEF — CONTROL PANEL</h1>
+    <div class="row" style="margin-top:10px">
+      <span>Servers <span id="d-srv" class="dot dn">●</span></span>
+      <span>Tunnels <span id="d-tun" class="dot dn">●</span></span>
+      <span>Game <span id="d-game" class="dot">○ idle</span></span>
+    </div>
+    <div class="url">COP&nbsp;&nbsp; <code id="u-cop">—</code><button onclick="cp('u-cop')">copy</button>
+      <span>token</span><code id="t-cop">—</code><button onclick="cp('t-cop')">copy</button></div>
+    <div class="url">THIEF <code id="u-thief">—</code><button onclick="cp('u-thief')">copy</button>
+      <span>token</span><code id="t-thief">—</code><button onclick="cp('t-thief')">copy</button></div>
+    <div style="opacity:.6;font-size:12px;margin-top:6px">→ send these URLs + tokens to your opponent</div>
+  </section>
+
+  <section>
+    <h1>CHALLENGE AN OPPONENT</h1>
+    <div class="grid2" style="margin-top:10px">
+      <div class="field"><span class="lbl">OUR GROUP</span><input id="f-our" value="NajAmjad" /></div>
+      <div class="field"><span class="lbl">OPPONENT GROUP</span><input id="f-opp" value="Opponent" /></div>
+      <div class="field"><span class="lbl">OPPONENT COP MCP URL</span><input id="f-cop-url" placeholder="https://…/mcp/" /></div>
+      <div class="field"><span class="lbl">OPPONENT THIEF MCP URL</span><input id="f-thief-url" placeholder="https://…/mcp/" /></div>
+      <div class="field"><span class="lbl">OPP COP TOKEN (blank if open)</span><input id="f-cop-tok" /></div>
+      <div class="field"><span class="lbl">OPP THIEF TOKEN (blank if open)</span><input id="f-thief-tok" /></div>
+      <div class="field"><span class="lbl">REPORT EMAIL</span><input id="f-email" /></div>
+    </div>
+    <div style="margin-top:12px"><button class="go" id="startBtn" onclick="startGame()">START CHALLENGE ▶</button>
+      <span id="formMsg" style="margin-left:12px;opacity:.7"></span></div>
+  </section>
+
+  <section>
+    <h1>LIVE GAME <span id="conn" style="float:right;font-size:12px;opacity:.7">● connecting…</span></h1>
+    <main style="margin-top:10px">
+      <div id="matrix"></div>
+      <div id="comms"></div>
+    </main>
+  </section>
+
+  <script>
+    "use strict";
+    const $ = (id) => document.getElementById(id);
+    const eq = (a,b) => Array.isArray(a) && Array.isArray(b) && a[0]===b[0] && a[1]===b[1];
+    const cp = (id) => navigator.clipboard && navigator.clipboard.writeText($(id).textContent);
+
+    function renderMatrix(p) {
+      p = p || {}; const n = p.grid || 5, m = $("matrix");
+      m.style.gridTemplateColumns = `repeat(${n}, 1fr)`; m.innerHTML = "";
+      for (let r=0;r<n;r++) for (let c=0;c<n;c++) {
+        const cell=document.createElement("div"); cell.className="cell"; const here=[r,c];
+        const isB=(p.barriers||[]).some((b)=>eq(b,here));
+        if (p.captured && eq(here,p.cop) && eq(here,p.thief)) { cell.classList.add("capture"); cell.textContent="!"; }
+        else if (eq(here,p.cop)) { cell.classList.add("cop"); cell.textContent="C"; }
+        else if (eq(here,p.thief)) { cell.classList.add("thief"); cell.textContent="T"; }
+        else if (isB) { cell.classList.add("barrier"); cell.textContent="B"; }
+        m.appendChild(cell);
+      }
+    }
+    function logMsg(role, prose, turn) {
+      const d=document.createElement("div"); d.className="msg "+role;
+      d.innerHTML=`<span class="t">[T${turn}]</span><span class="who">${role.toUpperCase()}:</span> "${(prose||"").replace(/[<>&]/g,"")}"`;
+      $("comms").appendChild(d); $("comms").scrollTop=$("comms").scrollHeight;
+    }
+    function logDivider(t) {
+      const d=document.createElement("div"); d.className="divider"; d.textContent="──── "+t+" ────";
+      $("comms").appendChild(d); $("comms").scrollTop=$("comms").scrollHeight;
+    }
+    function render(p) {
+      if (p.separator) { logDivider(p.separator); return; }
+      renderMatrix(p);
+      if (p.cop_prose) logMsg("cop", p.cop_prose, p.turn);
+      if (p.thief_prose) logMsg("thief", p.thief_prose, p.turn);
+    }
+    renderMatrix({ grid:5, barriers:[] });
+
+    async function refresh() {
+      try {
+        const s = await (await fetch("/api/status")).json();
+        $("d-srv").className = "dot " + (s.servers_up?"up":"dn");
+        $("d-tun").className = "dot " + (s.tunnels_up?"up":"dn");
+        $("d-game").textContent = (s.game_status==="idle"?"○ ":"● ") + s.game_status;
+        $("u-cop").textContent = s.cop_url||"—"; $("u-thief").textContent = s.thief_url||"—";
+        $("t-cop").textContent = s.cop_token||"—"; $("t-thief").textContent = s.thief_token||"—";
+      } catch (e) { /* panel still loads if status not ready */ }
+    }
+    refresh(); setInterval(refresh, 2000);
+
+    async function startGame() {
+      const body = {
+        our_group:$("f-our").value, opp_group:$("f-opp").value,
+        cop_url:$("f-cop-url").value, thief_url:$("f-thief-url").value,
+        cop_token:$("f-cop-tok").value, thief_token:$("f-thief-tok").value, email:$("f-email").value,
+      };
+      if (!body.cop_url || !body.thief_url) { $("formMsg").textContent="enter both opponent URLs"; return; }
+      $("startBtn").disabled = true; $("formMsg").textContent = "starting…";
+      try {
+        await fetch("/api/challenge", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) });
+        $("formMsg").textContent = "challenge started — watch below";
+      } catch (e) { $("formMsg").textContent = "failed to start: " + e; }
+      setTimeout(() => { $("startBtn").disabled = false; }, 4000);
+    }
+
+    const es = new EventSource("/stream");
+    es.onopen = () => { $("conn").textContent = "● live"; };
+    es.onmessage = (e) => { try { render(JSON.parse(e.data)); } catch (err) { console.error(err); } };
+    es.onerror = () => { $("conn").textContent = "● stream closed"; };
+  </script>
+</body>
+</html>

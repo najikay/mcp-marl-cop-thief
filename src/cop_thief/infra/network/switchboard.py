@@ -78,14 +78,21 @@ async def _drain(stream) -> None:
         pass
 
 
-async def run_switchboard() -> None:
-    """Launch both tunnels, capture + persist URLs, then hold open until Ctrl+C."""
+async def run_switchboard(on_ready=None) -> None:
+    """Launch both tunnels, capture + persist URLs, then hold open until Ctrl+C.
+
+    ``on_ready(cop_url, thief_url)`` is invoked once the public ``/mcp/`` URLs are
+    captured (the control panel uses it to publish them into the live node status).
+    """
     procs = [await _spawn(_PORT_COP), await _spawn(_PORT_THIEF)]
     try:
         cop_url, thief_url = await asyncio.gather(_capture(procs[0]), _capture(procs[1]))
+        cop_url, thief_url = f"{cop_url}/mcp/", f"{thief_url}/mcp/"  # full shareable MCP endpoints
         inject_urls(cop_url, thief_url)
         _print_table(cop_url, thief_url)
-        print("Tunnels live and written to config/setup.json. Press Ctrl+C to terminate.")
+        if on_ready is not None:
+            on_ready(cop_url, thief_url)
+        print("Tunnels live and written to config/setup.json. Share these /mcp/ URLs. Ctrl+C to stop.")
         await asyncio.gather(*(_drain(p.stderr) for p in procs))
     finally:
         for proc in procs:

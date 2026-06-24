@@ -1,46 +1,26 @@
-"""One-way Server-Sent-Events broadcast server (the 'Dumb Television' backend).
+"""Control-panel backend: serves the panel, the live SSE TV, and status/challenge API.
 
-Serves a single static HTML canvas and a ``text/event-stream`` of immutable turn
-snapshots. The UI is broadcast-only: it can never mutate Python game state.
-
-Standalone for now (not wired into main.py): ``/stream`` is fed by a sterile
-``mock_game_generator`` so the browser can be tested without a live game.
+Routes: ``/`` (control panel), ``/stream`` (broadcast-only Server-Sent-Events TV),
+``/api/status`` (live node status JSON), ``/api/challenge`` (POST opponent details →
+runs a cross-host challenge in a worker thread, streamed to the TV and emailed).
+The UI can never mutate game state directly — it only posts a challenge request.
 """
 
 from __future__ import annotations
 
-import asyncio
+import threading
 from pathlib import Path
 
 from starlette.applications import Starlette
-from starlette.responses import FileResponse, StreamingResponse
+from starlette.responses import FileResponse, JSONResponse, StreamingResponse
 from starlette.routing import Route
 
-_STATIC = Path(__file__).parent / "static" / "index.html"
-_GRID = 5
-_TOTAL = 10
-_DELAY_S = 1.5
-
-# Sterile 5-turn capture sequence (cop closes the diagonal; collision on turn 5).
-_SEQUENCE = [
-    {"turn": 1, "cop": [1, 1], "thief": [3, 4], "captured": False, "epistemic": "Conway Scaffolding", "cost_usd": 0.0004, "cop_prose": "I press in from the damp north-west cobblestones.", "thief_prose": "I drift along the eastern wall, watching the lanes."},
-    {"turn": 2, "cop": [2, 2], "thief": [4, 4], "captured": False, "epistemic": "Q-Policy", "cost_usd": 0.0009, "cop_prose": "Closing the diagonal — your corner is shrinking.", "thief_prose": "I hug the far corner; you are still two strides away."},
-    {"turn": 3, "cop": [2, 3], "thief": [3, 4], "captured": False, "epistemic": "Q-Policy", "cost_usd": 0.0013, "cop_prose": "I slide east to seal your escape north.", "thief_prose": "Edging up the wall, but the gap is thinning."},
-    {"turn": 4, "cop": [3, 3], "thief": [4, 4], "captured": False, "epistemic": "Q-Policy", "cost_usd": 0.0018, "cop_prose": "One lane left. I drop south-east onto your shadow.", "thief_prose": "Cornered against the eastern rampart — running out of board."},
-    {"turn": 5, "cop": [3, 4], "thief": [3, 4], "captured": True, "epistemic": "Q-Policy", "cost_usd": 0.0022, "cop_prose": "Got you. Same cell — capture.", "thief_prose": "Trapped. The lanes are gone."},
-]
-
-
-async def mock_game_generator():
-    """Yield a sterile 5-turn capture sequence, one packet per delay tick."""
-    for packet in _SEQUENCE:
-        yield {"grid": _GRID, "total": _TOTAL, **packet}
-        await asyncio.sleep(_DELAY_S)
+_PANEL = Path(__file__).parent / "static" / "panel.html"
 
 
 async def homepage(_request) -> FileResponse:
-    """Serve the single-file HTML television."""
-    return FileResponse(_STATIC)
+    """Serve the single-file control panel."""
+    return FileResponse(_PANEL)
 
 
 async def stream(_request) -> StreamingResponse:
@@ -54,11 +34,71 @@ async def stream(_request) -> StreamingResponse:
     return StreamingResponse(event_source(), media_type="text/event-stream")
 
 
-app = Starlette(routes=[Route("/", homepage), Route("/stream", stream)])
+async def status(_request) -> JSONResponse:
+    """Return the live node status (servers, tunnels, URLs, tokens, game phase)."""
+    from cop_thief.ui.node_state import STATE
+
+    return JSONResponse(STATE.snapshot())
+
+
+def _run_challenge(params: dict) -> None:
+    """Worker thread: play one cross-host challenge, stream it, then email the report."""
+    from cop_thief.infra.network.move_client import RemoteMoveClient
+    from cop_thief.orchestrator.challenge_runner import ChallengeRunner
+    from cop_thief.ui import broadcast
+    from cop_thief.ui.node_state import STATE
+
+    STATE.set_game("playing")
+    try:
+        runner = ChallengeRunner(
+            params.get("our_group", "NajAmjad"), params.get("opp_group", "Opponent"),
+            RemoteMoveClient(params["cop_url"], params.get("cop_token", "")),
+            RemoteMoveClient(params["thief_url"], params.get("thief_token", "")),
+            observer=broadcast.observe, announce=broadcast.banner, turn_delay=0.3)
+        report = runner.run()
+    except Exception as exc:  # thread boundary: surface any failure to the panel
+        STATE.set_game("error", {"error": str(exc)})
+        broadcast.banner(f"CHALLENGE FAILED: {exc}")
+        return
+    _email(report, params.get("email", ""))
+    STATE.set_game("done", report)
+    broadcast.banner(f"GAME DONE — {report['final_result']} — hash {report['agreement_sha256'][:12]}")
+
+
+def _email(report: dict, recipient: str) -> None:
+    """Email the report; a mail failure must not fail the (already played) game."""
+    from google.auth.exceptions import GoogleAuthError
+
+    from cop_thief.reporting import GmailApiReporter
+    from cop_thief.ui import broadcast
+
+    if not recipient:
+        return
+    try:
+        reporter = GmailApiReporter()
+        reporter.bootstrap_oauth()
+        reporter.dispatch_payload(report, recipient)
+    except (OSError, RuntimeError, ValueError, GoogleAuthError) as exc:
+        broadcast.banner(f"Email skipped ({type(exc).__name__}).")
+
+
+async def challenge(request) -> JSONResponse:
+    """Start a cross-host challenge in a worker thread from posted opponent details."""
+    params = await request.json()
+    threading.Thread(target=_run_challenge, args=(params,), daemon=True).start()
+    return JSONResponse({"status": "started"})
+
+
+app = Starlette(routes=[
+    Route("/", homepage),
+    Route("/stream", stream),
+    Route("/api/status", status),
+    Route("/api/challenge", challenge, methods=["POST"]),
+])
 
 
 def main() -> None:
-    """Run the broadcast server on localhost:8800."""
+    """Run the control panel server on localhost:8800."""
     import uvicorn
 
     uvicorn.run(app, host="127.0.0.1", port=8800)

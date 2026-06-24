@@ -193,6 +193,7 @@ Per single sub-game (config keys in parentheses):
 | **REC-01** | **Mutual-agreement reconciliation.** After the 6 sub-games both sides hash the canonical `sub_games` array; equal digests ⇒ `mutual_agreement: true` (totals stand), any mismatch ⇒ `mutual_agreement: false` and a 0/0 `both_lose` scoreline. |
 | **STRAT-01** | **Active Cop barrier strategy.** When the Thief is within reach and capture is unavailable, the Cop deploys a barrier (`[INTENT: BARRIER]`) on the Thief's escape route nearest it (Adjacent Barrier Law, budget-bounded) — so barriers actually deploy in live play (`B` renders) and `thief_trapped` is reachable, not just theoretical. |
 | **STRAT-02** | **Roster variants + Q-policy in live play.** A server-held `StrategyResolver` routes each `request_move` through a persistent per-role 3-variant `AgentRoster`; the sub-game's `variant` index picks the agent (aggressive/balanced/defensive), which selects via its epsilon-greedy Q-policy with geometry fallback. The 6 sub-games differ; variant labels appear in the report and UI. |
+| **NET-06** | **Interactive cross-host challenge.** `python -m cop_thief.challenge` prompts for our/opponent group names, the opponent's COP/THIEF MCP URLs (`…/mcp/` or `…/sse`), tokens and report email; it preflights the opponent's `request_move`, then plays 6 sub-games with **per-leg routing** (our role local, opponent's role fetched over MCP) and emails the JSON `bonus_game` report. Opponent details are runtime input, not hardcoded. |
 
 ### 4.2 Non-Functional Requirements
 | ID | Category | Requirement |

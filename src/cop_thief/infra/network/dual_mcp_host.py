@@ -1,9 +1,10 @@
-"""Concurrent dual FastMCP host: Cop (:8001) and Thief (:8002) over MCP-SSE.
+"""Concurrent dual FastMCP host: Cop (:8001) and Thief (:8002) over MCP streamable-HTTP.
 
-Wraps the existing Cop/Thief FastMCP servers (with their tool layers) as
-Starlette ASGI apps via FastMCP's native SSE transport, then runs both under one
-asyncio event loop with two programmatic Uvicorn servers. These are the local
-targets behind the Cloudflare tunnels (8001 → Cop, 8002 → Thief).
+Wraps the existing Cop/Thief FastMCP servers (with their tool layers) as Starlette
+ASGI apps via FastMCP's streamable-HTTP transport (tool endpoint at ``/mcp``), then
+runs both under one asyncio event loop with two programmatic Uvicorn servers. These
+are the local targets behind the Cloudflare tunnels (8001 → Cop, 8002 → Thief); the
+shared public URLs are ``https://…trycloudflare.com/mcp/`` (matches the standard).
 
 Run: ``uv run python -m cop_thief.infra.network.dual_mcp_host``
 """
@@ -23,13 +24,13 @@ _LOG_LEVEL = "warning"
 
 
 def build_servers() -> tuple[uvicorn.Server, uvicorn.Server]:
-    """Build two configured (not-yet-serving) Uvicorn servers for Cop/Thief SSE.
+    """Build two configured (not-yet-serving) Uvicorn servers for Cop/Thief.
 
     Each FastMCP instance is converted to an ASGI app via ``http_app(transport=
-    "sse")`` and bound to its dedicated localhost port.
+    "http")`` (streamable-HTTP, endpoint ``/mcp``) and bound to its localhost port.
     """
-    cop_app = create_cop_server().http_app(transport="sse")
-    thief_app = create_thief_server().http_app(transport="sse")
+    cop_app = create_cop_server().http_app(transport="http")
+    thief_app = create_thief_server().http_app(transport="http")
     cop = uvicorn.Server(
         uvicorn.Config(cop_app, host=_HOST, port=_COP_PORT, log_level=_LOG_LEVEL)
     )
