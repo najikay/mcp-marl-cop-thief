@@ -21,11 +21,11 @@ class ChallengeRunner:
     """Play 6 sub-games against a live opponent (our role local, their role remote)."""
 
     def __init__(self, our_group, opp_group, their_cop, their_thief,
-                 observer=None, announce=None, turn_delay=0.0):
-        """Wire group names, the opponent's remote move clients and live hooks."""
+                 our_resolver=None, observer=None, announce=None, turn_delay=0.0):
+        """Wire group names, the opponent's remote move clients, our resolver and hooks."""
         self._our_group, self._opp_group = our_group, opp_group
         self._their_cop, self._their_thief = their_cop, their_thief
-        self._our = StrategyResolver().resolve
+        self._our = our_resolver or StrategyResolver().resolve
         self._observer, self._announce, self._delay = observer, announce, turn_delay
 
     def _say(self, msg: str) -> None:

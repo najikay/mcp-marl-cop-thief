@@ -8,9 +8,9 @@ from cop_thief.servers.tools.move_tool import resolve_move
 
 
 def _runner() -> ChallengeRunner:
-    """A runner whose 'opponent' endpoints are the local deterministic resolver."""
+    """A runner whose opponent AND our resolver are the fast deterministic geometry."""
     return ChallengeRunner("NajAmjad", "Team-Beta", their_cop=resolve_move,
-                           their_thief=resolve_move, turn_delay=0.0)
+                           their_thief=resolve_move, our_resolver=resolve_move, turn_delay=0.0)
 
 
 def test_challenge_runs_six_subgames_over_both_legs() -> None:

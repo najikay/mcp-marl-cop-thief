@@ -1,37 +1,50 @@
-"""Stateful per-role strategy resolver: 3-variant roster + Q-policy for live play.
+"""Stateful per-role strategy resolver: Angel–Devil minimax planner variants.
 
-Held by an MCP server for the whole session, so each role's ``AgentRoster`` (and
-its Q-tables) persist across ``request_move`` calls and across the 6 sub-games. A
-sub-game's ``variant`` index selects the agent (aggressive / balanced / defensive),
-giving the six sub-games distinct behaviour. Move selection is the variant's
-epsilon-greedy Q-policy with the Conway-aware geometry as the Tier-2 fallback; the
-Cop's barrier policy (shared ``encode_action``) still applies.
+Each ``request_move`` is answered by a depth-limited alpha-beta planner (game
+theory) whose Cop action set includes walling its own cell (Conway 'Devil' move),
+so barriers and herding-to-trap emerge from search — no hand-coded barrier rule.
+The sub-game ``variant`` index selects one of three planner profiles, giving the
+six sub-games distinct, principled behaviour.
 """
 
 from __future__ import annotations
 
-from cop_thief.domain.constants import AgentRole
-from cop_thief.domain.move_language import encode_move
-from cop_thief.domain.strategy.heuristic import pursuit_target
-from cop_thief.domain.strategy.roster import AgentRoster
+from cop_thief.domain.constants import ActionType, AgentRole
+from cop_thief.domain.move_language import encode_barrier, encode_move
+from cop_thief.domain.strategy.evaluation import Evaluator
+from cop_thief.domain.strategy.minimax import MinimaxPlanner
+from cop_thief.domain.strategy.roster import VARIANT_LABELS
 from cop_thief.servers.tools.move_tool import build_state
+
+# (weights, depth) per variant: aggressive (deep, proximity) / balanced / defensive (containment).
+_VARIANTS = (
+    ((1.2, 0.5, 0.4, 0.1), 4),
+    ((1.0, 0.6, 0.4, 0.1), 3),
+    ((0.7, 1.0, 0.6, 0.2), 3),
+)
+
+
+def _default_planners() -> list[MinimaxPlanner]:
+    """Build the three variant planners (one Evaluator + depth each)."""
+    return [MinimaxPlanner(Evaluator(weights), depth) for weights, depth in _VARIANTS]
 
 
 class StrategyResolver:
-    """Resolve a move via a persistent per-role roster of Q-learning variants."""
+    """Resolve a move via a per-variant Angel–Devil minimax planner."""
 
-    def __init__(self, rosters: dict | None = None) -> None:
-        """Hold one ``AgentRoster`` (3 variants) per role; build defaults if unset."""
-        self._rosters = rosters or {role: AgentRoster(role) for role in AgentRole}
+    def __init__(self, planners: list[MinimaxPlanner] | None = None) -> None:
+        """Hold the variant planners; build the three defaults if unset."""
+        self._planners = planners or _default_planners()
 
     def label(self, role: AgentRole, variant: int) -> str:
         """Return the variant's human label (aggressive / balanced / defensive)."""
-        roster = self._rosters[role]
-        return roster.labels[variant % len(roster)]
+        return VARIANT_LABELS[variant % len(VARIANT_LABELS)]
 
     def resolve(self, observation: dict) -> str:
-        """Pick the sub-game's variant agent and return its action as treaty prose."""
+        """Plan the sub-game variant's action and return it as treaty prose."""
         state, role, pos = build_state(observation)
-        agent = self._rosters[role].agent(int(observation.get("variant", 0)))
-        target = agent.select_target(state, role, fallback=pursuit_target)
+        planner = self._planners[int(observation.get("variant", 0)) % len(self._planners)]
+        action_type, target = planner.best_action(state)
+        if action_type is ActionType.PLACE_BARRIER:
+            return encode_barrier(role)
         return encode_move(role, pos, target)
