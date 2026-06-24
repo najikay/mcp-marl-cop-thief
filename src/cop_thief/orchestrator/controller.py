@@ -10,14 +10,10 @@ from __future__ import annotations
 
 from cop_thief.config import get_config_manager
 from cop_thief.domain.constants import ActionType, AgentRole, SubGameOutcome
-from cop_thief.domain.geometry import (
-    calculate_manhattan,
-    get_adjacent_coords,
-    is_conway_trap_inevitable,
-)
 from cop_thief.domain.grid import Grid
 from cop_thief.domain.state import DecPomdpGameState
 from cop_thief.domain.strategy import QTableStrategy
+from cop_thief.domain.strategy.heuristic import pursuit_target
 from cop_thief.orchestrator.encoder import NaturalLanguageEncoder
 from cop_thief.orchestrator.firewall import CognitiveFirewall
 from cop_thief.orchestrator.parser import DefensiveNlParser
@@ -45,18 +41,8 @@ class GameLoopController:
         self._rewards = get_config_manager().get_setup().rl.rewards
 
     def _geometry_target(self, state: DecPomdpGameState, role: AgentRole) -> tuple:
-        """Tier-2 fallback: cop pursues (Conway-aware), thief flees."""
-        pos = state.cop_pos if role is AgentRole.COP else state.thief_pos
-        ref = state.thief_pos if role is AgentRole.COP else state.cop_pos
-        legal = [c for c in get_adjacent_coords(pos, state.grid.shape) if state.grid.is_legal_move(pos, c)]
-        if not legal:
-            return pos
-        if role is AgentRole.COP:
-            barriers = set(state.grid.barriers)
-            traps = [c for c in legal if is_conway_trap_inevitable(c, ref, barriers, state.grid.shape)]
-            pool = traps or legal
-            return min(pool, key=lambda c: calculate_manhattan(c, ref))
-        return max(legal, key=lambda c: calculate_manhattan(c, ref))
+        """Tier-2 fallback delegating to the shared Conway-aware pursuit heuristic."""
+        return pursuit_target(state, role)
 
     def _reward(self, state: DecPomdpGameState, role: AgentRole) -> tuple[float, bool]:
         """Compute the RL reward + terminal flag from the resulting state."""

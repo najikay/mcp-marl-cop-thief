@@ -1,25 +1,42 @@
-"""TDD unit test for the SSE broadcast packet schema (barriers + status)."""
+"""TDD unit tests for the SSE broadcast bus (feed / observe / subscribe)."""
 
 from __future__ import annotations
 
-from cop_thief.domain.grid import Grid
+import asyncio
+import json
+
 from cop_thief.domain.state import DecPomdpGameState
-from cop_thief.ui.broadcast import make_packet
+from cop_thief.ui import broadcast
 
 
-def test_make_packet_includes_barriers_and_status() -> None:
-    """A live snapshot carries barrier cells, status, epistemic and prose split."""
-    state = DecPomdpGameState(
-        cop_pos=(1, 1), thief_pos=(3, 3), grid=Grid(shape=(5, 5), barriers=frozenset({(2, 2)}))
-    )
-    packet = make_packet(state, "I edge west", informed=True)
-    assert packet["barriers"] == [[2, 2]]
-    assert packet["status"] == "live"
-    assert packet["epistemic"] == "Q-Policy"
-    assert packet["cop"] == [1, 1] and packet["thief"] == [3, 3]
+def _drain() -> None:
+    while not broadcast._QUEUE.empty():
+        broadcast._QUEUE.get_nowait()
 
 
-def test_make_packet_capture_status() -> None:
-    """Co-located agents report a 'capture' status."""
+def _next_payload() -> dict:
+    chunk = asyncio.run(broadcast.subscribe().__anext__())
+    assert chunk.startswith("data: ") and chunk.endswith("\n\n")
+    return json.loads(chunk[len("data: "):].strip())
+
+
+def test_feed_then_subscribe_formats_sse_string() -> None:
+    """feed() enqueues a packet; subscribe() yields a formatted SSE JSON string."""
+    _drain()
+    broadcast.feed({"turn": 3, "cop": [1, 1]}, "cop says", "", "live")
+    payload = _next_payload()
+    assert payload["turn"] == 3
+    assert payload["cop_prose"] == "cop says"
+    assert payload["thief_prose"] == ""
+    assert payload["status"] == "live"
+
+
+def test_observe_builds_packet_from_state() -> None:
+    """observe() derives barriers/epistemic/status from a live game state."""
+    _drain()
     state = DecPomdpGameState(cop_pos=(2, 2), thief_pos=(2, 2))
-    assert make_packet(state, "got you", informed=False)["status"] == "capture"
+    broadcast.observe(state, "got you", informed=True)
+    payload = _next_payload()
+    assert payload["captured"] is True and payload["status"] == "capture"
+    assert payload["epistemic"] == "Q-Policy"
+    assert payload["barriers"] == []

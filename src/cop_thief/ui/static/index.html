@@ -49,6 +49,7 @@
     .msg.cop .who { color: var(--cop); }
     .msg.thief .who { color: var(--thief); }
     .msg .t { opacity: 0.45; font-size: 12px; margin-right: 6px; }
+    .divider { color: var(--capture); text-align: center; font-weight: bold; margin: 10px 0 6px; letter-spacing: 1px; }
   </style>
 </head>
 <body>
@@ -70,10 +71,11 @@
   <script>
     "use strict";
     const $ = (id) => document.getElementById(id);
-    const eq = (a, b) => a[0] === b[0] && a[1] === b[1];
+    const eq = (a, b) => Array.isArray(a) && Array.isArray(b) && a[0] === b[0] && a[1] === b[1];
 
     function renderMatrix(p) {
-      const n = p.grid, m = $("matrix");
+      p = p || {};
+      const n = p.grid || 5, m = $("matrix");
       m.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
       m.innerHTML = "";
       for (let r = 0; r < n; r++) {
@@ -107,7 +109,17 @@
       comms.scrollTop = comms.scrollHeight;
     }
 
+    function logDivider(text) {
+      const comms = $("comms");
+      const div = document.createElement("div");
+      div.className = "divider";
+      div.textContent = "──── " + text + " ────";
+      comms.appendChild(div);
+      comms.scrollTop = comms.scrollHeight;
+    }
+
     function render(p) {
+      if (p.separator) { logDivider(p.separator); return; }
       $("turn").textContent = `${p.turn}/${p.total}`;
       const flag = $("epistemic");
       flag.textContent = p.epistemic;
@@ -125,9 +137,20 @@
       if (p.thief_prose) logMsg("thief", p.thief_prose, p.turn);
     }
 
+    // Deterministically lay down an empty 5x5 grid before any packet arrives,
+    // so the board is always visible even while the stream is idle/waiting.
+    renderMatrix({ grid: 5, barriers: [] });
+
     const es = new EventSource("/stream");
     es.onopen = () => { $("status").textContent = "● live"; };
-    es.onmessage = (e) => render(JSON.parse(e.data));
+    es.onmessage = (e) => {
+      try {
+        render(JSON.parse(e.data));
+      } catch (err) {
+        $("status").textContent = "● render error (stream alive)";
+        console.error("packet render failed:", err);
+      }
+    };
     es.onerror = () => { $("status").textContent = "● stream closed"; };
   </script>
 </body>

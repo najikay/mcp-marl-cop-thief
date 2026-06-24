@@ -8,11 +8,13 @@ from cop_thief.orchestrator.exceptions import (
     NaturalLanguageTranslationError,
 )
 from cop_thief.orchestrator.firewall import CognitiveFirewall
+from cop_thief.orchestrator.match import MatchOrchestrator
 from cop_thief.orchestrator.models import BeliefUpdate
 from cop_thief.orchestrator.parser import DefensiveNlParser
 
 __all__ = [
     "GameLoopController",
+    "MatchOrchestrator",
     "NaturalLanguageEncoder",
     "DefensiveNlParser",
     "CognitiveFirewall",

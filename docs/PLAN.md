@@ -376,4 +376,49 @@ Full detail in [`PRD_gatekeeper.md`](./PRD_gatekeeper.md).
 - Token-cost breakdown table; orchestration-challenge discussion (NL ambiguity, agreement).
 - Analysis notebook in `notebooks/`; assets in `assets/`.
 
+---
+
+## 10. Architecture v2 — Decentralized Match Play & Single-App Topology (Milestone 5)
+
+This supersedes the implicit "self-play only" runner. Governing rules live in
+[`RULES_AND_AGREEMENTS.md`](./RULES_AND_AGREEMENTS.md); the wire contract in
+[`INTER_GROUP_TREATY_SPEC.md`](./INTER_GROUP_TREATY_SPEC.md).
+
+### 10.1 Run topology (collapses 4 processes → 2)
+```
+Terminal 1 — `uv run python -m cop_thief.app`   (ONE asyncio process)
+   ├─ Cop MCP server      :8001   (public, tunneled)
+   ├─ Thief MCP server    :8002   (public, tunneled)
+   ├─ UI SSE server       :8800   (localhost — serves grid + /stream)
+   └─ Match Orchestrator  (drives matches, pushes every turn to the in-process broadcast bus)
+Terminal 2 — `uv run python -m cop_thief.infra.network.switchboard`  (cloudflared tunnels → 8001/8002)
+```
+Because the orchestrator and the UI share **one process**, `broadcast._QUEUE` is shared and the
+browser renders live moves. Localhost is needed only for the UI; the game runs in-process.
+
+### 10.2 Decentralized model (no referee)
+- Each side keeps its **own** authoritative `DecPomdpGameState`. The acting agent emits an NL move
+  (`[INTENT: MOVE/BARRIER/HOLD]` + direction word); **both** sides parse it deterministically and
+  apply it, so boards stay in lock-step. Thief moves first.
+- A **game = 3 matches**; each side fields a **3-agent roster of strategy variants** (`AgentRoster`:
+  cop_a/b/c, thief_a/b/c). Match *i* = our agent *i* vs their agent *i*.
+- End-of-series: SHA-256 over the agreed `sub_games`; both groups email identical reports; mismatch →
+  both score 0 (the agreement deterrent). Full transmission log is the dispute evidence.
+
+### 10.3 Components to add
+| Component | Module | Role |
+|-----------|--------|------|
+| App entrypoint | `cop_thief/app.py` | one event loop: MCP servers + UI + orchestrator |
+| Match Orchestrator | `orchestrator/match.py` | real turn loop (thief-first), deterministic NL apply, live broadcast + audit log |
+| Agent roster | `domain/strategy/roster.py` | 3 strategy variants per role |
+| Defender mode | MCP tool `request_move(observation_prose) -> move_prose` | answer an incoming challenger over our URL |
+| Challenger mode | MCP `Client` → opponent tunnel URLs | initiate a series against another team |
+
+### 10.4 Phasing
+- **Phase A (local, no tunnels):** Match Orchestrator runs a real Cop-vs-Thief match across the two
+  local MCP servers, 3-match game, thief-first, streaming live to the UI + `game_audit.jsonl`. This
+  is the strategy-iteration loop.
+- **Phase B (inter-group):** swap one side's transport to the opponent's tunnel URL; add
+  defender/challenger handshake; finish with SHA-256 reconcile + Gmail report + dispute logs.
+
 *End of PLAN — approve before proceeding to TODO.md.*

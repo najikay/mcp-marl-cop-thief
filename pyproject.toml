@@ -82,6 +82,7 @@ source = ["src"]
 branch = true
 omit = [
     "src/cop_thief/main.py",
+    "src/cop_thief/app.py",
     "src/cop_thief/diagnostic_runner.py",
     "*/tests/*",
     "src/cop_thief/gui/*",

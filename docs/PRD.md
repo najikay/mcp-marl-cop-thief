@@ -182,6 +182,12 @@ Per single sub-game (config keys in parentheses):
 | **UI-01** | **Native `tkinter` real-time observer GUI** — zero extra dependencies. Left pane: a 5×5 (config-driven) `Canvas` updating agent coordinates each tick — **Blue = Cop, Red = Thief, Black = active Barriers**. Right pane: a scrolling text feed live-streaming the natural-language prose banter between the agents. The GUI consumes updates via a **thread-safe queue** and never blocks the game loop. |
 | **SEC-03** | **Sandbox Loopback Guard** — the Gmail Reporter supports a *"Burner Sandbox Dry-Run"* mode that sends the final JSON handshake from `mcp.marl.telemetry@gmail.com` **to itself** (`mcp.marl.telemetry@gmail.com`) to validate Gmail-API formatting/auth. The live Examiner address (`rmisegal+uoh26b@gmail.com`) is contacted **only** after a successful burner loopback (enforced by a `SubmissionSafetyGuard` interlock). |
 | **CLOUD-02** | **Persistent public HTTPS endpoints** — provision two durable public HTTPS URLs via **Cloudflare Tunnels (`cloudflared`)** or **Localtonet**, fronting the local FastMCP instances and secured by **revocable bearer tokens** (one Cop URL, one Thief URL). |
+| **MATCH-01** | **Decentralized match play (no referee).** The two agents decide the game together: each side keeps its own authoritative board and applies the peer's NL moves; **disagreement on the result → both groups score 0** (see [`RULES_AND_AGREEMENTS.md`](./RULES_AND_AGREEMENTS.md)). |
+| **MATCH-02** | **Defender / Challenger duality.** Each server can (a) **accept** an incoming challenge (`request_move` tool) or (b) **initiate** a challenge against another team's URLs. Thief always moves first. |
+| **MATCH-03** | **Game = 3 matches; 3-agent roster.** Each side fields **3 strategy-variant agents** per role; match *i* = our agent *i* vs their agent *i*. |
+| **MATCH-04** | **Live observability (mandatory for strategy work).** Every match renders on the UI (moving Cop/Thief/Barriers) **and** is appended to `data/game_audit.jsonl` in real time — the orchestrator and UI run in one process so the broadcast bus is shared. |
+| **MATCH-05** | **Single-app topology.** One process hosts both MCP servers + the UI + the match orchestrator; a second process runs the Cloudflare tunnels. (Two terminals, not four.) |
+| **MATCH-06** | **Dispute evidence.** Per-turn transmissions, board hashes, and the SHA-256 series hash are retained as the evidence record for lecturer adjudication on suspected cheating. |
 
 ### 4.2 Non-Functional Requirements
 | ID | Category | Requirement |

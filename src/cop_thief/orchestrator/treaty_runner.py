@@ -106,7 +106,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--production-drop", action="store_true")
     args = parser.parse_args(argv)
     teams = resolve_teams(get_config_manager().network)
-    sub_games, totals = run_series(teams, GameLoopController(observer=broadcast.feed))
+    sub_games, totals = run_series(teams, GameLoopController(observer=broadcast.observe))
     report = build_bonus_report(teams, sub_games, totals)
     reporter = GmailApiReporter()
     reporter.bootstrap_oauth()

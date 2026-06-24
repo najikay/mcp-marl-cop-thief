@@ -12,6 +12,7 @@ from fastmcp import FastMCP
 from cop_thief.domain.constants import AgentRole
 from cop_thief.sdk import AdversarialHijackDetectedError, CopThiefSDK
 from cop_thief.servers.auth import SecurityMiddleware
+from cop_thief.servers.tools.move_tool import resolve_move
 
 
 def handle_thief_prose(
@@ -53,5 +54,11 @@ def create_cop_server(
     def get_cop_public_telemetry() -> dict:
         """Return sanitized agreement-view telemetry (no strategy weights)."""
         return cop_public_telemetry(sdk)
+
+    @mcp.tool
+    def request_move(observation: dict, auth_token: str) -> str:
+        """A challenger requests the Cop's next move (treaty prose) for a board."""
+        security.validate(auth_token, AgentRole.COP)
+        return resolve_move({**observation, "role": "cop"})
 
     return mcp

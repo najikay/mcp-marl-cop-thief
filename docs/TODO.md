@@ -636,5 +636,29 @@ These cross-cutting milestones are **done and verified** (full suite green, `ruf
 
 ---
 
-*End of TODO — 430 numbered tasks across the 10 sequential engineering phases (incl. the token-budget mechanism #387–#405 and the Homestretch expansion: SubmissionSafetyGuard #406–#410, Observer GUI #411–#418, Burner Loopback #419–#423, CLOUD-02 tunnels #424–#430).*
+---
+
+## MILESTONE 5 — Decentralized Match Play, Live UI & Inter-Group Competition
+
+See [`PLAN.md` §10](./PLAN.md) and [`RULES_AND_AGREEMENTS.md`](./RULES_AND_AGREEMENTS.md).
+
+### Phase A — Local real match + live UI (strategy iteration loop)
+- [x] **#431** Create `cop_thief/app.py`: one asyncio process hosting Cop MCP (:8001) + Thief MCP (:8002) + UI SSE (:8800) + orchestrator (coverage-omit entrypoint).
+- [x] **#432** Create `orchestrator/match.py` `MatchOrchestrator`: real turn loop, **thief-first**, deterministic NL-move apply, terminal via `evaluate_terminal_condition`.
+- [x] **#433** Stream every turn to the in-process `broadcast` bus AND append to `data/game_audit.jsonl` (live UI shows C/T/B + moves).
+- [x] **#434** Create `domain/strategy/roster.py` `AgentRoster`: 3 strategy variants per role; **game = 3 matches** (agent *i* vs agent *i*).
+- [x] **#435** Deterministic NL move parse↔apply parity helper (both sides resolve identical board) reusing `[INTENT]` + direction vocabulary.
+- [x] **#436** Unit tests: thief-first ordering, 3-match game tally, deterministic apply parity, roster wiring.
+- [ ] **#437** Live smoke: run `app.py`, watch a 3-match game render on `localhost:8800` with moving C/T and comms feed.
+
+### Phase B — Inter-group (defender / challenger + mutual agreement)
+- [x] **#438** Defender tool `request_move(observation_prose, auth_token) -> move_prose` on each MCP server (token-guarded, hard-armored).
+- [ ] **#439** Challenger transport: MCP `Client` → opponent tunnel URLs; drive a full 6-match series.
+- [ ] **#440** Per-side authoritative state + transmission audit log (dispute evidence per RULES §5/§6).
+- [ ] **#441** SHA-256 mutual-agreement reconcile; mismatch → 0/0; Diplomat reconcile rounds.
+- [x] **#442** End-of-series Gmail report (burner default; `--production-drop` to examiner) reusing `treaty_runner`.
+- [ ] **#443** Security assertions: token required on all tools; rotation invalidates; injection rejected + logged.
+- [ ] **#444** Integration test: full local two-roster series with deterministic agreed reports (mocked LLM transport).
+
+*End of TODO — Milestone 5 (#431–#444) opens decentralized match play; supersedes the self-play-only runner. Prior tally: 430 tasks (#1–#430).*
 *Update this file continuously during development (Guidelines §2.5, step 6).*

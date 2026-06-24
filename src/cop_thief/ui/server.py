@@ -10,7 +10,6 @@ Standalone for now (not wired into main.py): ``/stream`` is fed by a sterile
 from __future__ import annotations
 
 import asyncio
-import json
 from pathlib import Path
 
 from starlette.applications import Starlette
@@ -49,8 +48,8 @@ async def stream(_request) -> StreamingResponse:
     from cop_thief.ui import broadcast
 
     async def event_source():
-        async for packet in broadcast.subscribe():
-            yield f"data: {json.dumps(packet)}\n\n"
+        async for sse_chunk in broadcast.subscribe():
+            yield sse_chunk
 
     return StreamingResponse(event_source(), media_type="text/event-stream")
 
