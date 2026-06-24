@@ -17,6 +17,7 @@ from cop_thief.domain.constants import AgentRole, SubGameOutcome
 from cop_thief.domain.grid import Grid
 from cop_thief.domain.move_language import apply_prose
 from cop_thief.domain.state import DecPomdpGameState
+from cop_thief.domain.strategy.roster import VARIANT_LABELS
 from cop_thief.sdk.services import MatchCoordinator
 from cop_thief.sdk.warfare import is_hostile
 
@@ -31,22 +32,17 @@ class SeriesRunner:
     def __init__(self, cop_provider, thief_provider, observer=None, logger=None,
                  reporter=None, announce=None, recipient=_BURNER, max_moves=25, turn_delay=0.0):
         """Wire move providers, live observer, audit logger, reporter and UI banners."""
-        self._cop = cop_provider
-        self._thief = thief_provider
-        self._observer = observer
-        self._logger = logger
-        self._reporter = reporter
-        self._announce = announce
-        self._recipient = recipient
+        self._cop, self._thief = cop_provider, thief_provider
+        self._observer, self._logger, self._reporter = observer, logger, reporter
+        self._announce, self._recipient = announce, recipient
         self._coord = MatchCoordinator(max_moves=max_moves)
-        self._delay = turn_delay
-        self._hostile = 0
+        self._delay, self._hostile = turn_delay, 0
 
-    def _observation(self, state: DecPomdpGameState, role: AgentRole) -> dict:
+    def _observation(self, state: DecPomdpGameState, role: AgentRole, variant: int = 0) -> dict:
         return {"role": role.value, "grid": list(state.grid.shape),
                 "cop": list(state.cop_pos), "thief": list(state.thief_pos),
                 "barriers": [list(b) for b in state.grid.barriers],
-                "barriers_left": state.cop_barriers_left}
+                "barriers_left": state.cop_barriers_left, "variant": variant}
 
     def _record(self, state: DecPomdpGameState, role: AgentRole, prose: str, hostile: bool) -> None:
         if self._observer is not None:
@@ -59,8 +55,8 @@ class SeriesRunner:
                 prose if role is AgentRole.COP else "",
                 prose if role is AgentRole.THIEF else "", False, False, hostile)
 
-    def play_match(self) -> SubGameOutcome:
-        """Play one thief-first sub-game by asking each provider for its move."""
+    def play_match(self, variant: int = 0) -> SubGameOutcome:
+        """Play one thief-first sub-game with roster ``variant`` by asking each provider."""
         state = DecPomdpGameState(
             cop_pos=(0, 0), thief_pos=(_GRID - 1, _GRID - 1), grid=Grid(shape=(_GRID, _GRID)))
         for _ in range(self._coord.max_moves * 2):
@@ -69,7 +65,7 @@ class SeriesRunner:
                 return outcome
             role = state.turn_role
             provider = self._cop if role is AgentRole.COP else self._thief
-            prose = provider(self._observation(state, role))
+            prose = provider(self._observation(state, role, variant))
             self._hostile += int(hostile := is_hostile(prose))
             state = apply_prose(state, role, prose)
             self._record(state, role, prose, hostile)
@@ -90,17 +86,17 @@ class SeriesRunner:
         for venue, our_role in _DIRECTIONS:
             if self._announce is not None:
                 self._announce(f"{venue.upper()} LEG — we play {our_role.value.upper()} (3 sub-games)")
-            for _ in range(3):
+            for variant in range(3):
                 if self._announce is not None:
-                    self._announce(f"Sub-game {len(sub_games) + 1}/6")
-                outcome = self.play_match()
+                    self._announce(f"Sub-game {len(sub_games) + 1}/6 — {VARIANT_LABELS[variant]} variant")
+                outcome = self.play_match(variant)
                 cop_pts, thief_pts = self._points(outcome)
                 ours, opp = (cop_pts, thief_pts) if our_role is AgentRole.COP else (thief_pts, cop_pts)
                 totals["ours"] += ours
                 totals["opponent"] += opp
                 sub_games.append({"match": len(sub_games) + 1, "venue": venue,
-                                  "our_role": our_role.value, "outcome": outcome.value,
-                                  "our_points": ours, "opponent_points": opp})
+                                  "variant": VARIANT_LABELS[variant], "our_role": our_role.value,
+                                  "outcome": outcome.value, "our_points": ours, "opponent_points": opp})
         report = self._report(sub_games, totals)
         if self._reporter is not None:
             self._reporter.dispatch_payload(report, self._recipient)

@@ -192,6 +192,7 @@ Per single sub-game (config keys in parentheses):
 | **NET-05** | **Real cross-host transport.** Moves are fetched by an MCP `Client` calling the partner's `request_move` tool over its `/sse` endpoint (per-role bearer token). The same `RemoteMoveClient` targets our own local `/sse` endpoints in mirror mode, so the live game runs over real MCP-over-SSE sockets — identical to playing a partner's tunnel URL. |
 | **REC-01** | **Mutual-agreement reconciliation.** After the 6 sub-games both sides hash the canonical `sub_games` array; equal digests ⇒ `mutual_agreement: true` (totals stand), any mismatch ⇒ `mutual_agreement: false` and a 0/0 `both_lose` scoreline. |
 | **STRAT-01** | **Active Cop barrier strategy.** When the Thief is within reach and capture is unavailable, the Cop deploys a barrier (`[INTENT: BARRIER]`) on the Thief's escape route nearest it (Adjacent Barrier Law, budget-bounded) — so barriers actually deploy in live play (`B` renders) and `thief_trapped` is reachable, not just theoretical. |
+| **STRAT-02** | **Roster variants + Q-policy in live play.** A server-held `StrategyResolver` routes each `request_move` through a persistent per-role 3-variant `AgentRoster`; the sub-game's `variant` index picks the agent (aggressive/balanced/defensive), which selects via its epsilon-greedy Q-policy with geometry fallback. The 6 sub-games differ; variant labels appear in the report and UI. |
 
 ### 4.2 Non-Functional Requirements
 | ID | Category | Requirement |

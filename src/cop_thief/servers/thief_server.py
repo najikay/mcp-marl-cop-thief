@@ -12,7 +12,7 @@ from fastmcp import FastMCP
 from cop_thief.domain.constants import AgentRole
 from cop_thief.sdk import AdversarialHijackDetectedError, CopThiefSDK
 from cop_thief.servers.auth import SecurityMiddleware
-from cop_thief.servers.tools.move_tool import resolve_move
+from cop_thief.servers.tools.strategy_resolver import StrategyResolver
 
 
 def handle_cop_prose(
@@ -44,11 +44,14 @@ def thief_public_telemetry(sdk: CopThiefSDK) -> dict:
 
 
 def create_thief_server(
-    sdk: CopThiefSDK | None = None, security: SecurityMiddleware | None = None
+    sdk: CopThiefSDK | None = None,
+    security: SecurityMiddleware | None = None,
+    resolver: StrategyResolver | None = None,
 ) -> FastMCP:
     """Build and return the Thief FastMCP server with its tools registered."""
     sdk = sdk or CopThiefSDK()
     security = security or SecurityMiddleware()
+    resolver = resolver or StrategyResolver()
     # NOTE: fastmcp>=2.14 removed the `dependencies` constructor kwarg.
     mcp: FastMCP = FastMCP("ThiefServer")
 
@@ -64,8 +67,8 @@ def create_thief_server(
 
     @mcp.tool
     def request_move(observation: dict, auth_token: str) -> str:
-        """A challenger requests the Thief's next move (treaty prose) for a board."""
+        """A challenger requests the Thief's next move (variant Q-policy, treaty prose)."""
         security.validate(auth_token, AgentRole.THIEF)
-        return resolve_move({**observation, "role": "thief"})
+        return resolver.resolve({**observation, "role": "thief"})
 
     return mcp

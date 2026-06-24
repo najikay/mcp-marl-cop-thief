@@ -15,8 +15,8 @@ from cop_thief.domain.state import DecPomdpGameState
 from cop_thief.domain.strategy.heuristic import barrier_target, pursuit_target
 
 
-def resolve_move(observation: dict) -> str:
-    """Return this server's next action (treaty prose) for the given observation."""
+def build_state(observation: dict) -> tuple[DecPomdpGameState, AgentRole, tuple]:
+    """Rebuild ``(state, role, our_pos)`` from a challenger's observation dict."""
     role = AgentRole(observation["role"])
     grid = Grid(
         shape=tuple(observation.get("grid", [5, 5])),
@@ -30,9 +30,19 @@ def resolve_move(observation: dict) -> str:
         cop_barriers_left=int(observation.get("barriers_left", 5)),
     )
     pos = state.cop_pos if role is AgentRole.COP else state.thief_pos
-    pursuit = pursuit_target(state, role)
-    if role is AgentRole.COP and pursuit != state.thief_pos:
+    return state, role, pos
+
+
+def encode_action(state: DecPomdpGameState, role: AgentRole, pos: tuple, move_target: tuple) -> str:
+    """Encode a barrier (Cop cornering, capture unavailable) or the chosen move as prose."""
+    if role is AgentRole.COP and move_target != state.thief_pos:
         seal = barrier_target(state)
         if seal is not None:
             return encode_barrier(role, pos, seal)
-    return encode_move(role, pos, pursuit)
+    return encode_move(role, pos, move_target)
+
+
+def resolve_move(observation: dict) -> str:
+    """Return the deterministic geometry+barrier action (treaty prose) for an observation."""
+    state, role, pos = build_state(observation)
+    return encode_action(state, role, pos, pursuit_target(state, role))
