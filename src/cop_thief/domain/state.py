@@ -75,7 +75,7 @@ class DecPomdpGameState(BaseModel):
         grid, cop, thief = self.grid, self.cop_pos, self.thief_pos
         barriers_left = self.cop_barriers_left
         if action_type is ActionType.PLACE_BARRIER:
-            if role is AgentRole.COP and barriers_left > 0 and self._barrier_ok(target):
+            if role is AgentRole.COP and barriers_left > 0 and self.is_barrier_legal(target):
                 grid = grid.model_copy(update={"barriers": grid.barriers | {target}})
                 barriers_left -= 1
         elif role is AgentRole.COP:
@@ -94,7 +94,7 @@ class DecPomdpGameState(BaseModel):
             }
         )
 
-    def _barrier_ok(self, target: Coord) -> bool:
+    def is_barrier_legal(self, target: Coord) -> bool:
         """Adjacent Barrier Law: in-bounds, Chebyshev<=1 from Cop, free cell."""
         d_row, d_col = abs(self.cop_pos[0] - target[0]), abs(self.cop_pos[1] - target[1])
         return (

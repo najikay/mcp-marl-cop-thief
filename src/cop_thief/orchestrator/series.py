@@ -45,7 +45,8 @@ class SeriesRunner:
     def _observation(self, state: DecPomdpGameState, role: AgentRole) -> dict:
         return {"role": role.value, "grid": list(state.grid.shape),
                 "cop": list(state.cop_pos), "thief": list(state.thief_pos),
-                "barriers": [list(b) for b in state.grid.barriers]}
+                "barriers": [list(b) for b in state.grid.barriers],
+                "barriers_left": state.cop_barriers_left}
 
     def _record(self, state: DecPomdpGameState, role: AgentRole, prose: str, hostile: bool) -> None:
         if self._observer is not None:

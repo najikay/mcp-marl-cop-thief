@@ -660,5 +660,10 @@ See [`PLAN.md` §10](./PLAN.md) and [`RULES_AND_AGREEMENTS.md`](./RULES_AND_AGRE
 - [ ] **#443** Security assertions: token required on all tools; rotation invalidates; injection rejected + logged.
 - [ ] **#444** Integration test: full local two-roster series with deterministic agreed reports (mocked LLM transport).
 
+### Phase C — Actual strategy in live play (priority #3)
+- [x] **#445** `[INTENT: BARRIER]` move-language (`encode_barrier` / `parse_intent`); `apply_prose` seals the named adjacent cell; intent read only from the bracketed tag (spoof-proof).
+- [x] **#446** Cop barrier policy (`heuristic.barrier_target`): seal a cornered Thief's escape route when in Chebyshev reach and capture is unavailable; `barriers_left` threaded through the observation. **`B` now deploys in live play; `thief_trapped` is reachable** (unit-proven).
+- [ ] **#447** Slice 3b — wire `QTableStrategy` + the 3-variant `AgentRoster` into live play (per-sub-game variant identity; Angel/Devil + RL) so the 6 sub-games differ.
+
 *End of TODO — Milestone 5 (#431–#444) opens decentralized match play; supersedes the self-play-only runner. Prior tally: 430 tasks (#1–#430).*
 *Update this file continuously during development (Guidelines §2.5, step 6).*
