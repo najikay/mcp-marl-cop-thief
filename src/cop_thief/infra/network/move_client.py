@@ -15,8 +15,9 @@ import time
 from fastmcp import Client
 
 _MOVE_TOOL = "request_move"
-_RETRIES = 4          # extra attempts after the first, to ride a transient drop / reconnect
+_RETRIES = 2          # extra attempts after the first, to ride a transient drop / reconnect
 _RETRY_DELAY = 2.0    # seconds between attempts (the opponent's tunnel may need a moment)
+_TIMEOUT = 20.0       # per-move response deadline: a FROZEN opponent that exceeds it forfeits
 
 
 class OpponentUnreachableError(RuntimeError):
@@ -24,18 +25,22 @@ class OpponentUnreachableError(RuntimeError):
 
 
 async def fetch_remote_move(
-    target, observation: dict, auth_token: str, tool_name: str = _MOVE_TOOL
+    target, observation: dict, auth_token: str, tool_name: str = _MOVE_TOOL,
+    timeout: float = _TIMEOUT,
 ) -> str:
-    """Call the partner's move tool once and return its treaty prose.
+    """Call the partner's move tool once and return its treaty prose, bounded by ``timeout``.
 
-    ``target`` is anything ``fastmcp.Client`` accepts — a URL string for a live
-    partner, or an in-memory ``FastMCP`` server object for tests. ``tool_name`` is
-    configurable so we can call an opponent whose move tool is named differently.
+    ``target`` is anything ``fastmcp.Client`` accepts — a URL string for a live partner, or an
+    in-memory ``FastMCP`` server object for tests. The whole connect+call is wrapped in a
+    deadline so a **frozen** opponent (connects but never replies) raises instead of hanging.
     """
-    async with Client(target) as client:
-        result = await client.call_tool(
-            tool_name, {"observation": observation, "auth_token": auth_token}
-        )
+    async def _call():
+        async with Client(target) as client:
+            return await client.call_tool(
+                tool_name, {"observation": observation, "auth_token": auth_token}
+            )
+
+    result = await asyncio.wait_for(_call(), timeout=timeout)
     return str(getattr(result, "data", result))
 
 
@@ -53,27 +58,29 @@ class RemoteMoveClient:
     """Sync provider adapter: ``(observation) -> prose`` via a partner MCP server."""
 
     def __init__(self, target, auth_token: str, tool_name: str = _MOVE_TOOL,
-                 retries: int = _RETRIES, retry_delay: float = _RETRY_DELAY) -> None:
-        """Bind the MCP ``target`` (URL or in-memory server), token, move-tool and retry policy."""
+                 retries: int = _RETRIES, retry_delay: float = _RETRY_DELAY,
+                 timeout: float = _TIMEOUT) -> None:
+        """Bind the MCP ``target`` (URL/in-memory server), token, move-tool, retry + timeout policy."""
         self._target = target
         self._token = auth_token
         self._tool = tool_name
         self._retries = retries
         self._retry_delay = retry_delay
+        self._timeout = timeout
 
     def __call__(self, observation: dict) -> str:
-        """Fetch one remote move, retrying on any transport failure so the series completes.
+        """Fetch one remote move, retrying on any transport failure/timeout so the series completes.
 
-        Each attempt opens a **fresh** connection (``fetch_remote_move`` makes a new ``Client``),
-        so a dropped tunnel/refused connection on a single move — even the last one — recovers
-        instead of aborting the whole game. The original error is re-raised only if all attempts
-        fail (a genuinely-down opponent), never swallowed.
+        Each attempt opens a **fresh** connection (``fetch_remote_move`` makes a new ``Client``)
+        bounded by a timeout, so a dropped/refused connection OR a frozen opponent on a single
+        move recovers if transient. If every attempt fails, ``OpponentUnreachableError`` is raised
+        (never swallowed) — the runner then forfeits that sub-game to us so the game still finishes.
         """
         last: Exception | None = None
         for attempt in range(self._retries + 1):
             try:
                 return asyncio.run(
-                    fetch_remote_move(self._target, observation, self._token, self._tool)
+                    fetch_remote_move(self._target, observation, self._token, self._tool, self._timeout)
                 )
             except Exception as exc:  # any transport failure → brief backoff, reconnect, retry
                 last = exc

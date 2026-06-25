@@ -65,22 +65,28 @@ def _run_challenge(params: dict) -> None:
         broadcast.banner(f"CHALLENGE FAILED: {exc}")
         return
     bonus = build_bonus_from_report(report, STATE.cop_url, STATE.thief_url)  # ex06 §9.2 envelope
-    _email(bonus, params.get("email", ""))
+    _email(bonus, params.get("email", ""), production=bool(params.get("production")))
     STATE.set_game("done", report)
     broadcast.banner(f"GAME DONE — {report['final_result']} — hash {report['agreement_sha256'][:12]}")
 
 
-def _email(report: dict, recipient: str) -> None:
-    """Email the report; a mail failure must not fail the (already played) game."""
+def _email(report: dict, recipient: str, production: bool = False) -> None:
+    """Email the report; a mail failure must not fail the (already played) game.
+
+    ``production=True`` (the panel's PRODUCTION SUBMIT toggle) unlocks the safety guard for
+    this send so the report can go to the examiner; otherwise the guard stays locked (only the
+    burner test inbox is allowed). The Gmail sender is always the authenticated burner account.
+    """
     from google.auth.exceptions import GoogleAuthError
 
     from cop_thief.reporting import GmailApiReporter
+    from cop_thief.reporting.guard import SubmissionSafetyGuard
     from cop_thief.ui import broadcast
 
     if not recipient:
         return
     try:
-        reporter = GmailApiReporter()
+        reporter = GmailApiReporter(guard=SubmissionSafetyGuard(locked=not production))
         reporter.bootstrap_oauth()
         reporter.dispatch_payload(report, recipient)
     except (OSError, RuntimeError, ValueError, GoogleAuthError) as exc:

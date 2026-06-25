@@ -68,6 +68,9 @@
       <div class="field"><span class="lbl">OPP COP TOKEN (blank if open)</span><input id="f-cop-tok" /></div>
       <div class="field"><span class="lbl">OPP THIEF TOKEN (blank if open)</span><input id="f-thief-tok" /></div>
       <div class="field"><span class="lbl">REPORT EMAIL</span><input id="f-email" /></div>
+      <div class="field"><span class="lbl">PRODUCTION SUBMIT (send to examiner)</span>
+        <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="f-prod" style="width:auto" />
+        unlock guard — emails the address above (use for the real run)</label></div>
     </div>
     <div style="margin-top:12px">
       <button class="go" id="startBtn" onclick="startGame()">START CHALLENGE ▶</button>
@@ -150,6 +153,7 @@
         our_group:$("f-our").value, opp_group:$("f-opp").value,
         cop_url:$("f-cop-url").value, thief_url:$("f-thief-url").value,
         cop_token:$("f-cop-tok").value, thief_token:$("f-thief-tok").value, email:$("f-email").value,
+        production:$("f-prod").checked,
       };
       if (!body.cop_url || !body.thief_url) { $("formMsg").textContent="enter both opponent URLs"; return; }
       $("startBtn").disabled = true; $("formMsg").textContent = "starting…";

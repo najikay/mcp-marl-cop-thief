@@ -53,7 +53,7 @@ def test_remote_move_client_retries_then_succeeds(monkeypatch) -> None:
     import cop_thief.infra.network.move_client as mc
     calls = {"n": 0}
 
-    async def flaky(target, observation, token, tool):
+    async def flaky(target, observation, token, tool, timeout=None):
         calls["n"] += 1
         if calls["n"] < 3:
             raise ConnectionError("Client failed to connect")
@@ -71,11 +71,28 @@ def test_remote_move_client_raises_after_exhausting_retries(monkeypatch) -> None
 
     import cop_thief.infra.network.move_client as mc
 
-    async def dead(target, observation, token, tool):
+    async def dead(target, observation, token, tool, timeout=None):
         raise ConnectionError("Client failed to connect")
 
     monkeypatch.setattr(mc, "fetch_remote_move", dead)
     client = mc.RemoteMoveClient("url", "tok", retries=2, retry_delay=0)
+    with pytest.raises(mc.OpponentUnreachableError):
+        client(_OBS)
+
+
+def test_frozen_opponent_times_out_to_unreachable(monkeypatch) -> None:
+    """A frozen opponent (move times out) surfaces OpponentUnreachableError → runner forfeits it."""
+    import asyncio as aio
+
+    import pytest
+
+    import cop_thief.infra.network.move_client as mc
+
+    async def frozen(target, observation, token, tool, timeout=None):
+        raise aio.TimeoutError
+
+    monkeypatch.setattr(mc, "fetch_remote_move", frozen)
+    client = mc.RemoteMoveClient("url", "tok", retries=1, retry_delay=0)
     with pytest.raises(mc.OpponentUnreachableError):
         client(_OBS)
 
