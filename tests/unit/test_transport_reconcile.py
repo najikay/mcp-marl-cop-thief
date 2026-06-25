@@ -66,7 +66,7 @@ def test_remote_move_client_retries_then_succeeds(monkeypatch) -> None:
 
 
 def test_remote_move_client_raises_after_exhausting_retries(monkeypatch) -> None:
-    """A genuinely-down opponent surfaces the error after all attempts (never swallowed)."""
+    """A genuinely-down opponent surfaces OpponentUnreachableError after all attempts."""
     import pytest
 
     import cop_thief.infra.network.move_client as mc
@@ -76,7 +76,7 @@ def test_remote_move_client_raises_after_exhausting_retries(monkeypatch) -> None
 
     monkeypatch.setattr(mc, "fetch_remote_move", dead)
     client = mc.RemoteMoveClient("url", "tok", retries=2, retry_delay=0)
-    with pytest.raises(ConnectionError):
+    with pytest.raises(mc.OpponentUnreachableError):
         client(_OBS)
 
 

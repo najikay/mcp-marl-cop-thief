@@ -19,6 +19,10 @@ _RETRIES = 4          # extra attempts after the first, to ride a transient drop
 _RETRY_DELAY = 2.0    # seconds between attempts (the opponent's tunnel may need a moment)
 
 
+class OpponentUnreachableError(RuntimeError):
+    """The opponent's MCP server could not be reached after all retries (sustained outage)."""
+
+
 async def fetch_remote_move(
     target, observation: dict, auth_token: str, tool_name: str = _MOVE_TOOL
 ) -> str:
@@ -75,4 +79,4 @@ class RemoteMoveClient:
                 last = exc
                 if attempt < self._retries:
                     time.sleep(self._retry_delay)
-        raise last  # type: ignore[misc]
+        raise OpponentUnreachableError(f"Client failed to connect: {last}") from last

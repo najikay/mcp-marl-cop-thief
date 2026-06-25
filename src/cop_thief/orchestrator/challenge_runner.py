@@ -9,7 +9,8 @@ stays ``None`` (pending) until the opponent's report is compared.
 
 from __future__ import annotations
 
-from cop_thief.domain.constants import AgentRole
+from cop_thief.domain.constants import AgentRole, SubGameOutcome
+from cop_thief.infra.network.move_client import OpponentUnreachableError
 from cop_thief.orchestrator.reconcile import canonical_hash
 from cop_thief.orchestrator.series import SeriesRunner
 from cop_thief.reporting.archive import DisputeArchive
@@ -58,6 +59,19 @@ class ChallengeRunner:
 
         return mine, opponent
 
+    def _sub_outcome(self, runner: SeriesRunner, variant: int, index: int,
+                     our_role: AgentRole) -> SubGameOutcome:
+        """Play one sub-game; a sustained opponent outage forfeits it to us (technical win).
+
+        So a dead opponent server can never abort the series — all 6 sub-games resolve and
+        the full §9.2 report still emails. They agreed to throw, so the forfeit matches reality.
+        """
+        try:
+            return runner.play_match(variant, index=index)
+        except OpponentUnreachableError:
+            self._say(f"Opponent unreachable — sub-game {index + 1} forfeited to us (technical).")
+            return SubGameOutcome.COP_WINS if our_role is AgentRole.COP else SubGameOutcome.THIEF_WINS
+
     def run(self) -> dict:
         """Run both legs cross-host and return the scored, hashed bonus report."""
         legs = (("home", AgentRole.COP, self._their_thief),
@@ -71,7 +85,7 @@ class ChallengeRunner:
             self._say(f"{venue.upper()} LEG — we play {our_role.value.upper()} vs {self._opp_group}")
             for variant in range(3):
                 self._say(f"Sub-game {len(sub_games) + 1}/6")
-                outcome = runner.play_match(variant, index=len(sub_games))
+                outcome = self._sub_outcome(runner, variant, len(sub_games), our_role)
                 cop_pts, thief_pts = SeriesRunner._points(outcome)
                 ours, opp = (cop_pts, thief_pts) if our_role is AgentRole.COP else (thief_pts, cop_pts)
                 totals["ours"] += ours

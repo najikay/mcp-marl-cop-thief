@@ -30,6 +30,23 @@ def test_challenge_report_hash_and_result() -> None:
     assert report["mutual_agreement"] is None  # pending the opponent's report
 
 
+def test_unreachable_opponent_forfeits_so_game_completes_six() -> None:
+    """A dead opponent server forfeits its sub-games to us — the series still yields a full 6."""
+    from cop_thief.infra.network.move_client import OpponentUnreachableError
+
+    def dead(_observation):
+        raise OpponentUnreachableError("Client failed to connect")
+
+    runner = ChallengeRunner("NajAmjad", "Team-Beta", their_cop=dead, their_thief=dead,
+                             our_resolver=resolve_move, turn_delay=0.0)
+    report = runner.run()
+    assert len(report["sub_games"]) == 6  # complete, never a partial report
+    homes = [s for s in report["sub_games"] if s["venue"] == "home"]
+    aways = [s for s in report["sub_games"] if s["venue"] == "away"]
+    assert all(s["outcome"] == "cop_wins" for s in homes)    # we are Cop at home → forfeit win
+    assert all(s["outcome"] == "thief_wins" for s in aways)  # we are Thief away → forfeit win
+
+
 def test_home_leg_is_cop_away_leg_is_thief() -> None:
     """Per-leg routing assigns us Cop on HOME (1-3) and Thief on AWAY (4-6)."""
     sub_games = _runner().run()["sub_games"]
