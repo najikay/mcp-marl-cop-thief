@@ -105,7 +105,7 @@
   },
   "reporting": {
     "examiner_email": "rmisegal+uoh26b@gmail.com",
-    "burner_email": "mcp.marl.telemetry@gmail.com",
+    "burner_email": "CHANGEME-new-burner@gmail.com",
     "production_submission_locked": true,
     "subject_template": "[marl-cop-thief] Game Report — {group_name} — {timestamp}",
     "timezone": "Asia/Jerusalem",
@@ -144,8 +144,8 @@
   },
   "_network_note": "Two-team public URL matrix (ex06 §9.2): one Cop + one Thief URL per group. Local defaults; replace with Cloudflare tunnel URLs for distributed play.",
   "network": {
-    "team_alpha_cop_url": "https://nickel-melissa-ave-ash.trycloudflare.com/mcp/",
-    "team_alpha_thief_url": "https://strip-baskets-seemed-published.trycloudflare.com/mcp/",
+    "team_alpha_cop_url": "https://delicious-distinction-player-keen.trycloudflare.com/mcp/",
+    "team_alpha_thief_url": "https://designated-indices-solving-dense.trycloudflare.com/mcp/",
     "team_beta_cop_url": "",
     "team_beta_thief_url": ""
   }

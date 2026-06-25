@@ -62,6 +62,13 @@ def test_dispatch_payload_carries_group_name_in_subject_and_body() -> None:
     assert "NajAmjad" in mime  # also present in the JSON body
 
 
+def test_reporter_sender_is_config_driven() -> None:
+    """The send-from address defaults to reporting.burner_email (swap account = one config edit)."""
+    from cop_thief.config import get_config_manager
+    reporter = GmailApiReporter(guard=SubmissionSafetyGuard(locked=False), gatekeeper=mock.Mock(), service=None)
+    assert reporter._sender == get_config_manager().setup.reporting.burner_email
+
+
 def test_reporter_builds_canonical_json() -> None:
     """dispatch_game_report yields a structured handshake via the gatekeeper."""
     gatekeeper = mock.Mock()

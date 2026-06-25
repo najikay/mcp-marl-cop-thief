@@ -12,6 +12,7 @@ import json
 from email.mime.text import MIMEText
 from pathlib import Path
 
+from cop_thief.config import get_config_manager
 from cop_thief.domain.state import DecPomdpGameState
 from cop_thief.infra.gatekeeper import build_default_gatekeeper
 from cop_thief.reporting.guard import SubmissionSafetyGuard
@@ -29,16 +30,20 @@ class GmailApiReporter:
         gatekeeper=None,
         service=None,
         token_tracker=None,
-        sender: str = "mcp.marl.telemetry@gmail.com",
+        sender: str | None = None,
         credentials_path: str = "credentials.json",
         token_path: str = "token.json",
     ) -> None:
-        """Wire the guard, gatekeeper, optional Gmail service and tracker."""
+        """Wire the guard, gatekeeper, optional Gmail service and tracker.
+
+        ``sender`` defaults to ``reporting.burner_email`` from config (the authenticated
+        Gmail account), so swapping the reporting account is a single config edit.
+        """
         self._guard = guard or SubmissionSafetyGuard()
         self._gatekeeper = gatekeeper or build_default_gatekeeper()
         self._service = service
         self._tracker = token_tracker
-        self._sender = sender
+        self._sender = sender or get_config_manager().setup.reporting.burner_email
         self._cred_path = Path(credentials_path)
         self._token_path = Path(token_path)
 
