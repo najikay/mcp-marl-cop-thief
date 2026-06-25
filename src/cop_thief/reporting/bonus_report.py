@@ -8,6 +8,7 @@ the §9.2 schema: groups, both github repos, the four ``mcp_url_*``, students, `
 
 from __future__ import annotations
 
+from cop_thief.config import get_config_manager
 from cop_thief.orchestrator.reconcile import canonical_hash
 
 _TZ = "Asia/Jerusalem"
@@ -45,8 +46,9 @@ def totals_by_group(sub_games: list, group_1: str, group_2: str) -> dict:
 
 
 def build_bonus_report(*, group_1: str, group_2: str, github: tuple, mcp_urls: dict, students: tuple,
-                       sub_games: list, mutual_agreement=None, bonus_claim="up_to_10_points") -> dict:
+                       sub_games: list, mutual_agreement=None, bonus_claim=None) -> dict:
     """Assemble the exact §9.2 ``bonus_game`` envelope with a treaty-§D agreement hash."""
+    claim = bonus_claim if bonus_claim is not None else {group_1: 10, group_2: 10}
     return {
         "report_type": "bonus_game",
         "groups": {"group_1": group_1, "group_2": group_2},
@@ -57,5 +59,25 @@ def build_bonus_report(*, group_1: str, group_2: str, github: tuple, mcp_urls: d
         "timezone": _TZ, "sub_games": sub_games,
         "totals_by_group": totals_by_group(sub_games, group_1, group_2),
         "agreement_sha256": canonical_hash(sub_games),
-        "mutual_agreement": mutual_agreement, "bonus_claim": bonus_claim,
+        "mutual_agreement": mutual_agreement, "bonus_claim": claim,
+    }
+
+
+def build_internal_report(report: dict) -> dict:
+    """Convert a played game into the exact ex06 §9.1 Internal Game JSON (for the auto-email).
+
+    ``report`` carries the perspective-relative ``sub_games`` (``our_role``/``our_points``);
+    totals are split by the role WE played (Cop sub-games vs Thief sub-games). Identity and our
+    two MCP URLs come from config (no hardcoding). Body is JSON-only per ex06 §9.
+    """
+    cfg = get_config_manager()
+    grp, net = cfg.setup.group, cfg.network
+    sub = report["sub_games"]
+    cop = sum(s["our_points"] for s in sub if s["our_role"] == "cop")
+    thief = sum(s["our_points"] for s in sub if s["our_role"] == "thief")
+    return {
+        "group_name": grp.group_name, "students": list(grp.students),
+        "github_repo": grp.github_repo, "cop_mcp_url": net.team_alpha_cop_url,
+        "thief_mcp_url": net.team_alpha_thief_url, "timezone": _TZ,
+        "sub_games": sub, "totals": {"cop": cop, "thief": thief},
     }

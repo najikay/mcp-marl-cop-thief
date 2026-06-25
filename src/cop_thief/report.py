@@ -27,15 +27,18 @@ def main(argv: list[str] | None = None) -> None:
     argv = argv if argv is not None else sys.argv[1:]
     raw = Path(argv[0]).read_text(encoding="utf-8") if argv else _ask("sub_games JSON")
     sub_games = json.loads(raw)
-    recipient = get_config_manager().setup.reporting.burner_email
-    g1 = _ask("group_1 (Cop in sub-games 1-3)", "NajAmjad")
+    cfg = get_config_manager()
+    grp, net = cfg.setup.group, cfg.network
+    recipient = cfg.setup.reporting.burner_email
+    g1 = _ask("group_1 (Cop in sub-games 1-3)", grp.group_name)
     g2 = _ask("group_2 (Cop in 4-6)", "Opponent")
     report = build_bonus_report(
         group_1=g1, group_2=g2,
-        github=(_ask("github group_1"), _ask("github group_2")),
-        mcp_urls={"g1_cop": _ask("g1 cop url"), "g1_thief": _ask("g1 thief url"),
+        github=(_ask("github group_1", grp.github_repo), _ask("github group_2")),
+        mcp_urls={"g1_cop": _ask("g1 cop url", net.team_alpha_cop_url),
+                  "g1_thief": _ask("g1 thief url", net.team_alpha_thief_url),
                   "g2_cop": _ask("g2 cop url"), "g2_thief": _ask("g2 thief url")},
-        students=([s for s in _ask("students group_1 (comma-sep)").split(",") if s],
+        students=([s for s in _ask("students group_1", ",".join(grp.students)).split(",") if s],
                   [s for s in _ask("students group_2 (comma-sep)").split(",") if s]),
         sub_games=sub_games, mutual_agreement=True)
     print(f"agreement_sha256: {report['agreement_sha256']}  (must equal {g2}'s digest)")

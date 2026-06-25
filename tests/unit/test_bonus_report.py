@@ -5,6 +5,7 @@ from __future__ import annotations
 from cop_thief.orchestrator.reconcile import canonical_hash, reconcile_agreement
 from cop_thief.reporting.bonus_report import (
     build_bonus_report,
+    build_internal_report,
     canonical_sub_games,
     totals_by_group,
 )
@@ -44,6 +45,20 @@ def test_build_bonus_report_has_exact_92_schema() -> None:
     assert report["report_type"] == "bonus_game"
     assert report["agreement_sha256"] == canonical_hash(canon)
     assert report["totals_by_group"] == {"NajAmjad": 30, "Beta": 10}
+    assert report["bonus_claim"] == {"NajAmjad": 10, "Beta": 10}  # §9.2: dict of group -> claimed pts
+
+
+def test_internal_report_has_exact_91_schema() -> None:
+    """build_internal_report emits the §9.1 Internal Game JSON with role-split totals."""
+    rich = {"sub_games": [
+        {"match": 1, "our_role": "cop", "our_points": 20},
+        {"match": 2, "our_role": "cop", "our_points": 5},
+        {"match": 3, "our_role": "thief", "our_points": 10}]}
+    rep = build_internal_report(rich)
+    assert set(rep) == {"group_name", "students", "github_repo", "cop_mcp_url",
+                        "thief_mcp_url", "timezone", "sub_games", "totals"}
+    assert rep["totals"] == {"cop": 25, "thief": 10}
+    assert rep["group_name"]  # config-driven identity, non-empty
 
 
 def test_both_groups_hash_identically_so_reports_agree() -> None:

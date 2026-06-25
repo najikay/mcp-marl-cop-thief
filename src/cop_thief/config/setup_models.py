@@ -7,6 +7,7 @@ Leaf sub-models (token economics, NL, reporting, network) live in
 from __future__ import annotations
 
 from cop_thief.config.aux_models import (
+    GroupConfig,
     NetworkConfig,
     NlConfig,
     ProviderRate,
@@ -105,3 +106,4 @@ class SetupConfig(FrozenModel):
     nl: NlConfig = NlConfig()
     reporting: ReportingConfig = ReportingConfig()
     network: NetworkConfig = NetworkConfig()
+    group: GroupConfig = GroupConfig()

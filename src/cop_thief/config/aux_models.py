@@ -55,6 +55,14 @@ class ReportingConfig(FrozenModel):
     production_submission_locked: bool = True
 
 
+class GroupConfig(FrozenModel):
+    """Our group identity for the ex06 §9.1/§9.2 reports (config-driven, no hardcoding)."""
+
+    group_name: str = "NajAmjad"
+    github_repo: str = ""
+    students: list[str] = []
+
+
 class NetworkConfig(FrozenModel):
     """Two-team public URL matrix (ex06 §9.2): one Cop + one Thief per group."""
 
