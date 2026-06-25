@@ -45,7 +45,15 @@ def test_build_bonus_report_has_exact_92_schema() -> None:
     assert report["report_type"] == "bonus_game"
     assert report["agreement_sha256"] == canonical_hash(canon)
     assert report["totals_by_group"] == {"NajAmjad": 30, "Beta": 10}
-    assert report["bonus_claim"] == {"NajAmjad": 10, "Beta": 10}  # §9.2: dict of group -> claimed pts
+    assert report["bonus_claim"] == {"NajAmjad": 10, "Beta": 7}  # winner 10, loser 7
+
+
+def test_bonus_claim_by_result_win_loss_tie() -> None:
+    """bonus_claim follows the rubric: win=10, loss=7, tie=5."""
+    from cop_thief.reporting.bonus_report import claim_from_totals
+    assert claim_from_totals({"A": 90, "B": 30}, "A", "B") == {"A": 10, "B": 7}
+    assert claim_from_totals({"A": 30, "B": 90}, "A", "B") == {"A": 7, "B": 10}
+    assert claim_from_totals({"A": 75, "B": 75}, "A", "B") == {"A": 5, "B": 5}
 
 
 def test_build_bonus_from_report_emits_92_with_dynamic_urls() -> None:

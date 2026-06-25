@@ -12,6 +12,16 @@ from cop_thief.config import get_config_manager
 from cop_thief.orchestrator.reconcile import canonical_hash
 
 _TZ = "Asia/Jerusalem"
+_WIN, _LOSS, _TIE = 10, 7, 5  # ex06 bonus rubric: claimed points by result
+
+
+def claim_from_totals(totals: dict, group_1: str, group_2: str) -> dict:
+    """Each group's bonus claim from the result — win=10, loss=7, tie=5."""
+    a, b = totals[group_1], totals[group_2]
+    if a == b:
+        return {group_1: _TIE, group_2: _TIE}
+    winner, loser = (group_1, group_2) if a > b else (group_2, group_1)
+    return {winner: _WIN, loser: _LOSS}
 
 
 def canonical_sub_games(our_group: str, opp_group: str, urls: dict, results: list) -> list[dict]:
@@ -48,7 +58,8 @@ def totals_by_group(sub_games: list, group_1: str, group_2: str) -> dict:
 def build_bonus_report(*, group_1: str, group_2: str, github: tuple, mcp_urls: dict, students: tuple,
                        sub_games: list, mutual_agreement=None, bonus_claim=None) -> dict:
     """Assemble the exact §9.2 ``bonus_game`` envelope with a treaty-§D agreement hash."""
-    claim = bonus_claim if bonus_claim is not None else {group_1: 10, group_2: 10}
+    totals = totals_by_group(sub_games, group_1, group_2)
+    claim = bonus_claim if bonus_claim is not None else claim_from_totals(totals, group_1, group_2)
     return {
         "report_type": "bonus_game",
         "groups": {"group_1": group_1, "group_2": group_2},
@@ -57,7 +68,7 @@ def build_bonus_report(*, group_1: str, group_2: str, github: tuple, mcp_urls: d
         "mcp_url_group_2_cop": mcp_urls["g2_cop"], "mcp_url_group_2_thief": mcp_urls["g2_thief"],
         "students_group_1": list(students[0]), "students_group_2": list(students[1]),
         "timezone": _TZ, "sub_games": sub_games,
-        "totals_by_group": totals_by_group(sub_games, group_1, group_2),
+        "totals_by_group": totals,
         "agreement_sha256": canonical_hash(sub_games),
         "mutual_agreement": mutual_agreement, "bonus_claim": claim,
     }
