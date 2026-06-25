@@ -107,3 +107,4 @@ class SetupConfig(FrozenModel):
     reporting: ReportingConfig = ReportingConfig()
     network: NetworkConfig = NetworkConfig()
     group: GroupConfig = GroupConfig()
+    opponent: GroupConfig = GroupConfig()
