@@ -16,6 +16,7 @@ import asyncio
 import uvicorn
 
 from cop_thief.servers import create_cop_server, create_thief_server
+from cop_thief.servers.inbound_observer import OBSERVER
 
 _HOST = "127.0.0.1"
 _COP_PORT = 8001
@@ -29,8 +30,8 @@ def build_servers() -> tuple[uvicorn.Server, uvicorn.Server]:
     Each FastMCP instance is converted to an ASGI app via ``http_app(transport=
     "http")`` (streamable-HTTP, endpoint ``/mcp``) and bound to its localhost port.
     """
-    cop_app = create_cop_server().http_app(transport="http")
-    thief_app = create_thief_server().http_app(transport="http")
+    cop_app = create_cop_server(observer=OBSERVER).http_app(transport="http")
+    thief_app = create_thief_server(observer=OBSERVER).http_app(transport="http")
     cop = uvicorn.Server(
         uvicorn.Config(cop_app, host=_HOST, port=_COP_PORT, log_level=_LOG_LEVEL)
     )

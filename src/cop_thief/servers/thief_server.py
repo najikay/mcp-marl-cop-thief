@@ -47,8 +47,13 @@ def create_thief_server(
     sdk: CopThiefSDK | None = None,
     security: SecurityMiddleware | None = None,
     resolver: StrategyResolver | None = None,
+    observer=None,
 ) -> FastMCP:
-    """Build and return the Thief FastMCP server with its tools registered."""
+    """Build and return the Thief FastMCP server with its tools registered.
+
+    ``observer`` (the app wires in the inbound game observer) accrues opponent-driven
+    moves toward the auto §9.2 email; left ``None`` (tests) it is a no-op.
+    """
     sdk = sdk or CopThiefSDK()
     security = security or SecurityMiddleware()
     resolver = resolver or StrategyResolver()
@@ -69,6 +74,9 @@ def create_thief_server(
     def request_move(observation: dict, auth_token: str) -> str:
         """A challenger requests the Thief's next move (variant Q-policy, treaty prose)."""
         security.validate(auth_token, AgentRole.THIEF)
-        return resolver.resolve({**observation, "role": "thief"})
+        obs = {**observation, "role": "thief"}
+        if observer is not None:
+            observer.record("thief", obs)  # opponent-driven: accrue toward the auto §9.2 email
+        return resolver.resolve(obs)
 
     return mcp
