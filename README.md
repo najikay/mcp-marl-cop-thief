@@ -129,6 +129,56 @@ required 3-agent roster. Full design: [`docs/STRATEGY.md`](docs/STRATEGY.md).
 
 ---
 
+## Formal model — Dec-POMDP
+
+The pursuit is modelled as a **Decentralized, Partially-Observable Markov Decision Process**, the
+tuple **⟨ n, S, {Aᵢ}, P, R, {Ωᵢ}, O, γ ⟩** (ex06 §11):
+
+| Symbol | Meaning | In this project |
+|---|---|---|
+| **n** | agents | **2** — Cop and Thief (independent, no shared memory). |
+| **S** | state space | `DecPomdpGameState`: `cop_pos`, `thief_pos` ∈ 5×5 grid, the set of `barriers ⊆ G` (≤ 5), `cop_barriers_left`, `turn_counter`, `turn_role`. Joint position space is bounded by `(R·C)² = 625`; with barriers the reachable space is larger but finite. |
+| **Aᵢ** | per-agent actions | **Cop**: 8 King moves (Chebyshev ≤ 1) ∪ *place a barrier on an adjacent free cell (stay put)* ∪ HOLD. **Thief**: 8 King moves ∪ HOLD. "Stay" is a degenerate move. |
+| **P** | transition | **Deterministic** board state-machine (`apply_action`): one mutation per turn; illegal moves (off-board / onto a barrier / non-King) are rejected; a barrier turn walls the named adjacent cell and the Cop stays. |
+| **R** | reward | Immutable Table 1: capture → Cop **+20** / Thief **+5**; evasion → Cop **+5** / Thief **+10**. The planner uses progress-shaped terminal values (`±WIN ∓ turns`) so play is strictly decisive (no draws). |
+| **Ωᵢ** | observation space | A *subjective* view per agent: exact opponent coordinates **iff** within the vision radius, else a qualitative occlusion **sector** (e.g. `THIEF_IN_NORTHWEST_QUADRANT`). |
+| **O** | observation function | `get_subjective_observation(role, radius)` — reveals the opponent when Manhattan distance ≤ `vision.radius` (default **2**), otherwise only the quadrant. Symmetric for both roles (fog-of-war). |
+| **γ** | discount | `rl.gamma = 0.9` for the self-play TD / Q baseline; the minimax layer instead uses progress-shaped terminal scores to press for capture/survival. |
+
+Partial observability is real: each agent decides from its **belief** of the board (its last
+observation + parsed opponent prose), never from global ground truth.
+
+## Orchestration challenges (the hard part)
+
+Per ex06 §14 the *value of the assignment is the orchestration*, not the win. The hard problems and
+how we solve them:
+
+- **Free natural language, no predefined protocol.** Agents converse in prose. We layer a **thin
+  deterministic contract** — every message opens with exactly one signpost `[INTENT: MOVE|BARRIER|HOLD]`
+  followed by a compass word — so the move is machine-resolvable while the body stays free NL. This keeps
+  two independently-built engines in lock-step **without** a shared codebase.
+- **Linguistic ambiguity & untrusted input.** Inbound prose is parsed deterministically (longest-match
+  direction word, bracket-only intent so flavour text can't spoof it) with an **optional LLM parse** for
+  unstructured opponent text; low confidence → a **safe exploratory fallback** (never crash, never forge a
+  capture). Every field is treated as hostile — e.g. a non-numeric `variant` is coerced, never trusted.
+- **Ensuring mutual understanding.** Both peers share a **deterministic move language** (encode/parse with
+  no LLM needed), so a game is byte-reproducible. At the end both sides hash the canonical `sub_games`
+  (**SHA-256, K3**); **any mismatch ⇒ 0/0 for both** — agreement is enforced, not assumed.
+- **Liveness over an unreliable network.** Cross-host moves **retry with reconnect**; a sustained outage
+  or a **frozen** peer (per-move 20 s timeout) **forfeits** that sub-game so the series always completes
+  all 6 and the report still emails — a dead opponent can never stall the match.
+
+## Visualization & conclusive proofs (§11)
+
+- **GUI** — the [Screenshots](#screenshots) above show the live 5×5 board, the `[INTENT: …]`
+  comms-intercept feed, barriers (`B`), captures (`!`), and leg transitions.
+- **Cloud MCP communication** — the boot block above prints the live public Cloudflare `/mcp/` URLs, and
+  the panel's comms feed streams the real `[INTENT:]` transmissions exchanged with the cloud servers;
+  every turn is also appended to `data/game_audit.jsonl` and sealed into a tamper-evident per-game archive
+  (`data/archive/`, bundle SHA-256 in the report).
+- **Learning** — strategy weights are tuned by **self-play TD** (`selfplay.train_weights`); a tabular
+  **Q-learning** baseline is retained for comparison. Design + curves: [`docs/STRATEGY.md`](docs/STRATEGY.md).
+
 ## Security & fair play
 
 - **Tokens** — every MCP tool call requires a per-role revocable bearer token; exchanged out-of-band,
