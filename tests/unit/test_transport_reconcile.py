@@ -48,6 +48,38 @@ def test_remote_move_client_custom_tool_name() -> None:
     assert client(_OBS).startswith("[INTENT:")
 
 
+def test_remote_move_client_retries_then_succeeds(monkeypatch) -> None:
+    """A transient transport drop is retried (fresh connection) so the move still resolves."""
+    import cop_thief.infra.network.move_client as mc
+    calls = {"n": 0}
+
+    async def flaky(target, observation, token, tool):
+        calls["n"] += 1
+        if calls["n"] < 3:
+            raise ConnectionError("Client failed to connect")
+        return "[INTENT: MOVE] east"
+
+    monkeypatch.setattr(mc, "fetch_remote_move", flaky)
+    client = mc.RemoteMoveClient("url", "tok", retries=4, retry_delay=0)
+    assert client(_OBS) == "[INTENT: MOVE] east"
+    assert calls["n"] == 3  # failed twice, succeeded on the third attempt
+
+
+def test_remote_move_client_raises_after_exhausting_retries(monkeypatch) -> None:
+    """A genuinely-down opponent surfaces the error after all attempts (never swallowed)."""
+    import pytest
+
+    import cop_thief.infra.network.move_client as mc
+
+    async def dead(target, observation, token, tool):
+        raise ConnectionError("Client failed to connect")
+
+    monkeypatch.setattr(mc, "fetch_remote_move", dead)
+    client = mc.RemoteMoveClient("url", "tok", retries=2, retry_delay=0)
+    with pytest.raises(ConnectionError):
+        client(_OBS)
+
+
 def test_reconcile_match_keeps_totals_and_result() -> None:
     """Identical agreement hashes keep totals and mark mutual_agreement true."""
     report = {"sub_games": [{"sub_game": 1, "outcome": "cop_wins"}],

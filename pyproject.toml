@@ -68,6 +68,9 @@ ignore = ["E501"]
 # The challenge worker is a thread top-level boundary: it must catch any failure
 # and surface it to the panel rather than dying silently in a background thread.
 "src/cop_thief/ui/server.py" = ["BLE001"]
+# Live-opponent transport: a dropped/refused connection raises many error types, so the
+# move client retries blindly (fresh connection each attempt) so the series completes.
+"src/cop_thief/infra/network/move_client.py" = ["BLE001"]
 
 # --- pytest ------------------------------------------------------------------
 [tool.pytest.ini_options]

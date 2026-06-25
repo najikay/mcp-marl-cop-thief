@@ -10,10 +10,13 @@ the unit tests (in-memory) and by the live cross-host run (SSE over the tunnel).
 from __future__ import annotations
 
 import asyncio
+import time
 
 from fastmcp import Client
 
 _MOVE_TOOL = "request_move"
+_RETRIES = 4          # extra attempts after the first, to ride a transient drop / reconnect
+_RETRY_DELAY = 2.0    # seconds between attempts (the opponent's tunnel may need a moment)
 
 
 async def fetch_remote_move(
@@ -45,12 +48,31 @@ async def list_remote_tools(target) -> list[dict]:
 class RemoteMoveClient:
     """Sync provider adapter: ``(observation) -> prose`` via a partner MCP server."""
 
-    def __init__(self, target, auth_token: str, tool_name: str = _MOVE_TOOL) -> None:
-        """Bind the MCP ``target`` (URL or in-memory server), token and move-tool name."""
+    def __init__(self, target, auth_token: str, tool_name: str = _MOVE_TOOL,
+                 retries: int = _RETRIES, retry_delay: float = _RETRY_DELAY) -> None:
+        """Bind the MCP ``target`` (URL or in-memory server), token, move-tool and retry policy."""
         self._target = target
         self._token = auth_token
         self._tool = tool_name
+        self._retries = retries
+        self._retry_delay = retry_delay
 
     def __call__(self, observation: dict) -> str:
-        """Fetch one remote move synchronously (its own event loop per call)."""
-        return asyncio.run(fetch_remote_move(self._target, observation, self._token, self._tool))
+        """Fetch one remote move, retrying on any transport failure so the series completes.
+
+        Each attempt opens a **fresh** connection (``fetch_remote_move`` makes a new ``Client``),
+        so a dropped tunnel/refused connection on a single move — even the last one — recovers
+        instead of aborting the whole game. The original error is re-raised only if all attempts
+        fail (a genuinely-down opponent), never swallowed.
+        """
+        last: Exception | None = None
+        for attempt in range(self._retries + 1):
+            try:
+                return asyncio.run(
+                    fetch_remote_move(self._target, observation, self._token, self._tool)
+                )
+            except Exception as exc:  # any transport failure → brief backoff, reconnect, retry
+                last = exc
+                if attempt < self._retries:
+                    time.sleep(self._retry_delay)
+        raise last  # type: ignore[misc]
