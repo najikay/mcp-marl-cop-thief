@@ -25,6 +25,13 @@ def test_resolver_captures_adjacent_thief_via_minimax() -> None:
     assert StrategyResolver().resolve(obs) == "[INTENT: MOVE] The cop edges east."
 
 
+def test_resolve_tolerates_a_string_variant_label() -> None:
+    """An opponent's non-numeric variant (e.g. 'standard') must not crash — falls back safely."""
+    for variant in ("standard", "aggressive", None, "99", 7):
+        prose = StrategyResolver().resolve({**_FAR, "variant": variant})
+        assert prose.startswith("[INTENT:")
+
+
 def test_label_maps_variant_index() -> None:
     """Variant indices map to the human variant labels for both roles."""
     resolver = StrategyResolver()

@@ -48,6 +48,20 @@ class StrategyResolver:
         """Return the variant's human label (aggressive / balanced / defensive)."""
         return VARIANT_LABELS[variant % len(VARIANT_LABELS)]
 
+    @staticmethod
+    def _variant_index(raw, count: int) -> int:
+        """Coerce an UNTRUSTED variant (int, digit-string, or label) to a planner index.
+
+        An opponent may send any ``variant`` value (e.g. its own label ``"standard"``); we
+        never crash on it — non-numeric, unknown values fall back to variant 0.
+        """
+        try:
+            return int(raw) % count
+        except (TypeError, ValueError):
+            labels = [lbl.lower() for lbl in VARIANT_LABELS]
+            key = str(raw).strip().lower()
+            return labels.index(key) % count if key in labels else 0
+
     def _learn(self, observation: dict) -> None:
         """Update the opponent model from its last move (skip on reset / first call)."""
         last, self._last = self._last, observation
@@ -62,7 +76,7 @@ class StrategyResolver:
             action_type, target = self._planner.best_action(state, pessimism=1.0)
         else:
             self._learn(observation)
-            planner, risk = self._variants[int(observation.get("variant", 0)) % len(self._variants)]
+            planner, risk = self._variants[self._variant_index(observation.get("variant"), len(self._variants))]
             pessimism = 1.0 - risk * (1.0 - self._model.pessimism())
             action_type, target = planner.best_action(state, pessimism)
         if action_type is ActionType.PLACE_BARRIER:
