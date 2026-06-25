@@ -109,7 +109,10 @@
   "group": {
     "group_name": "NajAmjad",
     "github_repo": "https://github.com/najikay/mcp-marl-cop-thief",
-    "students": []
+    "students": [
+      "Naji Kayal",
+      "Amjad Abd El Rahim"
+    ]
   },
   "opponent": {
     "group_name": "Mohamad-Salih",
