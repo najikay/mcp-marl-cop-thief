@@ -1,14 +1,16 @@
-"""Stateful per-role strategy resolver: risk-tunable Angel–Devil minimax variants.
+"""Per-role strategy resolver: deterministic tournament minimax, or risk-tunable variants.
 
-Each ``request_move`` is answered by a minimax/expectimax planner (game theory) whose
-Cop action set includes walling its own cell (Conway 'Devil' move). An online
-``OpponentModel`` watches the opponent's moves across the session and lowers our
-pessimism toward expectimax only as far as the opponent proves exploitable; each
-variant's ``risk`` controls how much it trusts that signal (defensive = pure minimax).
+**Tournament (default, ``game.deterministic_moves``):** each ``request_move`` is a **pure
+function of the observation** — a single greedy minimax over the board (pessimism 1.0, no
+exploration, no history) — so two engines + one seed replay byte-identical sub_games (the
+inter-group hash agreement, K3). **Adaptive mode** (deterministic off) restores the 3 risk
+variants + the online ``OpponentModel`` that lowers pessimism against an exploitable opponent.
+Barriers are toggled by ``game.barriers_enabled`` (a per-match agreement).
 """
 
 from __future__ import annotations
 
+from cop_thief.config import get_config_manager
 from cop_thief.domain.constants import ActionType, AgentRole
 from cop_thief.domain.move_language import encode_barrier, encode_move
 from cop_thief.domain.strategy.evaluation import Evaluator
@@ -26,15 +28,21 @@ _VARIANTS = (
 
 
 class StrategyResolver:
-    """Resolve a move via a risk-tunable minimax planner with online opponent modelling."""
+    """Resolve a move — deterministic (tournament) or risk-tunable with opponent modelling."""
 
-    def __init__(self, variants=None) -> None:
-        """Build the variant (planner, risk) pairs and a fresh opponent model."""
-        self._variants = variants or [
-            (MinimaxPlanner(Evaluator(w), depth), risk) for w, depth, risk in _VARIANTS
-        ]
-        self._model = OpponentModel()
-        self._last: dict | None = None
+    def __init__(self, variants=None, deterministic=None, barriers=None) -> None:
+        """Read mode/barrier toggles from config (overridable) and build the planner(s)."""
+        game = get_config_manager().setup.game
+        self._deterministic = game.deterministic_moves if deterministic is None else deterministic
+        barr = game.barriers_enabled if barriers is None else barriers
+        if self._deterministic:
+            self._planner = MinimaxPlanner(Evaluator(), depth=3, barriers=barr)
+        else:
+            self._variants = variants or [
+                (MinimaxPlanner(Evaluator(w), depth, barriers=barr), risk) for w, depth, risk in _VARIANTS
+            ]
+            self._model = OpponentModel()
+            self._last: dict | None = None
 
     def label(self, role: AgentRole, variant: int) -> str:
         """Return the variant's human label (aggressive / balanced / defensive)."""
@@ -48,12 +56,15 @@ class StrategyResolver:
         self._model.observe(opponent_was_rational(observation["role"], last, observation))
 
     def resolve(self, observation: dict) -> str:
-        """Plan the variant's action (pessimism adapted to the opponent) as treaty prose."""
-        self._learn(observation)
+        """Plan the move and return it as treaty prose (deterministic by default)."""
         state, role, pos = build_state(observation)
-        planner, risk = self._variants[int(observation.get("variant", 0)) % len(self._variants)]
-        pessimism = 1.0 - risk * (1.0 - self._model.pessimism())
-        action_type, target = planner.best_action(state, pessimism)
+        if self._deterministic:
+            action_type, target = self._planner.best_action(state, pessimism=1.0)
+        else:
+            self._learn(observation)
+            planner, risk = self._variants[int(observation.get("variant", 0)) % len(self._variants)]
+            pessimism = 1.0 - risk * (1.0 - self._model.pessimism())
+            action_type, target = planner.best_action(state, pessimism)
         if action_type is ActionType.PLACE_BARRIER:
             return encode_barrier(role, pos, target)
         return encode_move(role, pos, target)

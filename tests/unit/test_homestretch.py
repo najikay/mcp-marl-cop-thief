@@ -31,9 +31,11 @@ def test_guard_blocks_locked_production_address() -> None:
 
 
 def test_guard_allows_burner_sandbox() -> None:
-    """The burner sandbox address always passes, even when locked."""
+    """The configured burner sandbox address always passes, even when locked."""
+    from cop_thief.config import get_config_manager
+    burner = get_config_manager().setup.reporting.burner_email
     guard = SubmissionSafetyGuard(locked=True)
-    assert guard.verify_safe_recipient("mcp.marl.telemetry@gmail.com") is None
+    assert guard.verify_safe_recipient(burner) is None
 
 
 def test_guard_config_default_and_passthrough() -> None:

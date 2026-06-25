@@ -10,7 +10,6 @@ from __future__ import annotations
 from cop_thief.config import get_config_manager
 
 _BLOCKED_TOKENS = ("segal", "haifa.ac.il")
-_ALWAYS_ALLOW = "mcp.marl.telemetry@gmail.com"
 
 
 class SubmissionSafetyException(RuntimeError):
@@ -21,11 +20,12 @@ class SubmissionSafetyGuard:
     """Gate recipient addresses behind the production-locked interlock."""
 
     def __init__(self, locked: bool | None = None, config_manager=None) -> None:
-        """Read the lock state from config unless explicitly overridden."""
+        """Read the lock state and the always-allowed burner from config."""
+        cfg = config_manager or get_config_manager()
         if locked is None:
-            cfg = config_manager or get_config_manager()
             locked = cfg.setup.reporting.production_submission_locked
         self._locked = bool(locked)
+        self._always_allow = cfg.setup.reporting.burner_email.strip().lower()
 
     @property
     def locked(self) -> bool:
@@ -39,7 +39,7 @@ class SubmissionSafetyGuard:
         address while the production lock is engaged.
         """
         low = email_address.strip().lower()
-        if low == _ALWAYS_ALLOW:
+        if low == self._always_allow:
             return
         if self._locked and any(token in low for token in _BLOCKED_TOKENS):
             raise SubmissionSafetyException(

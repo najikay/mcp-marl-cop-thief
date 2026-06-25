@@ -19,17 +19,19 @@ Action = tuple[ActionType, tuple]
 class MinimaxPlanner:
     """Risk-tunable planner returning the acting role's chosen action."""
 
-    def __init__(self, evaluator: Evaluator | None = None, depth: int = 3, pessimism: float = 1.0) -> None:
-        """Bind the leaf evaluator, search depth (plies) and default opponent pessimism."""
+    def __init__(self, evaluator: Evaluator | None = None, depth: int = 3,
+                 pessimism: float = 1.0, barriers: bool = True) -> None:
+        """Bind the leaf evaluator, search depth, default opponent pessimism, and barrier toggle."""
         self._eval = evaluator or Evaluator()
         self._depth = depth
         self._pessimism = pessimism
+        self._barriers = barriers
 
     def actions(self, state: DecPomdpGameState, role: AgentRole) -> list[Action]:
         """Enumerate legal actions: King moves, plus Cop barrier-moves (wall vacated, step to cell)."""
         steps = state.legal_moves(role)
         acts: list[Action] = [(ActionType.MOVE, cell) for cell in steps]
-        if role is AgentRole.COP and state.cop_barriers_left > 0:
+        if self._barriers and role is AgentRole.COP and state.cop_barriers_left > 0:
             acts += [(ActionType.PLACE_BARRIER, cell) for cell in steps]
         if not acts:  # boxed in — HOLD in place (terminal scoring resolves the loss)
             pos = state.cop_pos if role is AgentRole.COP else state.thief_pos

@@ -49,6 +49,8 @@ class SeriesRunner:
     def _start(self, index: int) -> tuple[tuple, tuple]:
         """Pick the sub-game's opening: seeded-random (ex06 §4.2) or fixed corners."""
         game = get_config_manager().setup.game
+        if game.start_mode == "fixed" and game.fixed_start:  # locked corners (e.g. COSMOS77)
+            return tuple(game.fixed_start["cop"]), tuple(game.fixed_start["thief"])
         if game.start_mode != "random":
             return (0, 0), (_GRID - 1, _GRID - 1)
         return random_start_positions(_GRID, _GRID, random.Random((game.random_seed or 0) + index))

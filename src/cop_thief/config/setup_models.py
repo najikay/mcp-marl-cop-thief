@@ -27,6 +27,9 @@ class GameConfig(FrozenModel):
     start_mode: str = "random"
     random_seed: int | None = None
     thief_moves_first: bool = True
+    deterministic_moves: bool = True  # tournament: move = pure fn(observation) → byte-agreeing replays
+    barriers_enabled: bool = True     # per-match agreement (e.g. COSMOS77 proposed barriers OFF)
+    fixed_start: dict | None = None   # {"cop": [r,c], "thief": [r,c]} when start_mode == "fixed"
 
 
 class ScoringConfig(FrozenModel):

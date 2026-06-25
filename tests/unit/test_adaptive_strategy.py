@@ -50,3 +50,17 @@ def test_random_start_positions_distinct_and_in_bounds() -> None:
 def test_random_start_is_reproducible_per_seed() -> None:
     """Identical seeds reproduce identical openings (so both groups agree)."""
     assert random_start_positions(5, 5, random.Random(7)) == random_start_positions(5, 5, random.Random(7))
+
+
+def test_fixed_start_uses_configured_corners(monkeypatch) -> None:
+    """start_mode 'fixed' opens every sub-game from the agreed corners (COSMOS77: cop 4,4 / thief 0,0)."""
+    from cop_thief.orchestrator.series import SeriesRunner
+    from cop_thief.servers.tools.move_tool import resolve_move
+
+    game = type("G", (), {"start_mode": "fixed", "fixed_start": {"cop": [4, 4], "thief": [0, 0]},
+                          "random_seed": None})()
+    monkeypatch.setattr("cop_thief.orchestrator.series.get_config_manager",
+                        lambda: type("M", (), {"setup": type("S", (), {"game": game})()})())
+    runner = SeriesRunner(resolve_move, resolve_move, turn_delay=0.0)
+    assert runner._start(0) == ((4, 4), (0, 0))
+    assert runner._start(5) == ((4, 4), (0, 0))  # same every sub-game (variety from role-swap)
