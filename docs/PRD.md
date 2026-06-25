@@ -52,7 +52,7 @@ Dec-POMDP = ⟨ n, S, {A_i}, P, R, {Ω_i}, O, γ ⟩
 |--------|------|--------------------------|
 | `n` | Number of agents | `n = 2` (Cop, Thief). |
 | `S` | State space | Full board state: cop coordinates, thief coordinates, set of placed barrier cells, barriers-remaining counter, move counter. For an `R×C` grid the joint position space is bounded by `(R·C)²`. |
-| `A_i` | Action set of agent *i* | Cop: move in 8 directions (incl. diagonal) **or** place a barrier on its current cell. Thief: move in 8 directions. "Stay" is a degenerate move. |
+| `A_i` | Action set of agent *i* | Cop: move in 8 directions (incl. diagonal) **or** place a barrier on an adjacent free cell (staying put). Thief: move in 8 directions. "Stay" is a degenerate move. |
 | `P` | Transition function | `P(s' \| s, a_cop, a_thief)` — deterministic board update from the joint action; the board is a **state machine** where each step yields a new state. Illegal moves (into a wall, edge, or barrier) are rejected/clamped. |
 | `R` | Reward / scoring | Capture & evasion scoring (see §3.4). Used both as the official score and as the RL reward signal. |
 | `Ω_i` | Observation space of agent *i* | The partial, natural-language description each agent receives (its own position, its noisy belief about the opponent, hints/deception in messages). |
@@ -136,9 +136,9 @@ Per single sub-game (config keys in parentheses):
 
 - **Win — Cop:** the Cop arrives on the exact cell occupied by the Thief.
 - **Win — Thief:** the Thief survives `max_moves` (default 25) without the Cop landing on its cell.
-- **Barrier:** as an alternative to moving, the Cop may place a barrier on its **current** cell;
-  that cell becomes an impassable wall for **both** agents thereafter. Cop ≤ `max_barriers`
-  (default 5) per sub-game; the Thief may **never** place barriers.
+- **Barrier:** as an alternative to moving, the Cop may spend a turn placing a barrier on an **adjacent
+  free** cell while staying in place; that cell becomes an impassable wall for **both** agents thereafter.
+  Cop ≤ `max_barriers` (default 5) per sub-game; the Thief may **never** place barriers.
 - **Per full game (6 sub-games):** max attainable per group = **90** (`3×20` as Cop + `3×10` as
   Thief); min = **30**.
 
@@ -193,9 +193,9 @@ Per single sub-game (config keys in parentheses):
 | **SEC-05** | **Calibrated injection counter-measure.** Against a **documented** cheater (each hostile transmission is flagged + logged first), an escalating counter-payload is **appended** to our transmission — tier 0 silent · 1 notice · 2 counter-strike · 3+ stacked override ("fair if fair, dirtier if dirty"). It **never alters our engine-determined move** (front-loaded `[INTENT]`, no compass words in the payload), so it cannot cost us the K3 points (the "Spite Trap"); a fair opponent draws nothing. |
 | **NET-05** | **Real cross-host transport.** Moves are fetched by an MCP `Client` calling the partner's `request_move` tool over its `/sse` endpoint (per-role bearer token). The same `RemoteMoveClient` targets our own local `/sse` endpoints in mirror mode, so the live game runs over real MCP-over-SSE sockets — identical to playing a partner's tunnel URL. |
 | **REC-01** | **Mutual-agreement reconciliation.** After the 6 sub-games both sides hash the canonical `sub_games` array; equal digests ⇒ `mutual_agreement: true` (totals stand), any mismatch ⇒ `mutual_agreement: false` and a 0/0 `both_lose` scoreline. |
-| **STRAT-01** | **Barrier-move mechanic (ex06 §4.3).** A Cop `[INTENT: BARRIER]` walls the cell it **vacates** and steps to an adjacent free cell, as a **single turn** (spends one of ≤25 moves + one of ≤5 barriers; opponent moves next) — impassable to both, **no agent ever stands on a barrier**, Thief never. The minimax planner chooses *when* to spend a wall (one barrier-move per legal step in the search), driving multi-step herding toward `thief_trapped`. |
+| **STRAT-01** | **Barrier mechanic (ex06 §4.3).** A Cop `[INTENT: BARRIER]` walls one **adjacent free cell** and stays in place, as its **own turn** (spends one of ≤25 moves + one of ≤5 barriers; opponent moves next) — impassable to both, **no agent ever stands on a barrier** (never its own or the Thief's cell), Thief never; moving is a separate turn. The minimax planner chooses *when* to spend a wall (one barrier per adjacent free cell in the search), driving multi-step herding toward `thief_trapped`. |
 | **STRAT-02** | **Game-theoretic minimax (Markov game).** Each `request_move` is answered by depth-limited **alpha-beta** over the zero-sum game (Cop max, Thief min, optimal-adversary assumption). Progress-shaped terminal scores (`±WIN ∓ turns`) make the policy press for capture/survival, so **draws are structurally avoided**. Three variant profiles (aggressive/balanced/defensive) drive the 6 sub-games. See [`STRATEGY.md`](./STRATEGY.md). |
-| **STRAT-03** | **Conway Angel–Devil barriers.** The Cop's search action set includes walling its own cell (§4.3); the evaluation's *containment* term is the Thief's flood-filled escape region, so the planner discovers legal herding-to-trap lines (no hand-coded barrier rule). |
+| **STRAT-03** | **Conway Angel–Devil barriers.** The Cop's search action set includes walling an adjacent cell (§4.3); the evaluation's *containment* term is the Thief's flood-filled escape region, so the planner discovers legal herding-to-trap lines (no hand-coded barrier rule). |
 | **STRAT-04** | **Advanced RL (self-play).** The linear evaluation weights are learned by **self-play TD** with a minimax backup (function approximation, ε-exploration) — beyond the assignment's tabular Q. `train_weights()` returns the learned vector; live play uses tuned defaults. |
 | **STRAT-05** | **Adapt to a sub-optimal opponent.** A **pessimism knob** interpolates minimax↔expectimax; an online `OpponentModel` estimates the opponent's rational-rate from observed moves and lowers pessimism only as far as proven exploitable (maximin vs best-response). Variants differ by `risk` (aggressive exploits, defensive stays pure-minimax). |
 | **GAME-02** | **Random openings (§4.2).** Each sub-game starts from a seeded-random, distinct Cop/Thief placement (`game.start_mode`/`random_seed`); the seed is deterministic so both groups reproduce the same opening (no agreement drift). |

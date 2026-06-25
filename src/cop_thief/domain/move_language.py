@@ -26,9 +26,9 @@ def encode_move(role: AgentRole, before: tuple, after: tuple) -> str:
 
 
 def encode_barrier(role: AgentRole, before: tuple, target: tuple) -> str:
-    """Render a barrier-move: wall the cell vacated, step ``before`` → ``target`` (ex06 §4.3)."""
+    """Render a barrier turn: the Cop walls the adjacent cell ``target`` and stays in place."""
     word = _WORD.get((target[0] - before[0], target[1] - before[1]), "hold")
-    return f"[INTENT: BARRIER] The {role.value} walls its cell and steps {word}."
+    return f"[INTENT: BARRIER] The {role.value} walls the cell to its {word}."
 
 
 def parse_target(prose: str, pos: tuple) -> tuple:
@@ -57,9 +57,8 @@ def parse_intent(prose: str) -> str:
 def apply_prose(state, role: AgentRole, prose: str):
     """Apply a peer's prose move to ``state`` (illegal/unparsable → HOLD in place).
 
-    A ``[INTENT: BARRIER]`` declaration is a Cop barrier-move: it walls the cell vacated and
-    steps in the named direction (ex06 §4.3; a Thief barrier or an illegal step is a no-op).
-    Otherwise it is a MOVE.
+    A ``[INTENT: BARRIER]`` is the Cop's own turn: it walls the named adjacent cell and the
+    Cop stays put (a Thief barrier or an illegal target is a no-op). Otherwise it is a MOVE.
     """
     pos = state.cop_pos if role is AgentRole.COP else state.thief_pos
     target = parse_target(prose, pos)

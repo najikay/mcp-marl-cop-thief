@@ -52,11 +52,11 @@ def test_minimax_captures_adjacent_thief() -> None:
 
 
 def test_minimax_offers_barrier_and_thief_avoids_suicide() -> None:
-    """The Cop action set includes a self-wall; the Thief never steps onto the Cop."""
+    """The Cop action set includes walling an adjacent cell; the Thief never steps onto the Cop."""
     planner = MinimaxPlanner(depth=2)
     cop_turn = DecPomdpGameState(cop_pos=(2, 2), thief_pos=(4, 4), turn_role=AgentRole.COP, cop_barriers_left=3)
     acts = planner.actions(cop_turn, AgentRole.COP)
-    assert (ActionType.PLACE_BARRIER, (2, 3)) in acts  # barrier-move: wall (2,2), step east
+    assert (ActionType.PLACE_BARRIER, (2, 3)) in acts  # barrier turn: wall (2,3), Cop stays
     thief_turn = DecPomdpGameState(cop_pos=(2, 2), thief_pos=(2, 3), turn_role=AgentRole.THIEF)
     _at, target = planner.best_action(thief_turn)
     assert target != (2, 2)

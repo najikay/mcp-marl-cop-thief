@@ -62,7 +62,7 @@ Thief-first, ≤ 25 moves each. Scoring is immutable: Cop capture → **20 / 5**
 
 **The control panel** — node status (Servers/Tunnels/Game), our shareable `…/mcp/` URLs + tokens with
 copy buttons, the opponent challenge form, and the live game. Here a mirror self-test is running; note the
-`[INTENT: BARRIER]` line (the Cop walling its own cell, §4.3), the green **`B`** barrier, and the `!` capture.
+`[INTENT: BARRIER]` line (the Cop walling an adjacent cell and staying put, §4.3), the green **`B`** barrier, and the `!` capture.
 
 ![Control panel](screenshots/control-panel.png)
 
@@ -121,7 +121,7 @@ Tunnels live and written to config/setup.json. Share these /mcp/ URLs. Ctrl+C to
 Each `request_move` is answered by depth-limited **alpha-beta minimax** over the zero-sum Markov game
 (Cop maximizes, Thief minimizes, optimal-adversary assumption). Progress-shaped terminal scores
 (`±WIN ∓ turns`) make the policy press for capture/survival, so **draws are structurally avoided**. The
-Cop's action set includes **walling its own cell** (Conway "Devil" move, §4.3); the evaluation's
+Cop's action set includes **walling an adjacent cell** (Conway "Devil" move, §4.3); the evaluation's
 *containment* feature is the Thief's flood-filled escape region, so the planner discovers legal
 herding-to-trap lines on its own. The linear evaluation weights are tunable by **self-play TD**
 (`selfplay.train_weights`). Three variant profiles (aggressive / balanced / defensive) field the

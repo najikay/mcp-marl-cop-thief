@@ -41,7 +41,7 @@ def test_deterministic_mode_is_a_pure_function_of_the_observation() -> None:
 
 
 def test_barriers_disabled_removes_barrier_actions() -> None:
-    """With barriers OFF, the planner offers no barrier-moves (per a barriers-off agreement)."""
+    """With barriers OFF, the planner offers no barrier actions (per a barriers-off agreement)."""
     state = DecPomdpGameState(cop_pos=(2, 2), thief_pos=(4, 4), turn_role=AgentRole.COP, cop_barriers_left=3)
     acts = MinimaxPlanner(barriers=False).actions(state, AgentRole.COP)
     assert all(a[0] is not ActionType.PLACE_BARRIER for a in acts)

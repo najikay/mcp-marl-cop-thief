@@ -52,10 +52,10 @@ def test_state_immutability_after_apply_action() -> None:
     assert moved.cop_pos == (1, 1)
     assert moved.turn_counter == 1
 
-    walled = state.apply_action(AgentRole.COP, ActionType.PLACE_BARRIER, (1, 1))  # §4.3 barrier-move
+    walled = state.apply_action(AgentRole.COP, ActionType.PLACE_BARRIER, (1, 1))  # wall adjacent cell
     assert state.grid.barriers == frozenset()          # original untouched
-    assert (0, 0) in walled.grid.barriers              # the vacated cell is walled
-    assert walled.cop_pos == (1, 1)                    # the Cop stepped off it
+    assert (1, 1) in walled.grid.barriers              # the adjacent cell is walled
+    assert walled.cop_pos == (0, 0)                    # the Cop stayed put (walling is its own turn)
     assert walled.cop_barriers_left == 4
 
     fled = state.apply_action(AgentRole.THIEF, ActionType.MOVE, (3, 3))

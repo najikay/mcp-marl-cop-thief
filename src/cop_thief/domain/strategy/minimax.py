@@ -3,7 +3,7 @@
 Game-theory core: WE play optimally; the OPPONENT's nodes are blended between their
 optimal reply (pure minimax, `pessimism = 1` → unexploitable, safe) and the average
 over their legal moves (`pessimism = 0` → expectimax that exploits a sub-optimal
-opponent). The Cop's action set includes walling its own cell (the Conway 'Devil'
+opponent). The Cop's action set includes walling an adjacent cell (the Conway 'Devil'
 move), so the planner discovers herding-to-trap lines without a hand-coded rule.
 """
 
@@ -28,11 +28,11 @@ class MinimaxPlanner:
         self._barriers = barriers
 
     def actions(self, state: DecPomdpGameState, role: AgentRole) -> list[Action]:
-        """Enumerate legal actions: King moves, plus Cop barrier-moves (wall vacated, step to cell)."""
+        """Enumerate legal actions: King moves, plus Cop barriers (wall an adjacent free cell)."""
         steps = state.legal_moves(role)
         acts: list[Action] = [(ActionType.MOVE, cell) for cell in steps]
         if self._barriers and role is AgentRole.COP and state.cop_barriers_left > 0:
-            acts += [(ActionType.PLACE_BARRIER, cell) for cell in steps]
+            acts += [(ActionType.PLACE_BARRIER, cell) for cell in steps if state.is_barrier_legal(cell)]
         if not acts:  # boxed in — HOLD in place (terminal scoring resolves the loss)
             pos = state.cop_pos if role is AgentRole.COP else state.thief_pos
             acts.append((ActionType.MOVE, pos))

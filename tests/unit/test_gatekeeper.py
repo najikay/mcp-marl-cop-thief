@@ -4,7 +4,8 @@ Scenarios:
 1. Happy-path DeepSeek 200 OK -> text returned, token tracker accumulates.
 2. DeepSeek 502 -> instant failover returns the mocked Anthropic response.
 3. Queue overflow -> BackpressureOverflowError fires.
-4. Token-accounting math across DeepSeek + Anthropic ledger rates.
+
+(TokenTracker ledger math + corrupt-file recovery live in ``test_token_tracker.py``.)
 """
 
 from __future__ import annotations
@@ -126,35 +127,9 @@ def test_dual_provider_failure_raises(tmp_path: Path) -> None:
     assert client.post.call_count == 2
 
 
-def test_corrupt_ledger_recovers(tmp_path: Path) -> None:
-    """A corrupt token_usage.json is tolerated; the tracker starts clean."""
-    ledger = tmp_path / "token_usage.json"
-    ledger.write_text("{ this is not valid json", encoding="utf-8")
-
-    tracker = TokenTracker(usage_file=ledger)
-    assert tracker.get_current_economics()["turns"] == 0  # recovered, not crashed
-
-    tracker.log_turn("DEEPSEEK", "deepseek-chat", 100, 10)
-    assert tracker.get_current_economics()["turns"] == 1
-
-
 def test_generic_execute_passthrough(tmp_path: Path) -> None:
     """The generic execute() chokepoint runs an arbitrary callable and returns it."""
     gk = _build_gatekeeper(mock.Mock(), tmp_path)
     result = gk.execute(lambda value: {"sent": value}, "payload", service="gmail")
     assert result == {"sent": "payload"}
     assert gk._queue.qsize() == 0  # slot acquired then released
-
-
-def test_token_accounting_math(tmp_path: Path) -> None:
-    """Ledger math: DeepSeek 0.15/0.60 + Anthropic 3.00/15.00 per million."""
-    tracker = TokenTracker(usage_file=tmp_path / "u.json")
-    tracker.log_turn("DEEPSEEK", "deepseek-chat", 1_000_000, 1_000_000)
-    tracker.log_turn("ANTHROPIC", "claude-3-5-sonnet-20241022", 1_000_000, 1_000_000)
-
-    econ = tracker.get_current_economics()
-    assert econ["input_accumulated"] == 2_000_000
-    assert econ["output_accumulated"] == 2_000_000
-    # DeepSeek: 0.15 + 0.60 = 0.75 ; Anthropic: 3.00 + 15.00 = 18.00
-    assert econ["estimated_cost_usd"] == round(0.75 + 18.0, 6)
-    assert econ["turns"] == 2

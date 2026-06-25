@@ -68,18 +68,17 @@ class DecPomdpGameState(BaseModel):
     ) -> DecPomdpGameState:
         """Return a NEW state with ``action`` applied; never mutates ``self``.
 
-        Edge case: ``PLACE_BARRIER`` is a *barrier-move* — the Cop walls the cell it
-        vacates (``self.cop_pos``) and steps to ``target`` (a barrier never holds an
-        agent), decrementing its budget. A ``MOVE`` simply relocates the acting agent.
-        The original instance is left pristine.
+        ``PLACE_BARRIER`` is its **own turn**: the Cop walls one adjacent free cell
+        (``target``) and STAYS in place — no agent ever stands on a barrier — spending one
+        barrier but NOT moving. A ``MOVE`` is a separate turn that relocates the acting
+        agent. The original instance is left pristine.
         """
         grid, cop, thief = self.grid, self.cop_pos, self.thief_pos
         barriers_left = self.cop_barriers_left
         if action_type is ActionType.PLACE_BARRIER:
             if role is AgentRole.COP and barriers_left > 0 and self.is_barrier_legal(target):
-                grid = grid.model_copy(update={"barriers": grid.barriers | {self.cop_pos}})
-                barriers_left -= 1
-                cop = target  # vacate the now-walled cell — no agent stands on a barrier
+                grid = grid.model_copy(update={"barriers": grid.barriers | {target}})
+                barriers_left -= 1  # the Cop stays put — walling is its own turn, not a move
         elif role is AgentRole.COP:
             cop = target
         else:
@@ -97,12 +96,13 @@ class DecPomdpGameState(BaseModel):
         )
 
     def is_barrier_legal(self, target: Coord) -> bool:
-        """ex06 §4.3 barrier-move: wall the Cop's current cell and step it to ``target``.
+        """A barrier turn walls one adjacent free cell while the Cop stays in place.
 
-        ``target`` must be a **distinct**, legal King step — the Cop must vacate the cell it
-        walls, because a barrier is impassable to both agents (no one may stand on it).
+        ``target`` must be a legal King step away that is **not** occupied — a barrier is
+        impassable to both agents, so the Cop never walls its own cell or the Thief's.
         """
-        return target != self.cop_pos and self.grid.is_legal_move(self.cop_pos, target)
+        return (target not in (self.cop_pos, self.thief_pos)
+                and self.grid.is_legal_move(self.cop_pos, target))
 
     def legal_moves(self, role: AgentRole) -> list[Coord]:
         """Non-STAY legal destinations for ``role`` (an empty list means trapped)."""
