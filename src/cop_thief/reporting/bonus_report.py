@@ -63,21 +63,26 @@ def build_bonus_report(*, group_1: str, group_2: str, github: tuple, mcp_urls: d
     }
 
 
-def build_internal_report(report: dict) -> dict:
-    """Convert a played game into the exact ex06 §9.1 Internal Game JSON (for the auto-email).
+def build_bonus_from_report(report: dict, our_cop_url: str = "", our_thief_url: str = "") -> dict:
+    """Convert a played inter-group game into the exact ex06 §9.2 ``bonus_game`` envelope.
 
-    ``report`` carries the perspective-relative ``sub_games`` (``our_role``/``our_points``);
-    totals are split by the role WE played (Cop sub-games vs Thief sub-games). Identity and our
-    two MCP URLs come from config (no hardcoding). Body is JSON-only per ex06 §9.
+    This is what the Cop auto-emails at game end (§9). We are ``group_1``, the opponent
+    ``group_2`` (both from config). Our two MCP URLs are taken **live** (the dynamic tunnel
+    URLs of this session) with a config fallback — we hold no permanent URL; the opponent's
+    come from config. The perspective-relative ``sub_games`` (``our_role``/``our_points``) are
+    mapped to the treaty-§D canonical array so both groups hash identically. ``mutual_agreement``
+    carries through from the run (``None`` until the two digests are reconciled).
     """
     cfg = get_config_manager()
-    grp, net = cfg.setup.group, cfg.network
-    sub = report["sub_games"]
-    cop = sum(s["our_points"] for s in sub if s["our_role"] == "cop")
-    thief = sum(s["our_points"] for s in sub if s["our_role"] == "thief")
-    return {
-        "group_name": grp.group_name, "students": list(grp.students),
-        "github_repo": grp.github_repo, "cop_mcp_url": net.team_alpha_cop_url,
-        "thief_mcp_url": net.team_alpha_thief_url, "timezone": _TZ,
-        "sub_games": sub, "totals": {"cop": cop, "thief": thief},
-    }
+    grp, opp, net = cfg.setup.group, cfg.setup.opponent, cfg.network
+    urls = {"our_cop": our_cop_url or net.team_alpha_cop_url,
+            "our_thief": our_thief_url or net.team_alpha_thief_url,
+            "opp_cop": net.team_beta_cop_url, "opp_thief": net.team_beta_thief_url}
+    canon = canonical_sub_games(grp.group_name, opp.group_name, urls, report["sub_games"])
+    return build_bonus_report(
+        group_1=grp.group_name, group_2=opp.group_name,
+        github=(grp.github_repo, opp.github_repo),
+        mcp_urls={"g1_cop": urls["our_cop"], "g1_thief": urls["our_thief"],
+                  "g2_cop": urls["opp_cop"], "g2_thief": urls["opp_thief"]},
+        students=(grp.students, opp.students),
+        sub_games=canon, mutual_agreement=report.get("mutual_agreement"))

@@ -48,7 +48,7 @@ def _run_challenge(params: dict) -> None:
     """Worker thread: play one cross-host challenge, stream it, then email the report."""
     from cop_thief.infra.network.move_client import RemoteMoveClient
     from cop_thief.orchestrator.challenge_runner import ChallengeRunner
-    from cop_thief.reporting.bonus_report import build_internal_report
+    from cop_thief.reporting.bonus_report import build_bonus_from_report
     from cop_thief.ui import broadcast
     from cop_thief.ui.node_state import STATE
 
@@ -64,7 +64,8 @@ def _run_challenge(params: dict) -> None:
         STATE.set_game("error", {"error": str(exc)})
         broadcast.banner(f"CHALLENGE FAILED: {exc}")
         return
-    _email(build_internal_report(report), params.get("email", ""))  # ex06 §9.1 mandatory report
+    bonus = build_bonus_from_report(report, STATE.cop_url, STATE.thief_url)  # ex06 §9.2 envelope
+    _email(bonus, params.get("email", ""))
     STATE.set_game("done", report)
     broadcast.banner(f"GAME DONE — {report['final_result']} — hash {report['agreement_sha256'][:12]}")
 
