@@ -10,21 +10,12 @@
     "num_games": 6,
     "max_barriers": 5,
     "allow_diagonal": true,
-    "start_mode": "fixed",
+    "start_mode": "random",
     "random_seed": null,
     "thief_moves_first": true,
-    "deterministic_moves": true,
-    "barriers_enabled": false,
-    "fixed_start": {
-      "cop": [
-        4,
-        4
-      ],
-      "thief": [
-        0,
-        0
-      ]
-    }
+    "deterministic_moves": false,
+    "barriers_enabled": true,
+    "fixed_start": null
   },
   "scoring": {
     "comment": "Mapped exactly from ex06 Table 1. Values are IMMUTABLE and may not change.",
@@ -156,8 +147,8 @@
   },
   "_network_note": "Two-team public URL matrix (ex06 §9.2): one Cop + one Thief URL per group. Local defaults; replace with Cloudflare tunnel URLs for distributed play.",
   "network": {
-    "team_alpha_cop_url": "https://uploaded-keys-gilbert-plastic.trycloudflare.com/mcp/",
-    "team_alpha_thief_url": "https://green-northeast-barrel-miss.trycloudflare.com/mcp/",
+    "team_alpha_cop_url": "https://reporter-commentary-frank-sentences.trycloudflare.com/mcp/",
+    "team_alpha_thief_url": "https://facilitate-metro-others-winner.trycloudflare.com/mcp/",
     "team_beta_cop_url": "",
     "team_beta_thief_url": ""
   }

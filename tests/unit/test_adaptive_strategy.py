@@ -53,7 +53,7 @@ def test_random_start_is_reproducible_per_seed() -> None:
 
 
 def test_fixed_start_uses_configured_corners(monkeypatch) -> None:
-    """start_mode 'fixed' opens every sub-game from the agreed corners (COSMOS77: cop 4,4 / thief 0,0)."""
+    """start_mode 'fixed' opens every sub-game from the agreed corners (e.g. cop 4,4 / thief 0,0)."""
     from cop_thief.orchestrator.series import SeriesRunner
     from cop_thief.servers.tools.move_tool import resolve_move
 

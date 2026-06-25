@@ -29,7 +29,7 @@ def main(argv: list[str] | None = None) -> None:
     sub_games = json.loads(raw)
     recipient = get_config_manager().setup.reporting.burner_email
     g1 = _ask("group_1 (Cop in sub-games 1-3)", "NajAmjad")
-    g2 = _ask("group_2 (Cop in 4-6)", "COSMOS77")
+    g2 = _ask("group_2 (Cop in 4-6)", "Opponent")
     report = build_bonus_report(
         group_1=g1, group_2=g2,
         github=(_ask("github group_1"), _ask("github group_2")),

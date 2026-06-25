@@ -1,11 +1,11 @@
-"""Per-role strategy resolver: deterministic tournament minimax, or risk-tunable variants.
+"""Per-role strategy resolver: risk-tunable adaptive variants, or deterministic tournament minimax.
 
-**Tournament (default, ``game.deterministic_moves``):** each ``request_move`` is a **pure
-function of the observation** — a single greedy minimax over the board (pessimism 1.0, no
-exploration, no history) — so two engines + one seed replay byte-identical sub_games (the
-inter-group hash agreement, K3). **Adaptive mode** (deterministic off) restores the 3 risk
-variants + the online ``OpponentModel`` that lowers pessimism against an exploitable opponent.
-Barriers are toggled by ``game.barriers_enabled`` (a per-match agreement).
+**Adaptive (our standing default, ``game.deterministic_moves`` off):** the 3 risk variants +
+the online ``OpponentModel`` that lowers pessimism against an exploitable opponent. **Tournament
+mode** (``game.deterministic_moves`` on) makes each ``request_move`` a **pure function of the
+observation** — a single greedy minimax (pessimism 1.0, no exploration, no history) — so two
+engines + one seed replay byte-identical sub_games (the inter-group hash agreement, K3); enable
+it only when an opponent negotiates byte-agreement. Barriers toggle via ``game.barriers_enabled``.
 """
 
 from __future__ import annotations
