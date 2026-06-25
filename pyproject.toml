@@ -96,6 +96,7 @@ omit = [
     "src/cop_thief/orchestrator/treaty_runner.py",
     "src/cop_thief/challenge.py",
     "src/cop_thief/serve.py",
+    "src/cop_thief/report.py",
 ]
 
 [tool.coverage.report]

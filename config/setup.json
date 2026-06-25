@@ -117,7 +117,7 @@
   },
   "reporting": {
     "examiner_email": "rmisegal+uoh26b@gmail.com",
-    "burner_email": "CHANGEME-new-burner@gmail.com",
+    "burner_email": "najikayal4@gmail.com",
     "production_submission_locked": true,
     "subject_template": "[marl-cop-thief] Game Report — {group_name} — {timestamp}",
     "timezone": "Asia/Jerusalem",
@@ -156,8 +156,8 @@
   },
   "_network_note": "Two-team public URL matrix (ex06 §9.2): one Cop + one Thief URL per group. Local defaults; replace with Cloudflare tunnel URLs for distributed play.",
   "network": {
-    "team_alpha_cop_url": "https://ink-outlined-cons-prescription.trycloudflare.com/mcp/",
-    "team_alpha_thief_url": "https://promising-elimination-guarantee-processors.trycloudflare.com/mcp/",
+    "team_alpha_cop_url": "https://uploaded-keys-gilbert-plastic.trycloudflare.com/mcp/",
+    "team_alpha_thief_url": "https://green-northeast-barrel-miss.trycloudflare.com/mcp/",
     "team_beta_cop_url": "",
     "team_beta_thief_url": ""
   }
